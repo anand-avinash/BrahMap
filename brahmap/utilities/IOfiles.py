@@ -10,8 +10,8 @@
 
 import numpy as np
 import h5py as h5
-from .utilities_functions import *
-from .healpy_functions import *
+
+from .healpy_functions import obspix2mask
 from functools import reduce
 
 
@@ -143,7 +143,7 @@ def flagging_not_in_allCES(CES_pixs):
     """
     Flag all the pixels which are not in common in  the considered  CES.
     """
-    nces = len(CES_pixs)
+    # nces = len(CES_pixs)
 
     # compute intersection
     inters = CES_pixs[0]
@@ -234,11 +234,11 @@ def write_ritz_eigenvectors_to_hdf5(z, filename, eigvals=None):
     Save to a file the approximated eigenvectors computed via the :func:`deflationlib.arnoldi`
     routine.
     """
-    datatype = z[0, 0].dtype
-    if datatype == "complex128":
-        dt = h5.special_dtype(vlen=datatype)
-    else:
-        dt = h5.h5t.IEEE_F64BE
+    # datatype = z[0, 0].dtype
+    # if datatype == "complex128":
+    #     dt = h5.special_dtype(vlen=datatype)
+    # else:
+    #     dt = h5.h5t.IEEE_F64BE
 
     size_eigenvectors, n_eigenvals = z.shape
     f = h5.File(filename, "w")
@@ -250,10 +250,10 @@ def write_ritz_eigenvectors_to_hdf5(z, filename, eigvals=None):
         data=n_eigenvals,
     )
 
-    eig = eigenvect_group.create_dataset("Eigenvectors", data=z, chunks=True)
+    _ = eigenvect_group.create_dataset("Eigenvectors", data=z, chunks=True)
 
-    if not (eigvals is None):
-        eig = f.create_dataset("Ritz_eigenvalues", data=eigvals)
+    if eigvals is not None:
+        _ = f.create_dataset("Ritz_eigenvalues", data=eigvals)
 
     f.close()
     pass
@@ -295,7 +295,7 @@ def write_obspix_to_hdf5(filename, obspix):
     Save into hdf5 file the obspix array
     """
     f = h5.File(filename, "w")
-    det = f.create_dataset("obspix", data=obspix, dtype=h5.h5t.STD_I32BE)
+    _ = f.create_dataset("obspix", data=obspix, dtype=h5.h5t.STD_I32BE)
     f.close()
     pass
 
@@ -368,7 +368,8 @@ def plot_histogram_eigenvalues(z):
     """
 
     import matplotlib.pyplot as plt
-    from matplotlib import rc
+
+    # from matplotlib import rc
 
     histo, edges = np.histogram(abs(z), bins=20, normed=False)
     bins = np.array([(edges[i] + edges[i + 1]) / 2.0 for i in range(len(histo))])

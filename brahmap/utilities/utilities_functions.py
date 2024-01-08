@@ -10,8 +10,6 @@
 
 import random as rd
 import numpy as np
-from scipy.linalg import get_blas_funcs
-import math as m
 import warnings
 
 
@@ -90,7 +88,8 @@ def output_profile(pr):
         instance returned by :func:`profile_run`
 
     """
-    import pstats, io
+    import pstats
+    import io
 
     s = io.StringIO()
     sortby = "cumulative"

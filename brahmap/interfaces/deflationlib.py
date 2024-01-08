@@ -12,7 +12,8 @@ import scipy.sparse.linalg as spla
 import krypy as kp
 
 import numpy as np
-from ..utilities import *
+from ..utilities.linear_algebra_funcs import norm2, dgemm
+from ..utilities.IOfiles import write_ritz_eigenvectors_to_hdf5
 
 
 def arnoldi(A, b, x0=None, tol=1e-5, maxiter=1000, inner_m=30):
@@ -169,7 +170,7 @@ def build_Z(z, y, w, eps):
 
     m = len(z)
 
-    npix = len(w[0])
+    # npix = len(w[0])
 
     select_eigvec = []
     for i in range(m):
@@ -225,7 +226,7 @@ def find_ritz_eigenvalues(h, v, threshold=1.0e-2, eigenvalues=False, filename=No
     print("Found   %d Ritz eigenvalues smaller than %.1g " % (r, threshold))
     print(eig[:r])
     print("//" * 30)
-    if not filename is None:
+    if filename is not None:
         write_ritz_eigenvectors_to_hdf5(z, filename, eigvals=eig)
     if eigenvalues:
         return z[:, selected.mask], r, eig[selected.mask]

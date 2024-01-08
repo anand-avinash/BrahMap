@@ -42,7 +42,7 @@ def obspix2mask(obspix, nside, fname=None):
     """
     mask = np.zeros(hp.nside2npix(nside))
     mask[obspix] = 1
-    if not fname is None:
+    if fname is not None:
         hp.write_map(fname, mask)
 
     return mask
@@ -80,7 +80,7 @@ def reorganize_map(mapin, obspix, npix, nside, pol, fname=None):
         i = mapin[::3]
         q, u = mapin[1::3], mapin[2::3]
 
-        m = np.where(q != 0.0)[0]
+        # m = np.where(q != 0.0)[0]
         healpix_map[obspix, 0] = i
         healpix_map[obspix, 1] = q
         healpix_map[obspix, 2] = u
@@ -99,7 +99,7 @@ def reorganize_map(mapin, obspix, npix, nside, pol, fname=None):
 
         healpix_map[obspix] = mapin
         hp_list = [healpix_map]
-    if not fname is None:
+    if fname is not None:
         hp.write_map(fname, hp_list)
 
     return hp_list
@@ -128,7 +128,7 @@ def show_map(outm, pol, patch, figname=None, title="", **kwargs):
     runcase = {1: "T", 2: "QU", 3: "TQU"}
     keys = runcase[pol]
 
-    if not "rot" in kwargs:
+    if "rot" not in kwargs:
         kwargs["rot"] = coord_dict[patch]
 
     for k, i in zip(list(keys), range(pol)):
@@ -187,7 +187,7 @@ def compare_maps(outm, inm, pol, patch, figname=None, remove_offset=True, **kwar
     """
     coord_dict = {"ra23": [-14.7, -33.09], "LP": [2.5, -53.5]}
 
-    if not "rot" in kwargs:
+    if "rot" not in kwargs:
         kwargs["rot"] = coord_dict[patch]
     if pol == 1:
         unseen = np.ma.masked_equal(outm, 0).mask

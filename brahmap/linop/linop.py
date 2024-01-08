@@ -157,7 +157,7 @@ class LinearOperator(BaseLinearOperator):
                         matvec=rmatvec,
                         rmatvec=matvec,
                         adjoint_of=self,
-                        **kwargs
+                        **kwargs,
                     )
                 else:
                     self.__H = None
@@ -405,7 +405,7 @@ class DiagonalOperator(LinearOperator):
             symmetric=True,
             matvec=lambda x: diag * x,
             dtype=diag.dtype,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -458,7 +458,7 @@ class MatrixLinearOperator(LinearOperator):
             matvec=matvec,
             rmatvec=rmatvec,
             dtype=matrix.dtype,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -579,7 +579,7 @@ def PysparseLinearOperator(A):
     nargout, nargin = A.shape
     try:
         symmetric = A.issym
-    except:
+    except Exception:
         symmetric = A.isSymmetric()
 
     def matvec(x):
@@ -679,14 +679,20 @@ def aslinearoperator(A):
             if hasattr(A, "symmetric"):
                 symmetric = A.symmetric
         elif hasattr(A, "__mul__"):
-            matvec = lambda x: A * x
+
+            def matvec(x):
+                return A * x
+
             if hasattr(A, "__rmul__"):
-                rmatvec = lambda x: x * A
+
+                def rmatvec(x):
+                    return x * A
+
             if hasattr(A, "dtype"):
                 dtype = A.dtype
             try:
                 symmetric = A.isSymmetric()
-            except:
+            except Exception:
                 symmetric = False
         return LinearOperator(
             nargin,

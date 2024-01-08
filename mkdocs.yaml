@@ -1,0 +1,106 @@
+# A note for mkdocs:
+# See <https://realpython.com/python-project-documentation-with-mkdocs/>
+#  and <https://www.mkdocs.org/user-guide/deploying-your-docs/>
+# `mkdocs serve`: It creates a test documentation and makes it available at localhost. All the changes made to the documentation are propagated instantly to assist the development.
+# `mkdocs build`: It build the complete static documentation pages along with html files and static assets. Committing it to the repo ensures that the self contained documentation pages are packaged with the package. However, it is not enough to host the documentation on github.
+# `mkdocs gh-deploy`: GitHub repositories automatically serve static content when committed to a branch named `gh-pages`. The command `mkdocs gh-deploy` just does that by rebuilding the documentation from markdown files and docstrings, then commits them to the `gh-pages` branch and pushes it to the `gh-pages` branch on remote. Be aware that you will not be able to review the built site before it is pushed to GitHub. Therefore, you may want to verify any changes you make to the docs beforehand by using the `build` or `serve` commands and reviewing the built files locally. **If there are untracked files or uncommitted work in the local repository where mkdocs gh-deploy is run, these will be included in the pages that are deployed.**
+
+# So follow the following workflow:
+# 1. Make changes to the repository. Review any changes to documentation with `mkdocs serve`.
+# 2. Build the documentation with `mkdocs build`. --->>> I have now added a pre-commit hook for it, so no need to run it explicitly. Now simply run `pre-commit run --all-files` for testing.
+# 3. Commit the changes and new documentation.
+# 4. Run `mkdocs gh-deploy` to deploy the documentation to github. --->>> I have deployed a github workflow to initiate `mkdocs gh-deploy` whenever a commit is pushed on the `main` branch on github. See <.github/workflow/documentation.yaml>
+
+
+site_name: BrahMap Documentation
+site_url: https://anand-avinash.github.io/BrahMap/
+
+site_author: Avinash Anand, Giuseppe Puglisi
+site_description: >-
+  An optimal map-making package for LiteBIRD
+
+# Repository
+repo_name: anand-avinash/BrahMap
+repo_url: https://github.com/anand-avinash/BrahMap
+
+# Copyright
+copyright: Copyright &copy; 2024 Avinash Anand, Giuseppe Puglisi
+
+theme:
+  name: "material"
+  features:
+    - content.code.copy
+    - navigation.top
+    - navigation.tabs
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - navigation.footer
+    - navigation.path
+    - toc.follow
+    - navigation.top
+    # - navigation.sections
+    # - navigation.tracking
+    # - header.autohide
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+
+
+### Matjax support
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+### Code highlighting
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+markdown_extensions:
+  - toc:
+      permalink: true
+
+plugins:
+  ### Enable docstring parsing
+  - mkdocstrings
+  ### Enable search
+  - search
+
+### Page tree
+nav:
+  - Home: index.md
+  - Quick start: quick_start.md
+  - API References:
+    - api_references.md
+    - Interfaces:
+      - Linear operators: api_ref/interfaces/linearoperators.md
+      - Deflation operation: api_ref/interfaces/deflationlib.md
+    - Utilities: api_ref/utilities.md
+    - linop package: api_ref/linop.md

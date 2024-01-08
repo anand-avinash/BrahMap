@@ -1,14 +1,52 @@
 [tool.poetry]
 name = "brahmap"
 version = "0.1.0"
-description = ""
-authors = ["Avinash Anand <36325275+anand-avinash@users.noreply.github.com>"]
+description = "An optimal map-making package for LiteBIRD"
+authors = ["Avinash Anand <36325275+anand-avinash@users.noreply.github.com>", "Giuseppe Puglisi"]
 readme = "README.md"
+repository = "https://github.com/anand-avinash/BrahMap"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-
+# Dependencies are constraint by <https://github.com/litebird/litebird_sim/>
+python = ">=3.9,<3.13"
+numba = "^0.57.1"
+numpy = "^1.24"
+scipy = "^1.11.3"
+ruff = "^0.1.7"
+pre-commit = "^2.15.0"
+mkdocs = "^1.5.3"
+mkdocstrings = "^0.24.0"
+mkdocstrings-python = "^1.7.5"
+mkdocs-material = "9.5.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select = ["E4", "E7", "E9", "F"]
+# ignore = ["E741", "E731", ]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"

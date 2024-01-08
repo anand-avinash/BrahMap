@@ -8,19 +8,18 @@
 #
 
 
-import math as m
+# import math as m
 import numpy as np
 from ..linop import linop as lp
 from ..linop import blkop as blk
-import random as rd
+from scipy.linalg import solve, lu, eigh
 
 # import weave
 # from weave import inline
 # import scipy.sparse.linalg as spla
-from ..utilities import *
+from ..utilities import bash_colors, dgemm, scalprod, get_legendre_polynomials
 
-# from multiprocessing import Pool, Queue, Process
-import time
+from multiprocessing import Pool
 import multiprocessing
 
 
@@ -149,7 +148,7 @@ class FilterLO(lp.LinearOperator):
         vec_out = d * 0.0
         pixs = self.pixels
         offset = 0
-        mask = np.ma.masked_greater_equal(pixs, 0).mask
+        # mask = np.ma.masked_greater_equal(pixs, 0).mask
         for subsc, ts, ns, nb in zip(
             self.subscans, self.tstart, self.nsamples, self.nbolos
         ):
@@ -221,7 +220,7 @@ class FilterLO(lp.LinearOperator):
                     start = j + (ns * bolo_iter) + offset
                     end = start + i
                     tmpmask = mask[start:end]
-                    size = len(np.where(tmpmask == True)[0])
+                    size = len(np.where(tmpmask == True)[0])  # noqa: E712
                     if size <= self.poly_order:
                         # too few samples to filter Legendre Polynomials
                         continue
@@ -264,7 +263,7 @@ class FilterLO(lp.LinearOperator):
                 start = j + ns * bolo_iter
                 end = start + i
                 tmpmask = mask[start:end]
-                size = len(np.where(tmpmask == True)[0])
+                size = len(np.where(tmpmask == True)[0])  # noqa: E712
                 if size <= self.poly_order:
                     continue
                 legendres = self.legendres[i]
@@ -287,9 +286,12 @@ class FilterLO(lp.LinearOperator):
         return vec_out
 
     def polyfilter_multithreads(self, d):
-        vec_out = d * 0.0
+        # vec_out = d * 0.0
         pixs = self.pixels
-        func = lambda ns, nb: ns * nb
+
+        def func(ns, nb):
+            return ns * nb
+
         offsend = list(map(func, self.nsamples, self.nbolos))
         offstart = offsend[:-1]
         offstart.insert(0, 0)
@@ -333,7 +335,7 @@ class FilterLO(lp.LinearOperator):
         self.subscans = subscan_nsample[0]
         self.tstart = subscan_nsample[1]
 
-        if not (type(self.nsamples) is list):
+        if not isinstance(self.nsamples, list):
             self.nsamples = [self.nsamples]
             self.nbolos = [self.nbolos]
             self.subscans = [self.subscans]
@@ -371,7 +373,7 @@ def globalprocsfilter(args):
             start = j + ns * bolo_iter
             end = start + i
             tmpmask = mask[start:end]
-            size = len(np.where(tmpmask == True)[0])
+            size = len(np.where(tmpmask == True)[0])  # noqa: E712
             if size <= poly_order:
                 continue
             legendres = legendredict[i]
@@ -969,7 +971,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
             #include <ctype.h>
             #include <stdlib.h>
             #include <math.h>
-            """
+            """  # noqa: F841
         if self.pol == 1:
             nan = np.ma.masked_greater(self.counts, 0)
             # print(
@@ -1212,9 +1214,6 @@ class InverseLO(lp.LinearOperator):
         Preconditioner for the solver.
         """
         return self.__preconditioner
-
-
-from scipy.linalg import solve, lu, eigh
 
 
 class CoarseLO(lp.LinearOperator):

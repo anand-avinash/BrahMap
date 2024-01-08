@@ -13,7 +13,7 @@ import numpy as np
 # from scipy import weave
 # import weave
 # from weave import inline
-from .utilities_functions import *
+from .utilities_functions import is_sorted, bash_colors
 
 
 class ProcessTimeSamples(object):
@@ -116,7 +116,7 @@ class ProcessTimeSamples(object):
         )
         try:
             assert np.allclose(new_obspix, self.obspix[index_of_new_in_old_obspix])
-        except:
+        except Exception:
             print(
                 self.bashc.fail(
                     "new_obspix contains pixels which aren't in the old obspix"
@@ -236,7 +236,7 @@ class ProcessTimeSamples(object):
             #include <ctype.h>
             #include <stdlib.h>
             #include <math.h>
-            """
+            """  # noqa: F841
         code_I = """
             int Nnew=0;
             int Nrem=0;
@@ -266,7 +266,7 @@ class ProcessTimeSamples(object):
             }
             newN(0)=Nnew;
             newN(1)=Nrem;
-            """
+            """  # noqa: F841
         code_QU = """
             int Nnew=0;
             int Nrem=0;
@@ -298,7 +298,7 @@ class ProcessTimeSamples(object):
             }
             newN(0)=Nnew;
             newN(1)=Nrem;
-            """
+            """  # noqa: F841
         code_IQU = """
             int Nnew=0;
             int Nrem=0;
@@ -333,7 +333,7 @@ class ProcessTimeSamples(object):
             }
             newN(0)=Nnew;
             newN(1)=Nrem;
-            """
+            """  # noqa: F841
         Nold = self.oldnpix
         newN = np.zeros(2)
         old2new = np.zeros(Nold, dtype=int)
