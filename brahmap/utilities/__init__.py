@@ -1,6 +1,5 @@
 """
-This module contains the utilities functions strictly related to the computation,
-the input/output.
+This module contains the utilities functions strictly related to the computation, and input/output.
 
 """
 
@@ -19,15 +18,6 @@ from .utilities_functions import (
     system_setup,
 )
 
-# from .IOfiles import *
-from .linear_algebra_funcs import dgemm, norm2, scalprod, get_legendre_polynomials
-from .healpy_functions import (
-    obspix2mask,
-    reorganize_map,
-    show_map,
-    subtract_offset,
-    compare_maps,
-)
 from .process_ces import ProcessTimeSamples
 from .lbsim_interface import lbs_process_timesamples
 
@@ -45,15 +35,6 @@ __all__ = [
     "noise_val",
     "subscan_resize",
     "system_setup",
-    "dgemm",
-    "norm2",
-    "scalprod",
-    "get_legendre_polynomials",
-    "obspix2mask",
-    "reorganize_map",
-    "show_map",
-    "subtract_offset",
-    "compare_maps",
     "ProcessTimeSamples",
     "lbs_process_timesamples",
 ]

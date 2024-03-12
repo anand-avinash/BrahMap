@@ -1,19 +1,8 @@
-#
-#   PROCESS_CES.PY
-#   class to preprocess and flag bad data
-#   date: 2016-12-02
-#   author: GIUSEPPE PUGLISI
-#
-#   Copyright (C) 2016   Giuseppe Puglisi    giuspugl@sissa.it
-#
-
-
 import numpy as np
 
-# from scipy import weave
-# import weave
-# from weave import inline
 from .utilities_functions import is_sorted, bash_colors
+import process_samples
+import repixelize
 
 
 class ProcessTimeSamples(object):
@@ -134,22 +123,6 @@ class ProcessTimeSamples(object):
         if self.pol == 1:
             self.counts = np.zeros(npix)
             counts = self.counts
-            # includes=r"""
-            # #include <stdio.h>
-            # #include <omp.h>
-            # #include <math.h>
-            # """
-            # code ="""
-            # int i,pixel;
-            # for ( i=0;i<N;++i){
-            #     pixel=pixs(i);
-            #     if (pixel == -1) continue;
-            #     counts(pixel)+=w(i);
-            #     }
-            #     """
-            # inline(code,['pixs','w','counts','N'],verbose=1,
-            # extra_compile_args=['-march=native  -O3  -fopenmp ' ],
-            # 	    support_code = includes,libraries=['gomp'],type_converters=weave.converters.blitz)
 
             for i in range(N):
                 pixel = pixs[i]
@@ -165,25 +138,6 @@ class ProcessTimeSamples(object):
             cos, sin = self.cos, self.sin
             cos2, sin2, sincos = self.cos2, self.sin2, self.sincos
             if self.pol == 2:
-                # includes=r"""
-                # #include <stdio.h>
-                # #include <omp.h>
-                # #include <math.h>
-                # """
-                # code = """
-                # int i,pixel;
-                # for ( i=0;i<N;++i){
-                #     pixel=pixs(i);
-                #     if (pixel == -1) continue;
-                #     cos2(pixel)     +=  w(i)*cos(i)*cos(i);
-                #     sin2(pixel)     +=  w(i)*sin(i)*sin(i);
-                #     sincos(pixel)   +=  w(i)*sin(i)*cos(i);
-                #     }
-                # """
-                # inline(code,['pixs','w','cos','sin','cos2','sin2','sincos','N'],verbose=1,
-                # extra_compile_args=['-march=native  -O3  -fopenmp ' ],
-                # support_code = includes,libraries=['gomp'],type_converters=weave.converters.blitz)
-
                 for i in range(N):
                     pixel = pixs[i]
                     if pixel == -1:
@@ -197,27 +151,6 @@ class ProcessTimeSamples(object):
                 self.cosine = np.zeros(npix)
                 self.sine = np.zeros(npix)
                 counts, cosine, sine = self.counts, self.cosine, self.sine
-                # includes=r"""
-                # #include <stdio.h>
-                # #include <omp.h>
-                # #include <math.h>
-                # """
-                # code = """
-                # int i,pixel;
-                # for ( i=0;i<N;++i){
-                #     pixel=pixs(i);
-                #     if (pixel == -1) continue;
-                #     counts(pixel)   +=  w(i);
-                #     cosine(pixel)   +=  w(i)*cos(i);
-                #     sine(pixel)     +=  w(i)*sin(i);
-                #     cos2(pixel)     +=  w(i)*cos(i)*cos(i);
-                #     sin2(pixel)     +=  w(i)*sin(i)*sin(i);
-                #     sincos(pixel)   +=  w(i)*sin(i)*cos(i);
-                # }
-                # """
-                # inline(code,['pixs','w','cos','sin','counts','cosine','sine','cos2','sin2','sincos','N'],
-                # extra_compile_args=['-march=native  -O3  -fopenmp ' ],verbose=1,
-                # support_code = includes,libraries=['gomp'],type_converters=weave.converters.blitz)
 
                 for i in range(N):
                     pixel = pixs[i]
@@ -231,279 +164,66 @@ class ProcessTimeSamples(object):
                     sincos[pixel] += w[i] * sin[i] * cos[i]
 
     def new_repixelization(self):
-        includes = r"""
-            #include <stdio.h>
-            #include <ctype.h>
-            #include <stdlib.h>
-            #include <math.h>
-            """  # noqa: F841
-        code_I = """
-            int Nnew=0;
-            int Nrem=0;
-
-            int boolval;
-            for (int jpix=0; jpix<Nold; jpix++){
-            	boolval=0;
-            	for (int i = 0; i< Nm; ++i){
-            		if (mask(i)==jpix){
-               			boolval=1;
-            			break;
-               		}
-               		else{
-               			continue;
-               		}
-               	}
-               if (boolval==1) {
-               		old2new(jpix)=Nnew;
-               		counts(Nnew)= counts(jpix);
-               		obspix(Nnew)= obspix(jpix);
-               		Nnew++;
-               }
-               else{
-               		old2new(jpix)=-1;
-               		Nrem++;
-               }
-            }
-            newN(0)=Nnew;
-            newN(1)=Nrem;
-            """  # noqa: F841
-        code_QU = """
-            int Nnew=0;
-            int Nrem=0;
-
-            int boolval;
-            for (int jpix=0; jpix<Nold; jpix++){
-            	boolval=0;
-            	for (int i = 0; i< Nm; ++i){
-            		if (mask(i)==jpix){
-               			boolval=1;
-            			break;
-               		}
-               		else{
-               			continue;
-               		}
-               	}
-               if (boolval==1) {
-               		old2new(jpix)=Nnew;
-               		cos2(Nnew)= cos2(jpix);
-               		sin2(Nnew)= sin2(jpix);
-               		sincos(Nnew)= sincos(jpix);
-               		obspix(Nnew)= obspix(jpix);
-               		Nnew++;
-               }
-               else{
-               		old2new(jpix)=-1;
-               		Nrem++;
-               }
-            }
-            newN(0)=Nnew;
-            newN(1)=Nrem;
-            """  # noqa: F841
-        code_IQU = """
-            int Nnew=0;
-            int Nrem=0;
-
-            int boolval;
-            for (int jpix=0; jpix<Nold; jpix++){
-            	boolval=0;
-            	for (int i = 0; i< Nm; ++i){
-            		if (mask(i)==jpix){
-               			boolval=1;
-            			break;
-               		}
-               		else{
-               			continue;
-               		}
-               	}
-               if (boolval==1) {
-               		old2new(jpix)=Nnew;
-                    cos2(Nnew)= cos2(jpix);
-               		sin2(Nnew)= sin2(jpix);
-               		sincos(Nnew)= sincos(jpix);
-               		cosine(Nnew)= cosine(jpix);
-               		sine(Nnew)= sine(jpix);
-               		counts(Nnew)= counts(jpix);
-               		obspix(Nnew)= obspix(jpix);
-               		Nnew++;
-               }
-               else{
-               		old2new(jpix)=-1;
-               		Nrem++;
-               }
-            }
-            newN(0)=Nnew;
-            newN(1)=Nrem;
-            """  # noqa: F841
-        Nold = self.oldnpix
-        newN = np.zeros(2)
-        old2new = np.zeros(Nold, dtype=int)
-        mask = self.mask
-        obspix = self.obspix
-        Nm = len(mask)
-        # print(Nold, newN, obspix.shape, Nm)
         if self.pol == 1:
-            counts = self.counts
-            # listarrays = ["obspix", "mask", "Nold", "old2new", "newN", "Nm", "counts"]
-            # inline(
-            #     code_I,
-            #     listarrays,
-            #     extra_compile_args=["-march=native  -O3 "],
-            #     verbose=1,
-            #     support_code=includes,
-            #     type_converters=weave.converters.blitz,
-            # )
+            (
+                n_new_pix,
+                n_removed_pix,
+                old2new,
+                self.counts,
+                self.obspix,
+            ) = repixelize.py_repixelization_pol1(
+                self.oldnpix, self.mask, self.counts, self.obspix
+            )
 
-            Nnew = 0
-            Nrem = 0
-
-            for jpix in range(Nold):
-                boolval = 0
-                for i in range(Nm):
-                    if mask[i] == jpix:
-                        boolval = 1
-                        break
-                    else:
-                        continue
-
-                if boolval == 1:
-                    old2new[jpix] = Nnew
-                    counts[Nnew] = counts[jpix]
-                    obspix[Nnew] = obspix[jpix]
-                    Nnew += 1
-                else:
-                    old2new[jpix] = -1
-                    Nrem += 1
-
-            newN[0] = Nnew
-            newN[1] = Nrem
-
-            n_new_pix, n_removed_pix = int(newN[0]), int(newN[1])
-
-            # print("SELF.COUNTS = ", self.counts.shape)
-            # resize arrays
-            # self.counts =
             self.counts = np.delete(self.counts, range(n_new_pix, self.oldnpix))
-            # import pdb
-
-            # pdb.set_trace()
-            # print("SELF.COUNTS = ", self.counts.shape)
 
         elif self.pol == 2:
-            cos2 = self.cos2
-            sin2 = self.sin2
-            sincos = self.sincos
-            # listarrays = [
-            #     "obspix",
-            #     "mask",
-            #     "Nold",
-            #     "old2new",
-            #     "newN",
-            #     "Nm",
-            #     "cos2",
-            #     "sin2",
-            #     "sincos",
-            # ]
-            # inline(
-            #     code_QU,
-            #     listarrays,
-            #     extra_compile_args=["-march=native  -O3 "],
-            #     verbose=1,
-            #     support_code=includes,
-            #     type_converters=weave.converters.blitz,
-            # )
+            (
+                n_new_pix,
+                n_removed_pix,
+                old2new,
+                self.counts,
+                self.obspix,
+                self.sin2,
+                self.cos2,
+                self.sincos,
+            ) = repixelize.py_repixelization_pol2(
+                self.oldnpix,
+                self.mask,
+                self.counts,
+                self.obspix,
+                self.sin2,
+                self.cos2,
+                self.sincos,
+            )
 
-            Nnew = 0
-            Nrem = 0
-
-            for jpix in range(Nold):
-                boolval = 0
-                for i in range(Nm):
-                    if mask[i] == jpix:
-                        boolval = 1
-                        break
-                    else:
-                        continue
-
-                if boolval == 1:
-                    old2new[jpix] = Nnew
-                    cos2[Nnew] = cos2[jpix]
-                    sin2[Nnew] = sin2[jpix]
-                    sincos[Nnew] = sincos[jpix]
-                    obspix[Nnew] = obspix[jpix]
-                    Nnew += 1
-                else:
-                    old2new[jpix] = -1
-                    Nrem += 1
-
-            newN[0] = Nnew
-            newN[1] = Nrem
-
-            n_new_pix, n_removed_pix = int(newN[0]), int(newN[1])
-            # resize arrays
             self.cos2 = np.delete(self.cos2, range(n_new_pix, self.oldnpix))
             self.sin2 = np.delete(self.sin2, range(n_new_pix, self.oldnpix))
             self.sincos = np.delete(self.sincos, range(n_new_pix, self.oldnpix))
         elif self.pol == 3:
-            cos2 = self.cos2
-            sin2 = self.sin2
-            sincos = self.sincos
-            cosine = self.cosine
-            sine = self.sine
-            counts = self.counts
-            # listarrays = [
-            #     "obspix",
-            #     "mask",
-            #     "Nold",
-            #     "old2new",
-            #     "newN",
-            #     "Nm",
-            #     "cos2",
-            #     "sin2",
-            #     "sincos",
-            #     "sine",
-            #     "cosine",
-            #     "counts",
-            # ]
-            # inline(
-            #     code_IQU,
-            #     listarrays,
-            #     extra_compile_args=["-march=native  -O3 "],
-            #     verbose=1,
-            #     support_code=includes,
-            #     type_converters=weave.converters.blitz,
-            # )
+            (
+                n_new_pix,
+                n_removed_pix,
+                old2new,
+                self.counts,
+                self.obspix,
+                self.sin2,
+                self.cos2,
+                self.sincos,
+                self.sine,
+                self.cosine,
+            ) = repixelize.py_repixelization_pol3(
+                self.oldnpix,
+                self.mask,
+                self.counts,
+                self.obspix,
+                self.sin2,
+                self.cos2,
+                self.sincos,
+                self.sine,
+                self.cosine,
+            )
 
-            Nnew = 0
-            Nrem = 0
-
-            for jpix in range(Nold):
-                boolval = 0
-                for i in range(Nm):
-                    if mask[i] == jpix:
-                        boolval = 1
-                        break
-                    else:
-                        continue
-
-                if boolval == 1:
-                    old2new[jpix] = Nnew
-                    cos2[Nnew] = cos2[jpix]
-                    sin2[Nnew] = sin2[jpix]
-                    sincos[Nnew] = sincos[jpix]
-                    cosine[Nnew] = cosine[jpix]
-                    sine[Nnew] = sine[jpix]
-                    counts[Nnew] = counts[jpix]
-                    obspix[Nnew] = obspix[jpix]
-                    Nnew += 1
-                else:
-                    old2new[jpix] = -1
-                    Nrem += 1
-
-            newN[0] = Nnew
-            newN[1] = Nrem
-
-            n_new_pix, n_removed_pix = int(newN[0]), int(newN[1])
-            # resize arrays
             self.cos2 = np.delete(self.cos2, range(n_new_pix, self.oldnpix))
             self.sin2 = np.delete(self.sin2, range(n_new_pix, self.oldnpix))
             self.sincos = np.delete(self.sincos, range(n_new_pix, self.oldnpix))
@@ -590,26 +310,6 @@ class ProcessTimeSamples(object):
         o2n = self.old2new
 
         pixs = self.pixs
-        # code = """
-        #   int i,pixel;
-        #   for ( i=0;i<N;++i){
-        #     pixel=pixs(i);
-        #     if (pixel == -1) continue;
-        #     pixs(i)=o2n(pixel);
-        #     }
-        # """
-        # inline(
-        #     code,
-        #     ["pixs", "o2n", "N"],
-        #     verbose=1,
-        #     extra_compile_args=["  -O3  -fopenmp "],
-        #     support_code=r"""
-        #            #include <stdio.h>
-        #            #include <omp.h>
-        #            #include <math.h>""",
-        #     libraries=["gomp"],
-        #     type_converters=weave.converters.blitz,
-        # )
 
         for i in range(N):
             pixel = pixs[i]
@@ -618,7 +318,7 @@ class ProcessTimeSamples(object):
             pixs[i] = o2n[pixel]
 
     def initializeweights(self, phi, w):
-        """
+        r"""
         Pre-compute the quantitities needed for the implementation of :math:`(A^T A)`
         and to masks bad pixels.
 
@@ -662,149 +362,38 @@ class ProcessTimeSamples(object):
             whose count is :math:`\geq 3`.
 
         """
-        N = self.nsamples
-        pixs = self.pixs
+
         if self.pol == 1:
-            self.counts = np.zeros(self.oldnpix)
-            counts = self.counts
-            # includes = r"""
-            #         #include <stdio.h>
-            #         #include <omp.h>
-            #         #include <math.h>"""
-            # code = """
-            #       int i,pixel;
-            #       for ( i=0;i<N;++i){
-            #         pixel=pixs(i);
-            #         if (pixel == -1) continue;
-            #         counts(pixel)+=w(i);
-            #         }
-            #         """
-            # inline(
-            #     code,
-            #     ["pixs", "w", "counts", "N"],
-            #     verbose=1,
-            #     extra_compile_args=["  -O3  -fopenmp "],
-            #     support_code=includes,
-            #     libraries=["gomp"],
-            #     type_converters=weave.converters.blitz,
-            # )
-
-            for i in range(N):
-                pixel = pixs[i]
-                if pixel == -1:
-                    continue
-                # print(N, pixel, counts, w)
-                counts[pixel] += w[i]
-
-            self.mask = np.where(self.counts > 0)[0]
+            self.counts, self.mask = process_samples.py_process_pol1(
+                self.nsamples, self.oldnpix, w, self.pixs
+            )
         else:
-            self.cos = np.cos(2.0 * phi)
-            self.sin = np.sin(2.0 * phi)
-            self.cos2 = np.zeros(self.oldnpix)
-            self.sin2 = np.zeros(self.oldnpix)
-            self.sincos = np.zeros(self.oldnpix)
-            cos, sin = self.cos, self.sin
-            cos2, sin2, sincos = self.cos2, self.sin2, self.sincos
             if self.pol == 2:
-                # includes = r"""
-                #         #include <stdio.h>
-                #         #include <omp.h>
-                #         #include <math.h>"""
-                # code = """
-                #       int i,pixel;
-                #       for ( i=0;i<N;++i){
-                #         pixel=pixs(i);
-                #         if (pixel == -1) continue;
-                #         cos2(pixel)     +=  w(i)*cos(i)*cos(i);
-                #         sin2(pixel)     +=  w(i)*sin(i)*sin(i);
-                #         sincos(pixel)   +=  w(i)*sin(i)*cos(i);
-                #         }
-                #         """
-                # inline(
-                #     code,
-                #     ["pixs", "w", "cos", "sin", "cos2", "sin2", "sincos", "N"],
-                #     verbose=1,
-                #     extra_compile_args=["  -O3  -fopenmp "],
-                #     support_code=includes,
-                #     libraries=["gomp"],
-                #     type_converters=weave.converters.blitz,
-                # )
-
-                for i in range(N):
-                    pixel = pixs[i]
-                    if pixel == -1:
-                        continue
-                    cos2[pixel] += w[i] * cos[i] * cos[i]
-                    sin2[pixel] += w[i] * sin[i] * sin[i]
-                    sincos[pixel] += w[i] * sin[i] * cos[i]
+                (
+                    self.counts,
+                    self.sin,
+                    self.cos,
+                    self.sin2,
+                    self.cos2,
+                    self.sincos,
+                ) = process_samples.py_process_pol2(
+                    self.nsamples, self.oldnpix, w, self.pixs, phi
+                )
 
             elif self.pol == 3:
-                self.counts = np.zeros(self.oldnpix)
-                self.cosine = np.zeros(self.oldnpix)
-                self.sine = np.zeros(self.oldnpix)
-                counts, cosine, sine = self.counts, self.cosine, self.sine
-                # includes = r"""
-                #         #include <stdio.h>
-                #         #include <omp.h>
-                #         #include <math.h>"""
-                # code = """
-                #       int i,pixel;
-                #       for ( i=0;i<N;++i){
-                #         pixel=pixs(i);
-                #         if (pixel == -1) continue;
-                #         counts(pixel)+=w(i);
-                #         cosine(pixel)     +=  w(i)*cos(i);
-                #         sine(pixel)       +=  w(i)*sin(i);
-                #         cos2(pixel)     +=  w(i)*cos(i)*cos(i);
-                #         sin2(pixel)     +=  w(i)*sin(i)*sin(i);
-                #         sincos(pixel)   +=  w(i)*sin(i)*cos(i);
-                #         }
-                #         """
-                # inline(
-                #     code,
-                #     [
-                #         "pixs",
-                #         "w",
-                #         "cos",
-                #         "sin",
-                #         "counts",
-                #         "cosine",
-                #         "sine",
-                #         "cos2",
-                #         "sin2",
-                #         "sincos",
-                #         "N",
-                #     ],
-                #     extra_compile_args=["  -O3  -fopenmp "],
-                #     verbose=1,
-                #     support_code=includes,
-                #     libraries=["gomp"],
-                #     type_converters=weave.converters.blitz,
-                # )
+                (
+                    self.counts,
+                    self.sine,
+                    self.cosine,
+                    self.sin,
+                    self.cos,
+                    self.sin2,
+                    self.cos2,
+                    self.sincos,
+                ) = process_samples.py_process_pol3(
+                    self.nsamples, self.oldnpix, w, self.pixs, phi
+                )
 
-                for i in range(N):
-                    pixel = pixs[i]
-                    if pixel == -1:
-                        continue
-                    counts[pixel] += w[i]
-                    cosine[pixel] += w[i] * cos[i]
-                    sine[pixel] += w[i] * sin[i]
-                    cos2[pixel] += w[i] * cos[i] * cos[i]
-                    sin2[pixel] += w[i] * sin[i] * sin[i]
-                    sincos[pixel] += w[i] * sin[i] * cos[i]
-
-            det = (self.cos2 * self.sin2) - (self.sincos * self.sincos)
-            tr = self.cos2 + self.sin2
-            sqrt = np.sqrt(tr * tr / 4.0 - det)
-            lambda_max = tr / 2.0 + sqrt
-            lambda_min = tr / 2.0 - sqrt
-            cond_num = np.abs(lambda_max / lambda_min)
-            mask = np.where(cond_num <= self.threshold)[0]
-            if self.pol == 2:
-                self.mask = mask
-            elif self.pol == 3:
-                mask2 = np.where(self.counts > 2)[0]
-                self.mask = np.intersect1d(mask2, mask)
-        # import pdb
-
-        # pdb.set_trace()
+            self.mask = process_samples.py_get_mask_pol(
+                self.pol, self.counts, self.sin2, self.cos2, self.sincos, self.threshold
+            )

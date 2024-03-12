@@ -89,6 +89,10 @@ extra_javascript:
 plugins:
   ### Enable docstring parsing
   - mkdocstrings
+      # handlers:
+      #   python:
+      #     options:
+      #       docstring_style: google
   ### Enable search
   - search
 
@@ -100,6 +104,5 @@ nav:
     - api_references.md
     - Interfaces:
       - Linear operators: api_ref/interfaces/linearoperators.md
-      - Deflation operation: api_ref/interfaces/deflationlib.md
     - Utilities: api_ref/utilities.md
     - linop package: api_ref/linop.md

@@ -1,28 +1,47 @@
-[tool.poetry]
-name = "brahmap"
-version = "0.1.0"
-description = "An optimal map-making package for LiteBIRD"
-authors = ["Avinash Anand <36325275+anand-avinash@users.noreply.github.com>", "Giuseppe Puglisi"]
-readme = "README.md"
-repository = "https://github.com/anand-avinash/BrahMap"
-
-[tool.poetry.dependencies]
-# Dependencies are constraint by <https://github.com/litebird/litebird_sim/>
-python = ">=3.9,<3.13"
-numba = "^0.57.1"
-numpy = "^1.24"
-scipy = "^1.11.3"
-ruff = "^0.1.7"
-pre-commit = "^2.15.0"
-mkdocs = "^1.5.3"
-mkdocstrings = "^0.24.0"
-mkdocstrings-python = "^1.7.5"
-mkdocs-material = "9.5.3"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
 
+[project]
+name = "brahmap"
+version = "0.2.0"
+description = "An scalable map-making package for CMB experiments"
+authors = [
+    { name = "Avinash Anand", email = "avinash.anand@roma2.infn.it" },
+    { name = "Giuseppe Puglisi" },
+]
+keywords = ["brahmap", "cmb", "sky map", "map-maker", "map-making"]
+readme = "README.md"
+requires-python = ">=3.9,<3.13"
+dependencies = [
+    "numpy",
+    "scipy",
+    "krypy",
+    "ruff",
+    "pre-commit",
+    "pytest",
+    "mkdocs",
+    "mkdocstrings",
+    "mkdocstrings-python",
+    "mkdocs-material",
+]
+
+[project.urls]
+Repository = "https://github.com/anand-avinash/BrahMap"
+Documentation = "https://anand-avinash.github.io/BrahMap/"
+Issues = "https://github.com/anand-avinash/BrahMap/issues"
+# Changelog = 
+
+[tool.setuptools]
+packages = ["brahmap"]
+
+[tool.pytest.ini_options]
+norecursedirs = ["extern"]
+# addopts = "-ra -q" # options for pytest
+# testpaths = ["brahmap/tests"] # directory to look for the test functions and modules
+
+[tool.setuptools_scm]
+# Keeping this enables setuptools_scm to keep all the files tracked by git under the package being installed (see `[tool.setuptools]`), to be included in the package. To include or exclude any other file, use MANIFEST.in
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
@@ -30,23 +49,18 @@ build-backend = "poetry.core.masonry.api"
 # McCabe complexity (`C901`) by default.
 select = ["E4", "E7", "E9", "F"]
 # ignore = ["E741", "E731", ]
-
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
 quote-style = "double"
-
 # Like Black, indent with spaces, rather than tabs.
 indent-style = "space"
-
 # Like Black, respect magic trailing commas.
 skip-magic-trailing-comma = false
-
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
