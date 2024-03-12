@@ -16,6 +16,7 @@ requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy",
     "scipy",
+    "healpy",
     "krypy",
     "ruff",
     "pre-commit",
@@ -32,8 +33,10 @@ Documentation = "https://anand-avinash.github.io/BrahMap/"
 Issues = "https://github.com/anand-avinash/BrahMap/issues"
 # Changelog = 
 
-[tool.setuptools]
-packages = ["brahmap"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["brahmap*"]
+namespaces = false
 
 [tool.pytest.ini_options]
 norecursedirs = ["extern"]

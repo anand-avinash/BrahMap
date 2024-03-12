@@ -23,7 +23,7 @@ for a completer reference to `BrahMap` API.
 
 ```shell
 # Clone the repository
-git clone https://github.com/anand-avinash/BrahMap.git
+git clone --recursive https://github.com/anand-avinash/BrahMap.git
 
 cd BrahMap
 

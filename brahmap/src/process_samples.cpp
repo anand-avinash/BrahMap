@@ -209,19 +209,19 @@ get_mask_pol(int pol, py::array_t<dtype_float> counts,
 
 PYBIND11_MODULE(process_samples, m) {
   m.doc() = "process_samples";
-  m.def("py_process_pol1", &process_pol1<int32_t, _Float32>, "test");
-  m.def("py_process_pol1", &process_pol1<int32_t, _Float64>, "test");
-  m.def("py_process_pol1", &process_pol1<int64_t, _Float32>, "test");
-  m.def("py_process_pol1", &process_pol1<int64_t, _Float64>, "test");
-  m.def("py_process_pol2", &process_pol2<int32_t, _Float32>, "test");
-  m.def("py_process_pol2", &process_pol2<int32_t, _Float64>, "test");
-  m.def("py_process_pol2", &process_pol2<int64_t, _Float32>, "test");
-  m.def("py_process_pol2", &process_pol2<int64_t, _Float64>, "test");
+  m.def("py_process_pol1", &process_pol1<int32_t, float>, "test");
+  m.def("py_process_pol1", &process_pol1<int32_t, double>, "test");
+  m.def("py_process_pol1", &process_pol1<int64_t, float>, "test");
+  m.def("py_process_pol1", &process_pol1<int64_t, double>, "test");
+  m.def("py_process_pol2", &process_pol2<int32_t, float>, "test");
+  m.def("py_process_pol2", &process_pol2<int32_t, double>, "test");
+  m.def("py_process_pol2", &process_pol2<int64_t, float>, "test");
+  m.def("py_process_pol2", &process_pol2<int64_t, double>, "test");
   // m.def("py_process_pol3", &process_pol3, "test");
-  m.def("py_process_pol3", &process_pol3<int32_t, _Float32>, "test");
-  m.def("py_process_pol3", &process_pol3<int32_t, _Float64>, "test");
-  m.def("py_process_pol3", &process_pol3<int64_t, _Float32>, "test");
-  m.def("py_process_pol3", &process_pol3<int64_t, _Float64>, "test");
-  m.def("py_get_mask_pol", &get_mask_pol<_Float32>, "test");
-  m.def("py_get_mask_pol", &get_mask_pol<_Float64>, "test");
+  m.def("py_process_pol3", &process_pol3<int32_t, float>, "test");
+  m.def("py_process_pol3", &process_pol3<int32_t, double>, "test");
+  m.def("py_process_pol3", &process_pol3<int64_t, float>, "test");
+  m.def("py_process_pol3", &process_pol3<int64_t, double>, "test");
+  m.def("py_get_mask_pol", &get_mask_pol<float>, "test");
+  m.def("py_get_mask_pol", &get_mask_pol<double>, "test");
 }

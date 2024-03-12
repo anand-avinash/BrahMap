@@ -1,1 +1,5 @@
 recursive-include extern *
+recursive-include tests *
+global-exclude */__pycache__/*
+global-exclude *.pyc
+global-exclude */.pytest_cache/*

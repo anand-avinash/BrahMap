@@ -1,0 +1,42 @@
+### Running pytest
+
+# setting up testing: <https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#testing-your-code>
+# setting up compiler: <https://github.com/marketplace/actions/setup-c-c-compiler>
+
+name: BrahMap testing
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: gcc-10
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install BrahMap
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+      - name: Test BrahMap with pytest
+        run: |
+          pytest
