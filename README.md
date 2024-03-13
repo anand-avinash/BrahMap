@@ -1,8 +1,13 @@
 # BrahMap
 
+<!-- markdownlint-disable MD013 -->
+![BrahMap testsuite](https://github.com/anand-avinash/BrahMap/actions/workflows/tests.yaml/badge.svg)
+![BrahMap documentation build status](https://github.com/anand-avinash/BrahMap/actions/workflows/documentation.yaml/badge.svg)
+<!-- markdownlint-enable MD013 -->
+
 <!-- markdownlint-disable MD033 -->
 <font color="red"> **This project is currently under active development!!!** </font>
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-enable MD033 -->
 
 `BrahMap` is an optimal map-making framework for the future CMB experiments,
 based on [COSMOMAP2](https://github.com/giuspugl/COSMOMAP2), as described in

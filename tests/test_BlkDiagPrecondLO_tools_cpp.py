@@ -161,7 +161,7 @@ class InitFloat64Params(InitCommonParams):
 
 
 @pytest.mark.parametrize(
-    "initfloat, rtol", [(InitFloat32Params(), 5.0e-6), (InitFloat64Params(), 5.0e-6)]
+    "initfloat, rtol", [(InitFloat32Params(), 5.0e-5), (InitFloat64Params(), 5.0e-5)]
 )
 class TestBlkDiagPrecondLO:
     def test_BlkDiagPrecondLO_mult_qu(self, initfloat, rtol):

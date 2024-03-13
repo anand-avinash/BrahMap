@@ -14,7 +14,7 @@ ext1 = Extension(
     define_macros=None,
     extra_compile_args=[
         "-O3",
-        "-march=native",
+        # "-march=native",
         "-Wall",
         "-shared",
         "-std=c++14",
@@ -33,7 +33,7 @@ ext2 = Extension(
     define_macros=None,
     extra_compile_args=[
         "-O3",
-        "-march=native",
+        # "-march=native",
         "-Wall",
         "-shared",
         "-std=c++14",
@@ -51,7 +51,7 @@ ext3 = Extension(
     define_macros=None,
     extra_compile_args=[
         "-O3",
-        "-march=native",
+        # "-march=native",
         "-Wall",
         "-shared",
         "-std=c++14",
@@ -69,7 +69,7 @@ ext4 = Extension(
     define_macros=None,
     extra_compile_args=[
         "-O3",
-        "-march=native",
+        # "-march=native",
         "-Wall",
         "-shared",
         "-std=c++14",

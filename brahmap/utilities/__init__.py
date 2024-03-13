@@ -24,11 +24,14 @@ from importlib.util import find_spec
 
 # suggestion taken from: <https://docs.astral.sh/ruff/rules/unused-import/>
 if find_spec("litebird_sim") is not None:
-    import_str = "lbs_process_timesamples"
-else:
-    import_str = None
+    from .lbsim_interface import lbs_process_timesamples
 
-__all__ = [
+    __all__ = ["lbs_process_timesamples"]
+
+else:
+    __all__ = []
+
+__all__ = __all__ + [
     "is_sorted",
     "bash_colors",
     "filter_warnings",
@@ -42,5 +45,4 @@ __all__ = [
     "subscan_resize",
     "system_setup",
     "ProcessTimeSamples",
-    import_str,
 ]

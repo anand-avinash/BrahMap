@@ -1,6 +1,6 @@
 ### Taken from <https://squidfunk.github.io/mkdocs-material/publishing-your-site/#with-github-actions>
 
-name: documentation 
+name: Documentation 
 on:
   push:
     branches:
@@ -26,5 +26,7 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
+      # The line below is to enable the docstring for the lbsim_interface.py
+      - run: pip install --no-deps litebird_sim
       - run: pip install mkdocs-material mkdocstrings[python]
       - run: mkdocs gh-deploy --force
