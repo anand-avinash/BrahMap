@@ -6,11 +6,11 @@ import helper_SparseLO as hs
 
 
 class InitCommonParams:
-    np.random.seed(123454321)
+    np.random.seed(1234321)
     oldnpix = 128
     nsamples = oldnpix * 10
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     nrows = nsamples
     ncols = oldnpix

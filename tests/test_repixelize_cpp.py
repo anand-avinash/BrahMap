@@ -12,7 +12,7 @@ class TestRepixelization:
     nsamples = oldnpix * 10
     w = np.random.random(size=nsamples)
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     phi = np.random.uniform(low=-np.pi / 2.0, high=np.pi / 2.0, size=nsamples)
     obspix = np.arange(nsamples)

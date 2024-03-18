@@ -12,7 +12,7 @@ class InitCommonParams:
     oldnpix = 128
     nsamples = oldnpix * 10
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     obspix = np.arange(nsamples)
     threshold = 1.0e3

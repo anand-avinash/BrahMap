@@ -22,44 +22,49 @@ site_description: >-
 # Repository
 repo_name: anand-avinash/BrahMap
 repo_url: https://github.com/anand-avinash/BrahMap
+edit_uri: edit/main/docs/
 
 # Copyright
 copyright: Copyright &copy; 2024 Avinash Anand, Giuseppe Puglisi
 
 theme:
   name: "material"
+  icon:
+    repo: fontawesome/brands/github
   features:
     - content.code.copy
+    - search.suggest # search suggestion
+    - search.highlight # highlight the search terms
     - navigation.top
     - navigation.tabs
     - navigation.expand
-    - search.suggest
-    - search.highlight
     - navigation.footer
     - navigation.path
+    - navigation.top # Back to top button
     - toc.follow
-    - navigation.top
+    - content.action.view # view source of this page
+    - content.action.edit # edit source of this page, related to `edit_uri`
     # - navigation.sections
-    # - navigation.tracking
+    # - navigation.tracking # to track the address of the page with the active anchor
     # - header.autohide
   palette:
-    - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/link
-        name: Switch to light mode
+    # - media: "(prefers-color-scheme)"
+    #   toggle:
+    #     icon: material/link
+    #     name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
+      primary: black
       accent: indigo
       toggle:
-        icon: material/toggle-switch
+        icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: black
       accent: indigo
       toggle:
-        icon: material/toggle-switch-off
+        icon: material/brightness-4
         name: Switch to system preference
 
 
@@ -93,8 +98,7 @@ plugins:
       #   python:
       #     options:
       #       docstring_style: google
-  ### Enable search
-  - search
+  - search # Enable search
 
 ### Page tree
 nav:

@@ -18,7 +18,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
         with:
           submodules: true
       # - name: Install compiler
@@ -27,7 +27,7 @@ jobs:
       #   with:
       #     compiler: gcc-10 # This compiler has been failing with (macos-latest, 3.11/3.12)
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install BrahMap

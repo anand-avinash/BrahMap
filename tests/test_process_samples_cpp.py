@@ -10,7 +10,7 @@ class TestInitializeWeights_float32:
     nsamples = oldnpix * 10
     w = np.random.random(size=nsamples).astype(dtype=np.float32)
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     phi = np.random.uniform(low=-np.pi / 2.0, high=np.pi / 2.0, size=nsamples).astype(
         dtype=np.float32
@@ -108,7 +108,7 @@ class TestInitializeWeights_float64:
     nsamples = oldnpix * 10
     w = np.random.random(size=nsamples).astype(dtype=np.float64)
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     phi = np.random.uniform(low=-np.pi / 2.0, high=np.pi / 2.0, size=nsamples).astype(
         dtype=np.float64
@@ -203,7 +203,7 @@ class TestGetMaskPol:
     nsamples = oldnpix * 10
     w = np.random.random(size=nsamples)
     pixs = np.random.randint(low=0, high=oldnpix, size=nsamples)
-    badpixs = np.random.randint(low=0, high=oldnpix, size=10)
+    badpixs = np.random.randint(low=0, high=nsamples, size=100)
     pixs[badpixs] = -1
     phi = np.random.uniform(low=-np.pi / 2.0, high=np.pi / 2.0, size=nsamples)
     threshold = 1.0e3
