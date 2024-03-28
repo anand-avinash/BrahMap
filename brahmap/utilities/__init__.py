@@ -18,7 +18,7 @@ from .utilities_functions import (
     system_setup,
 )
 
-from .process_ces import ProcessTimeSamples
+from .process_time_samples import ProcessTimeSamples, SolverType
 
 from importlib.util import find_spec
 
@@ -45,4 +45,5 @@ __all__ = __all__ + [
     "subscan_resize",
     "system_setup",
     "ProcessTimeSamples",
+    "SolverType",
 ]

@@ -298,7 +298,7 @@ class BlockDiagonalLO(lp.LinearOperator):
         computation with  the same matrices.
     """
 
-    def __init__(self, CES, n, pol=1):
+    def __init__(self, processed_samples, n, pol=1):
         self.size = pol * n
         self.pol = pol
         super(BlockDiagonalLO, self).__init__(
@@ -306,15 +306,15 @@ class BlockDiagonalLO(lp.LinearOperator):
         )
         self.pixels = np.arange(n)
         if pol == 1:
-            self.counts = CES.counts
+            self.counts = processed_samples.weighted_counts
         elif pol > 1:
-            self.sin2 = CES.sin2
-            self.sincos = CES.sincos
-            self.cos2 = CES.cos2
+            self.sin2 = processed_samples.weighted_sin_sq
+            self.sincos = processed_samples.weighted_sincos
+            self.cos2 = processed_samples.weighted_cos_sq
             if pol == 3:
-                self.counts = CES.counts
-                self.cos = CES.cosine
-                self.sin = CES.sine
+                self.counts = processed_samples.weighted_counts
+                self.cos = processed_samples.weighted_cos
+                self.sin = processed_samples.weighted_sin
 
     def mult(self, x):
         r"""
@@ -405,20 +405,20 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
         return y
 
-    def __init__(self, CES, n, pol=1):
+    def __init__(self, processed_samples, n, pol=1):
         self.size = pol * n
         self.pixels = np.arange(n)
         self.pol = pol
         if pol == 1:
-            self.counts = CES.counts
+            self.counts = processed_samples.weighted_counts
         elif pol > 1:
-            self.sin2 = CES.sin2
-            self.cos2 = CES.cos2
-            self.sincos = CES.sincos
+            self.sin2 = processed_samples.weighted_sin_sq
+            self.cos2 = processed_samples.weighted_cos_sq
+            self.sincos = processed_samples.weighted_sincos
             if pol == 3:
-                self.counts = CES.counts
-                self.cosine = CES.cosine
-                self.sine = CES.sine
+                self.counts = processed_samples.weighted_counts
+                self.cosine = processed_samples.weighted_cos
+                self.sine = processed_samples.weighted_sin
 
         super(BlockDiagonalPreconditionerLO, self).__init__(
             nargin=self.size, nargout=self.size, matvec=self.mult, symmetric=True

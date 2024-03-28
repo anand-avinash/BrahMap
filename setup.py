@@ -4,9 +4,9 @@ from setuptools import Extension, setup
 # g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 --includes) example9.cpp -o example9$(python3-config --extension-suffix)
 
 ext1 = Extension(
-    "process_samples",
+    "compute_weights",
     language="c++",
-    sources=[os.path.join("brahmap", "src", "process_samples.cpp")],
+    sources=[os.path.join("brahmap", "src", "compute_weights.cpp")],
     include_dirs=[
         os.path.join("brahmap", "src"),
         os.path.join("extern", "pybind11", "include"),
@@ -17,15 +17,16 @@ ext1 = Extension(
         # "-march=native",
         "-Wall",
         "-shared",
-        "-std=c++14",
+        "-std=c++20",
         "-fPIC",
+        "-fvisibility=hidden",
         "-lm",
     ],
 )
 
 ext2 = Extension(
     "repixelize",
-    sources=[os.path.join("brahmap", "src", "repixelize.cpp")],
+    sources=[os.path.join("brahmap", "src", "repixelization.cpp")],
     include_dirs=[
         os.path.join("brahmap", "src"),
         os.path.join("extern", "pybind11", "include"),
@@ -36,8 +37,9 @@ ext2 = Extension(
         # "-march=native",
         "-Wall",
         "-shared",
-        "-std=c++14",
+        "-std=c++20",
         "-fPIC",
+        "-fvisibility=hidden",
     ],
 )
 
@@ -54,8 +56,9 @@ ext3 = Extension(
         # "-march=native",
         "-Wall",
         "-shared",
-        "-std=c++14",
+        "-std=c++20",
         "-fPIC",
+        "-fvisibility=hidden",
     ],
 )
 
@@ -72,8 +75,9 @@ ext4 = Extension(
         # "-march=native",
         "-Wall",
         "-shared",
-        "-std=c++14",
+        "-std=c++20",
         "-fPIC",
+        "-fvisibility=hidden",
     ],
 )
 

@@ -2,17 +2,17 @@ import numpy as np
 import healpy as hp
 import litebird_sim as lbs
 
-from .process_ces import ProcessTimeSamples
+from .process_time_samples import ProcessTimeSamples, SolverType
 
 
 def lbs_process_timesamples(
     nside: int,
     pointings: np.ndarray,
-    pol_angles: np.ndarray,
-    pol_idx: int = 3,
-    w: np.ndarray = None,
+    pointings_flag: np.ndarray = None,
+    solver_type: SolverType = SolverType.IQU,
+    pol_angles: np.ndarray = None,
+    noise_weights: np.ndarray = None,
     threshold_cond: float = 1.0e3,
-    obspix: np.ndarray = None,
     galactic_coords: bool = True,
 ):
     """This function accepts the pointing and polarization angle arrays from `litebird_sim`, rotates them from elliptic to galactic coordinate system, generates the pixel indices of the pointings and then passes them to :func:`ProcessTimeSamples`.
@@ -41,11 +41,11 @@ def lbs_process_timesamples(
     pointings = hp.ang2pix(nside, pointings[:, 0], pointings[:, 1])
 
     return pointings, ProcessTimeSamples(
-        pixs=pointings.copy(),
         npix=hp.nside2npix(nside),
-        obspix=obspix,
-        pol=pol_idx,
-        phi=pol_angles,
-        w=w,
+        pointings=pointings,
+        pointings_flag=pointings_flag,
+        solver_type=solver_type,
+        pol_angles=pol_angles,
+        noise_weights=noise_weights,
         threshold_cond=threshold_cond,
     )
