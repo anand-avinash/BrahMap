@@ -76,8 +76,8 @@ class TestProcessTimeSamples(InitCommonParams):
 
         cpp_PTS = bmutils.ProcessTimeSamples(
             npix=self.npix,
-            pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings=initint.pointings.copy(),
+            pointings_flag=self.pointings_flag.copy(),
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -85,18 +85,23 @@ class TestProcessTimeSamples(InitCommonParams):
 
         py_PTS = hpts.ProcessTimeSamples(
             npix=self.npix,
-            pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings=initint.pointings.copy(),
+            pointings_flag=self.pointings_flag.copy(),
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
         )
 
+        # The following two assertions are to make sure that we don't change the
+        # `pointings` and `pointings_flag` arrays in-place within `ProcessTimeSamples`.
+        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(
             cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
         )
+        np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
 
     def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
@@ -121,6 +126,8 @@ class TestProcessTimeSamples(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
+        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
@@ -137,6 +144,7 @@ class TestProcessTimeSamples(InitCommonParams):
         np.testing.assert_allclose(
             cpp_PTS.weighted_sincos, py_PTS.weighted_sincos, rtol=rtol
         )
+        np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
 
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
@@ -161,6 +169,8 @@ class TestProcessTimeSamples(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
+        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
@@ -179,6 +189,7 @@ class TestProcessTimeSamples(InitCommonParams):
         )
         np.testing.assert_allclose(cpp_PTS.weighted_sin, py_PTS.weighted_sin, rtol=rtol)
         np.testing.assert_allclose(cpp_PTS.weighted_cos, py_PTS.weighted_cos, rtol=rtol)
+        np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,10 @@
 from enum import IntEnum
 import numpy as np
+import warnings
 
 import compute_weights
 import repixelize
+from .tools import TypeChangeWarning
 
 
 class SolverType(IntEnum):
@@ -42,6 +44,11 @@ class ProcessTimeSamples(object):
 
         self.solver_type = solver_type
 
+        if self.solver_type not in [1, 2, 3]:
+            raise ValueError(
+                "Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3)."
+            )
+
         if self.solver_type != 1:
             if len(pol_angles) != self.nsamples:
                 raise AssertionError(
@@ -58,9 +65,16 @@ class ProcessTimeSamples(object):
 
         self.threshold = threshold_cond
 
+        if noise_weights.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `noise_weights` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            noise_weights = noise_weights.astype(dtype=self.dtype_float)
+
         self._compute_weights(
             pol_angles,
-            noise_weights.astype(dtype=self.dtype_float),
+            noise_weights,
         )
 
         self._repixelization()
@@ -69,7 +83,7 @@ class ProcessTimeSamples(object):
         """Returns hit counts of the pixel indices"""
         pass
 
-    def _compute_weights(self, pol_angles, noise_weights):
+    def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
         self.pixel_mask = np.zeros(self.npix, dtype=self.pointings.dtype)
 
@@ -85,7 +99,12 @@ class ProcessTimeSamples(object):
             )
 
         else:
-            pol_angles = pol_angles.astype(dtype=self.dtype_float)
+            if pol_angles.dtype != self.dtype_float:
+                warnings.warn(
+                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
+                pol_angles = pol_angles.astype(dtype=self.dtype_float)
 
             self.sin2phi = np.zeros(self.nsamples, dtype=self.dtype_float)
             self.cos2phi = np.zeros(self.nsamples, dtype=self.dtype_float)
@@ -185,3 +204,7 @@ class ProcessTimeSamples(object):
             self.weighted_sincos.resize(self.new_npix, refcheck=False)
             self.weighted_sin.resize(self.new_npix, refcheck=False)
             self.weighted_cos.resize(self.new_npix, refcheck=False)
+
+        self.pixel_flag = np.zeros(self.npix, dtype=bool)
+        for pixel in self.pixel_mask:
+            self.pixel_flag[pixel] = True

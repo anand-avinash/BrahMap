@@ -1,5 +1,5 @@
 from .linearoperators import (
-    SparseLO,
+    PointingLO,
     ToeplitzLO,
     BlockLO,
     BlockDiagonalLO,
@@ -8,7 +8,7 @@ from .linearoperators import (
 )
 
 __all__ = [
-    "SparseLO",
+    "PointingLO",
     "ToeplitzLO",
     "BlockLO",
     "BlockDiagonalLO",

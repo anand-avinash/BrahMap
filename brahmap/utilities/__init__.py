@@ -18,6 +18,8 @@ from .utilities_functions import (
     system_setup,
 )
 
+from .tools import TypeChangeWarning
+
 from .process_time_samples import ProcessTimeSamples, SolverType
 
 from importlib.util import find_spec
@@ -46,4 +48,5 @@ __all__ = __all__ + [
     "system_setup",
     "ProcessTimeSamples",
     "SolverType",
+    "TypeChangeWarning",
 ]

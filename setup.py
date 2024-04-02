@@ -44,8 +44,8 @@ ext2 = Extension(
 )
 
 ext3 = Extension(
-    "SparseLO_tools",
-    sources=[os.path.join("brahmap", "src", "SparseLO_tools.cpp")],
+    "PointingLO_tools",
+    sources=[os.path.join("brahmap", "src", "PointingLO_tools.cpp")],
     include_dirs=[
         os.path.join("brahmap", "src"),
         os.path.join("extern", "pybind11", "include"),

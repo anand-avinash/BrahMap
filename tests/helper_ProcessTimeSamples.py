@@ -159,3 +159,7 @@ class ProcessTimeSamples(object):
                 weighted_sin=self.weighted_sin,
                 weighted_cos=self.weighted_cos,
             )
+
+        self.pixel_flag = np.zeros(self.npix, dtype=bool)
+        for pixel in self.pixel_mask:
+            self.pixel_flag[pixel] = True

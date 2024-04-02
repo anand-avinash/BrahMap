@@ -42,7 +42,6 @@ null_log.addHandler(logging.NullHandler())
 
 
 class BaseLinearOperator(object):
-
     """
     Base class defining the common interface shared by all linear operators.
 
@@ -58,7 +57,7 @@ class BaseLinearOperator(object):
 
     """
 
-    def __init__(self, nargin, nargout, symmetric=False, **kwargs):
+    def __init__(self, nargin, nargout, symmetric: bool = False, **kwargs):
         self.__nargin = nargin
         self.__nargout = nargout
         self.__symmetric = symmetric
@@ -82,7 +81,7 @@ class BaseLinearOperator(object):
         return self.__nargout
 
     @property
-    def symmetric(self):
+    def symmetric(self) -> bool:
         """Indicate whether the operator is symmetric or not."""
         return self.__symmetric
 
@@ -128,7 +127,6 @@ class BaseLinearOperator(object):
 
 
 class LinearOperator(BaseLinearOperator):
-
     """
     Generic linear operator class.
 
@@ -361,7 +359,6 @@ class LinearOperator(BaseLinearOperator):
 
 
 class IdentityOperator(LinearOperator):
-
     """Class representing the identity operator of size `nargin`."""
 
     def __init__(self, nargin, **kwargs):
@@ -376,7 +373,6 @@ class IdentityOperator(LinearOperator):
 
 
 class DiagonalOperator(LinearOperator):
-
     """
     Class representing a diagonal operator.
 
@@ -410,7 +406,6 @@ class DiagonalOperator(LinearOperator):
 
 
 class MatrixLinearOperator(LinearOperator):
-
     """
     Class representing a matrix operator.
 
@@ -463,7 +458,6 @@ class MatrixLinearOperator(LinearOperator):
 
 
 class ZeroOperator(LinearOperator):
-
     """Class representing the zero operator of shape `nargout`-by-`nargin`."""
 
     def __init__(self, nargin, nargout, **kwargs):
@@ -550,7 +544,6 @@ def SymmetricallyReducedLinearOperator(op, indices):
 
 
 class ShapeError(Exception):
-
     """
     Exception class for handling shape mismatch errors.
 
