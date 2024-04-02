@@ -15,13 +15,17 @@ void mult_I(                    //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
     // Here  we are multiplying `pixflag` to the pointings to prevent out of
     // range errors. Note that `pointings` array contains pathological pixels as
     // well. We don't want to look for them. While `pointings` array contains
     // number from 0 to `npix`, the size of `vec` array is only `new_npix`. The
     // same is applicable in all the functions in this file.
-    dint pixel = pixflag * pointings[idx];
+    pixel *= pixflag;
+
     // Multiplying `pixflag` with `pointings_flag` just flags the pointing
     // samples corresponding to the pathological pixel.
     bool pointflag = pixflag && pointings_flag[idx];
@@ -44,10 +48,13 @@ void rmult_I(                   //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
     // Note that the size of `prod` vector is `new_npix` whereas `pointings`
     // array contains numbers from 0 to `npix`.
-    dint pixel = pixflag * pointings[idx];
+    pixel *= pixflag;
     bool pointflag = pixflag && pointings_flag[idx];
 
     prod[pixel] += pointflag * vec[idx];
@@ -70,8 +77,11 @@ void mult_QU(                   //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
-    dint pixel = pixflag * pointings[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
+    pixel *= pixflag;
     bool pointflag = pixflag && pointings_flag[idx];
 
     prod[idx] += pointflag * (vec[2 * pixel] * cos2phi[idx] +
@@ -94,8 +104,11 @@ void rmult_QU(                  //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
-    dint pixel = pixflag * pointings[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
+    pixel *= pixflag;
     bool pointflag = pixflag && pointings_flag[idx];
 
     prod[2 * pixel] += pointflag * vec[idx] * cos2phi[idx];
@@ -118,8 +131,11 @@ void mult_IQU(                  //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
-    dint pixel = pixflag * pointings[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
+    pixel *= pixflag;
     bool pointflag = pixflag && pointings_flag[idx];
 
     prod[idx] +=
@@ -143,8 +159,11 @@ void rmult_IQU(                 //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    bool pixflag = pixel_flag[idx];
-    dint pixel = pixflag * pointings[idx];
+
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+
+    pixel *= pixflag;
     bool pointflag = pixflag && pointings_flag[idx];
 
     prod[3 * pixel] += pointflag * vec[idx];
