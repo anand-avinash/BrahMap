@@ -11,7 +11,7 @@ class InitCommonParams:
     nsamples = npix * 10
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=100)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=200)
     pointings_flag[bad_samples] = False
 
 
@@ -102,6 +102,7 @@ class TestProcessTimeSamples(InitCommonParams):
             cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
         )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
+        np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
     def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
@@ -145,6 +146,7 @@ class TestProcessTimeSamples(InitCommonParams):
             cpp_PTS.weighted_sincos, py_PTS.weighted_sincos, rtol=rtol
         )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
+        np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
@@ -190,6 +192,7 @@ class TestProcessTimeSamples(InitCommonParams):
         np.testing.assert_allclose(cpp_PTS.weighted_sin, py_PTS.weighted_sin, rtol=rtol)
         np.testing.assert_allclose(cpp_PTS.weighted_cos, py_PTS.weighted_cos, rtol=rtol)
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
+        np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
 
 if __name__ == "__main__":

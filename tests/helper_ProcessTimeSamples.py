@@ -53,12 +53,24 @@ class ProcessTimeSamples(object):
         """Returns hit counts of the pixel indices"""
         pass
 
+    @property
+    def old2new_pixel(self):
+        old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
+        for idx, flag in enumerate(self.pixel_flag):
+            if flag:
+                old2new_pixel[idx] = self.__old2new_pixel[idx]
+            else:
+                old2new_pixel[idx] = -1
+        return old2new_pixel
+
     def _compute_weights(self, pol_angles, noise_weights):
         if self.solver_type == SolverType.I:
             (
                 self.new_npix,
                 self.weighted_counts,
                 self.pixel_mask,
+                self.__old2new_pixel,
+                self.pixel_flag,
             ) = cw.computeweights_pol_I(
                 npix=self.npix,
                 nsamples=self.nsamples,
@@ -109,13 +121,20 @@ class ProcessTimeSamples(object):
                     dtype_float=self.dtype_float,
                 )
 
-            self.new_npix, self.pixel_mask = cw.get_pix_mask_pol(
+            (
+                self.new_npix,
+                self.pixel_mask,
+                self.__old2new_pixel,
+                self.pixel_flag,
+            ) = cw.get_pix_mask_pol(
+                npix=self.npix,
                 solver_type=self.solver_type,
                 threshold=self.threshold,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
                 weighted_sincos=self.weighted_sincos,
+                dtype_int=self.pointings.dtype,
             )
 
     def _repixelization(self):
@@ -159,7 +178,3 @@ class ProcessTimeSamples(object):
                 weighted_sin=self.weighted_sin,
                 weighted_cos=self.weighted_cos,
             )
-
-        self.pixel_flag = np.zeros(self.npix, dtype=bool)
-        for pixel in self.pixel_mask:
-            self.pixel_flag[pixel] = True

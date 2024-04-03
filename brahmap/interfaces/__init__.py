@@ -2,7 +2,7 @@ from .linearoperators import (
     PointingLO,
     ToeplitzLO,
     BlockLO,
-    BlockDiagonalLO,
+    # BlockDiagonalLO,
     BlockDiagonalPreconditionerLO,
     InverseLO,
 )
@@ -11,7 +11,7 @@ __all__ = [
     "PointingLO",
     "ToeplitzLO",
     "BlockLO",
-    "BlockDiagonalLO",
+    # "BlockDiagonalLO",
     "BlockDiagonalPreconditionerLO",
     "InverseLO",
 ]

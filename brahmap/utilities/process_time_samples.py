@@ -83,9 +83,21 @@ class ProcessTimeSamples(object):
         """Returns hit counts of the pixel indices"""
         pass
 
+    @property
+    def old2new_pixel(self):
+        old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
+        for idx, flag in enumerate(self.pixel_flag):
+            if flag:
+                old2new_pixel[idx] = self.__old2new_pixel[idx]
+            else:
+                old2new_pixel[idx] = -1
+        return old2new_pixel
+
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
         self.pixel_mask = np.zeros(self.npix, dtype=self.pointings.dtype)
+        self.__old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
+        self.pixel_flag = np.zeros(self.npix, dtype=bool)
 
         if self.solver_type == SolverType.I:
             self.new_npix = compute_weights.compute_weights_pol_I(
@@ -96,6 +108,8 @@ class ProcessTimeSamples(object):
                 noise_weights=noise_weights,
                 weighted_counts=self.weighted_counts,
                 pixel_mask=self.pixel_mask,
+                __old2new_pixel=self.__old2new_pixel,
+                pixel_flag=self.pixel_flag,
             )
 
         else:
@@ -157,6 +171,8 @@ class ProcessTimeSamples(object):
                 weighted_cos_sq=self.weighted_cos_sq,
                 weighted_sincos=self.weighted_sincos,
                 pixel_mask=self.pixel_mask,
+                __old2new_pixel=self.__old2new_pixel,
+                pixel_flag=self.pixel_flag,
             )
 
         self.pixel_mask.resize(self.new_npix, refcheck=False)
@@ -205,6 +221,6 @@ class ProcessTimeSamples(object):
             self.weighted_sin.resize(self.new_npix, refcheck=False)
             self.weighted_cos.resize(self.new_npix, refcheck=False)
 
-        self.pixel_flag = np.zeros(self.npix, dtype=bool)
-        for pixel in self.pixel_mask:
-            self.pixel_flag[pixel] = True
+        # self.pixel_flag = np.zeros(self.npix, dtype=bool)
+        # for pixel in self.pixel_mask:
+        #     self.pixel_flag[pixel] = True

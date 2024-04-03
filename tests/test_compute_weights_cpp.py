@@ -11,7 +11,7 @@ class InitCommonParams:
     nsamples = npix * 10
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=100)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=200)
     pointings_flag[bad_samples] = False
 
 
@@ -74,6 +74,8 @@ class TestComputeWeights(InitCommonParams):
     def test_compute_weights_pol_I(self, initint, initfloat, rtol):
         cpp_weighted_counts = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_pixel_mask = np.zeros(self.npix, dtype=initint.dtype)
+        cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
+        cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
 
         cpp_new_npix = compute_weights.compute_weights_pol_I(
             self.npix,
@@ -83,9 +85,17 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             cpp_weighted_counts,
             cpp_pixel_mask,
+            cpp_old2new_pixel,
+            cpp_pixel_flag,
         )
 
-        py_new_npix, py_weighted_counts, py_pixel_mask = cw.computeweights_pol_I(
+        (
+            py_new_npix,
+            py_weighted_counts,
+            py_pixel_mask,
+            py_old2new_pixel,
+            py_pixel_flag,
+        ) = cw.computeweights_pol_I(
             self.npix,
             self.nsamples,
             initint.pointings,
@@ -97,6 +107,8 @@ class TestComputeWeights(InitCommonParams):
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
         np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
         np.testing.assert_array_equal(cpp_pixel_mask, py_pixel_mask)
+        np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
+        np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
     def test_compute_weights_pol_QU(self, initint, initfloat, rtol):
         cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
@@ -219,6 +231,8 @@ class TestComputeWeights(InitCommonParams):
         )
 
         cpp_pixel_mask = np.zeros(self.npix, initint.dtype)
+        cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
+        cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
 
         cpp_new_npix = compute_weights.get_pixel_mask_pol(
             2,
@@ -229,16 +243,32 @@ class TestComputeWeights(InitCommonParams):
             weighted_cos_sq,
             weighted_sincos,
             cpp_pixel_mask,
+            cpp_old2new_pixel,
+            cpp_pixel_flag,
         )
 
         cpp_pixel_mask.resize(cpp_new_npix, refcheck=False)
 
-        py_new_npix, py_pixel_mask = cw.get_pix_mask_pol(
-            2, 1.0e3, weighted_counts, weighted_sin_sq, weighted_cos_sq, weighted_sincos
+        (
+            py_new_npix,
+            py_pixel_mask,
+            py_old2new_pixel,
+            py_pixel_flag,
+        ) = cw.get_pix_mask_pol(
+            self.npix,
+            2,
+            1.0e3,
+            weighted_counts,
+            weighted_sin_sq,
+            weighted_cos_sq,
+            weighted_sincos,
+            dtype_int=initint.dtype,
         )
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
         np.testing.assert_array_equal(cpp_pixel_mask, py_pixel_mask)
+        np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
+        np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
     def test_get_pix_mask_pol_IQU(self, initint, initfloat, rtol):
         (
@@ -261,6 +291,8 @@ class TestComputeWeights(InitCommonParams):
         )
 
         cpp_pixel_mask = np.zeros(self.npix, initint.dtype)
+        cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
+        cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
 
         cpp_new_npix = compute_weights.get_pixel_mask_pol(
             3,
@@ -271,16 +303,32 @@ class TestComputeWeights(InitCommonParams):
             weighted_cos_sq,
             weighted_sincos,
             cpp_pixel_mask,
+            cpp_old2new_pixel,
+            cpp_pixel_flag,
         )
 
         cpp_pixel_mask.resize(cpp_new_npix, refcheck=False)
 
-        py_new_npix, py_pixel_mask = cw.get_pix_mask_pol(
-            3, 1.0e3, weighted_counts, weighted_sin_sq, weighted_cos_sq, weighted_sincos
+        (
+            py_new_npix,
+            py_pixel_mask,
+            py_old2new_pixel,
+            py_pixel_flag,
+        ) = cw.get_pix_mask_pol(
+            self.npix,
+            3,
+            1.0e3,
+            weighted_counts,
+            weighted_sin_sq,
+            weighted_cos_sq,
+            weighted_sincos,
+            dtype_int=initint.dtype,
         )
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
         np.testing.assert_array_equal(cpp_pixel_mask, py_pixel_mask)
+        np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
+        np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
 
 if __name__ == "__main__":

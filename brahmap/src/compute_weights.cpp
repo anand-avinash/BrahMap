@@ -13,7 +13,9 @@ dint compute_weights_pol_I(      //
     const bool *pointings_flag,  //
     const dfloat *noise_weights, //
     dfloat *weighted_counts,     //
-    dint *pixel_mask             //
+    dint *pixel_mask,            //
+    dint *__old2new_pixel,       //
+    bool *pixel_flag             //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
@@ -27,6 +29,8 @@ dint compute_weights_pol_I(      //
   for (ssize_t idx = 0; idx < npix; ++idx) {
     if (weighted_counts[idx] > 0) {
       pixel_mask[new_npix] = idx;
+      __old2new_pixel[idx] = new_npix;
+      pixel_flag[idx] = true;
       ++new_npix;
     } // if
   }   // for
@@ -120,7 +124,9 @@ dint get_pixel_mask_pol(           //
     const dfloat *weighted_sin_sq, //
     const dfloat *weighted_cos_sq, //
     const dfloat *weighted_sincos, //
-    dint *pixel_mask               //
+    dint *pixel_mask,              //
+    dint *__old2new_pixel,         //
+    bool *pixel_flag               //
 ) {
 
   dfloat weight_threshold = (dfloat)(solver_type - 1);
@@ -139,6 +145,8 @@ dint get_pixel_mask_pol(           //
 
     if ((cond_num <= threshold) && (weight > weight_threshold)) {
       pixel_mask[new_npix] = idx;
+      __old2new_pixel[idx] = new_npix;
+      pixel_flag[idx] = true;
       ++new_npix;
     } // if
 
@@ -156,7 +164,9 @@ std::function<dint(                          //
     const py::array_t<bool> pointings_flag,  //
     const py::array_t<dfloat> noise_weights, //
     py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dint> pixel_mask             //
+    py::array_t<dint> pixel_mask,            //
+    py::array_t<dint> __old2new_pixel,       //
+    py::array_t<bool> pixel_flag             //
     )>
     numpy_bind_compute_weights_pol_I =  //
     [](const ssize_t npix,              //
@@ -165,13 +175,17 @@ std::function<dint(                          //
        const py::buffer pointings_flag, //
        const py::buffer noise_weights,  //
        py::buffer weighted_counts,      //
-       py::buffer pixel_mask            //
+       py::buffer pixel_mask,           //
+       py::buffer __old2new_pixel,      //
+       py::buffer pixel_flag            //
        ) -> dint {
   py::buffer_info pointings_info = pointings.request();
   py::buffer_info pointings_flags_info = pointings_flag.request();
   py::buffer_info noise_weights_info = noise_weights.request();
   py::buffer_info weighted_counts_info = weighted_counts.request();
   py::buffer_info pixel_mask_info = pixel_mask.request();
+  py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
+  py::buffer_info pixel_flag_info = pixel_flag.request();
 
   const dint *pointings_ptr =
       reinterpret_cast<const dint *>(pointings_info.ptr);
@@ -182,6 +196,9 @@ std::function<dint(                          //
   dfloat *weighted_counts_ptr =
       reinterpret_cast<dfloat *>(weighted_counts_info.ptr);
   dint *pixel_mask_ptr = reinterpret_cast<dint *>(pixel_mask_info.ptr);
+  dint *__old2new_pixel_ptr =
+      reinterpret_cast<dint *>(__old2new_pixel_info.ptr);
+  bool *pixel_flag_ptr = reinterpret_cast<bool *>(pixel_flag_info.ptr);
 
   dint new_npix = compute_weights_pol_I( //
       npix,                              //
@@ -190,7 +207,9 @@ std::function<dint(                          //
       pointings_flags_ptr,               //
       noise_weights_ptr,                 //
       weighted_counts_ptr,               //
-      pixel_mask_ptr                     //
+      pixel_mask_ptr,                    //
+      __old2new_pixel_ptr,               //
+      pixel_flag_ptr                     //
   );
 
   return new_npix;
@@ -365,7 +384,10 @@ std::function<dint(                            //
     const py::array_t<dfloat> weighted_sin_sq, //
     const py::array_t<dfloat> weighted_cos_sq, //
     const py::array_t<dfloat> weighted_sincos, //
-    py::array_t<dint> pixel_mask               //
+    py::array_t<dint> pixel_mask,              //
+    py::array_t<dint> __old2new_pixel,         //
+    py::array_t<bool> pixel_flag               //
+
     )>
     numpy_bind_get_pixel_mask_pol =      //
     [](const int solver_type,            //
@@ -375,13 +397,17 @@ std::function<dint(                            //
        const py::buffer weighted_sin_sq, //
        const py::buffer weighted_cos_sq, //
        const py::buffer weighted_sincos, //
-       py::buffer pixel_mask             //
+       py::buffer pixel_mask,            //
+       py::buffer __old2new_pixel,       //
+       py::buffer pixel_flag             //
        ) -> dint {
   py::buffer_info weighted_counts_info = weighted_counts.request();
   py::buffer_info weighted_sin_sq_info = weighted_sin_sq.request();
   py::buffer_info weighted_cos_sq_info = weighted_cos_sq.request();
   py::buffer_info weighted_sincos_info = weighted_sincos.request();
   py::buffer_info pixel_mask_info = pixel_mask.request();
+  py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
+  py::buffer_info pixel_flag_info = pixel_flag.request();
 
   const dfloat *weighted_counts_ptr =
       reinterpret_cast<const dfloat *>(weighted_counts_info.ptr);
@@ -392,6 +418,9 @@ std::function<dint(                            //
   const dfloat *weighted_sincos_ptr =
       reinterpret_cast<const dfloat *>(weighted_sincos_info.ptr);
   dint *pixel_mask_ptr = reinterpret_cast<dint *>(pixel_mask_info.ptr);
+  dint *__old2new_pixel_ptr =
+      reinterpret_cast<dint *>(__old2new_pixel_info.ptr);
+  bool *pixel_flag_ptr = reinterpret_cast<bool *>(pixel_flag_info.ptr);
 
   dint new_npix = get_pixel_mask_pol( //
       solver_type,                    //
@@ -401,7 +430,9 @@ std::function<dint(                            //
       weighted_sin_sq_ptr,            //
       weighted_cos_sq_ptr,            //
       weighted_sincos_ptr,            //
-      pixel_mask_ptr                  //
+      pixel_mask_ptr,                 //
+      __old2new_pixel_ptr,            //
+      pixel_flag_ptr                  //
   );
 
   return new_npix;
@@ -417,7 +448,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
         numpy_bind_compute_weights_pol_I<int64_t, float>,
@@ -427,7 +460,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
         numpy_bind_compute_weights_pol_I<int32_t, double>,
@@ -437,7 +472,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
         numpy_bind_compute_weights_pol_I<int64_t, double>,
@@ -447,7 +484,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
 
   m.def("compute_weights_pol_QU",
@@ -586,7 +625,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("weighted_sin_sq").noconvert(), //
         py::arg("weighted_cos_sq").noconvert(), //
         py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, float>,
         py::arg("solver_type"),                 //
@@ -596,7 +637,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("weighted_sin_sq").noconvert(), //
         py::arg("weighted_cos_sq").noconvert(), //
         py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int32_t, double>,
         py::arg("solver_type"),                 //
@@ -606,7 +649,9 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("weighted_sin_sq").noconvert(), //
         py::arg("weighted_cos_sq").noconvert(), //
         py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, double>,
         py::arg("solver_type"),                 //
@@ -616,6 +661,8 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("weighted_sin_sq").noconvert(), //
         py::arg("weighted_cos_sq").noconvert(), //
         py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert()       //
+        py::arg("pixel_mask").noconvert(),      //
+        py::arg("__old2new_pixel").noconvert(), //
+        py::arg("pixel_flag").noconvert()       //
   );
 }
