@@ -14,6 +14,8 @@ void repixelize_pol_I(const ssize_t new_npix, //
     weighted_counts[idx] = weighted_counts[pixel];
   } // for
 
+  return;
+
 } // repixelize_pol_I()
 
 template <typename dint, typename dfloat>
@@ -32,6 +34,8 @@ void repixelize_pol_QU(const ssize_t new_npix,  //
     weighted_cos_sq[idx] = weighted_cos_sq[pixel];
     weighted_sincos[idx] = weighted_sincos[pixel];
   } // for
+
+  return;
 
 } // repixelize_pol_QU()
 
@@ -56,7 +60,27 @@ void repixelize_pol_IQU(const ssize_t new_npix,  //
     weighted_cos[idx] = weighted_cos[pixel];
   } // for
 
+  return;
+
 } // repixelize_pol_IQU()
+
+template <typename dint>
+void flag_bad_pixel_samples(const ssize_t nsamples,    //
+                            const bool *pixel_flag,    //
+                            const dint *old2new_pixel, //
+                            dint *pointings,           //
+                            bool *pointings_flag       //
+) {
+
+  for (ssize_t idx = 0; idx < nsamples; ++idx) {
+    dint pixel = pointings[idx];
+    bool pixflag = pixel_flag[pixel];
+    pointings[idx] = pixflag * old2new_pixel[pixel];
+    pointings_flag[idx] &= pixflag;
+  } // for
+
+  return;
+} //  flag_bad_pixel_samples()
 
 template <typename dint, typename dfloat>
 std::function<void(                     //
@@ -184,6 +208,40 @@ std::function<void(                      //
       );
     }; // numpy_bind_repixelize_pol_IQU()
 
+template <typename dint>
+std::function<void(                        //
+    const ssize_t nsamples,                //
+    const py::array_t<bool> pixel_flag,    //
+    const py::array_t<dint> old2new_pixel, //
+    py::array_t<dint> pointings,           //
+    py::array_t<bool> poitnings_flag       //
+    )>
+    numpy_bind_flag_bad_pixel_samples = //
+    [](const ssize_t nsamples,          //
+       const py::buffer pixel_flag,     //
+       const py::buffer old2new_pixel,  //
+       py::buffer pointings,            //
+       py::buffer pointings_flag        //
+    ) {
+      py::buffer_info pixel_flag_info = pixel_flag.request();
+      py::buffer_info old2new_pixel_info = old2new_pixel.request();
+      py::buffer_info pointings_info = pointings.request();
+      py::buffer_info pointings_flag_info = pointings_flag.request();
+
+      const bool *pixel_flag_ptr =
+          reinterpret_cast<bool *>(pixel_flag_info.ptr);
+      const dint *old2new_pixel_ptr =
+          reinterpret_cast<const dint *>(old2new_pixel_info.ptr);
+      dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      bool *pointings_flag_ptr =
+          reinterpret_cast<bool *>(pointings_flag_info.ptr);
+
+      flag_bad_pixel_samples(nsamples, pixel_flag_ptr, old2new_pixel_ptr,
+                             pointings_ptr, pointings_flag_ptr);
+
+      return;
+    }; // numpy_bind_flag_bad_pixel_samples()
+
 PYBIND11_MODULE(repixelize, m) {
   m.doc() = "repixelize";
   m.def("repixelize_pol_I", numpy_bind_repixelize_pol_I<int32_t, float>,
@@ -279,5 +337,19 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_sincos").noconvert(), //
         py::arg("weighted_sin").noconvert(),    //
         py::arg("weighted_cos").noconvert()     //
+  );
+  m.def("flag_bad_pixel_samples", numpy_bind_flag_bad_pixel_samples<int32_t>,
+        py::arg("nsamples"),
+        py::arg("pixel_flag").noconvert(),    //
+        py::arg("old2new_pixel").noconvert(), //
+        py::arg("pointings").noconvert(),     //
+        py::arg("pointings_flag").noconvert() //
+  );
+  m.def("flag_bad_pixel_samples", numpy_bind_flag_bad_pixel_samples<int64_t>,
+        py::arg("nsamples"),
+        py::arg("pixel_flag").noconvert(),    //
+        py::arg("old2new_pixel").noconvert(), //
+        py::arg("pointings").noconvert(),     //
+        py::arg("pointings_flag").noconvert() //
   );
 }

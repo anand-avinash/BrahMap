@@ -9,10 +9,10 @@ import helper_Repixelization as rp
 class InitCommonParams:
     np.random.seed(1234)
     npix = 128
-    nsamples = npix * 10
+    nsamples = npix * 6
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=100)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
     pointings_flag[bad_samples] = False
 
 
@@ -73,13 +73,13 @@ class InitFloat64Params(InitCommonParams):
 )
 class TestRepixelization(InitCommonParams):
     def test_repixelize_pol_I(self, initint, initfloat, rtol):
-        new_npix, py_weighted_counts, pixel_mask = cw.computeweights_pol_I(
+        new_npix, py_weighted_counts, pixel_mask, __, __ = cw.computeweights_pol_I(
             self.npix,
             self.nsamples,
             initint.pointings,
             self.pointings_flag,
             initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
+            initfloat.dtype,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -112,13 +112,15 @@ class TestRepixelization(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
-        new_npix, pixel_mask = cw.get_pix_mask_pol(
+        new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
+            self.npix,
             2,
             1.0e3,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            initint.pointings.dtype,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -179,13 +181,15 @@ class TestRepixelization(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
-        new_npix, pixel_mask = cw.get_pix_mask_pol(
+        new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
+            self.npix,
             3,
             1.0e3,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            initint.dtype,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -239,9 +243,75 @@ class TestRepixelization(InitCommonParams):
         np.testing.assert_allclose(py_weighted_cos, cpp_weighted_cos, rtol=rtol)
 
 
+@pytest.mark.parametrize(
+    "initint, initfloat",
+    [
+        (InitInt32Params(), InitFloat32Params()),
+        (InitInt64Params(), InitFloat32Params()),
+        (InitInt32Params(), InitFloat64Params()),
+        (InitInt64Params(), InitFloat64Params()),
+    ],
+)
+class TestFlagBadPixelSamples(InitCommonParams):
+    def test_flag_bad_pixel_samples(self, initint, initfloat):
+        (
+            py_weighted_counts,
+            __,
+            __,
+            py_weighted_sin_sq,
+            py_weighted_cos_sq,
+            py_weighted_sincos,
+            __,
+            __,
+        ) = cw.computeweights_pol_IQU(
+            self.npix,
+            self.nsamples,
+            initint.pointings,
+            self.pointings_flag,
+            initfloat.noise_weights,
+            initfloat.pol_angles,
+            dtype_float=initfloat.dtype,
+        )
+
+        __, __, old2new_pixel, pixel_flag = cw.get_pix_mask_pol(
+            self.npix,
+            3,
+            1.0e3,
+            py_weighted_counts,
+            py_weighted_sin_sq,
+            py_weighted_cos_sq,
+            py_weighted_sincos,
+            initint.dtype,
+        )
+
+        py_pointings = initint.pointings.copy()
+        cpp_pointings = initint.pointings.copy()
+
+        py_pointings_flag = self.pointings_flag.copy()
+        cpp_pointings_flag = self.pointings_flag.copy()
+
+        rp.flag_bad_pixel_samples(
+            self.nsamples, pixel_flag, old2new_pixel, py_pointings, py_pointings_flag
+        )
+
+        repixelize.flag_bad_pixel_samples(
+            self.nsamples, pixel_flag, old2new_pixel, cpp_pointings, cpp_pointings_flag
+        )
+
+        np.testing.assert_array_equal(cpp_pointings, py_pointings)
+        np.testing.assert_array_equal(cpp_pointings_flag, py_pointings_flag)
+
+
 if __name__ == "__main__":
     pytest.main([f"{__file__}::TestRepixelization::test_repixelize_pol_I", "-v", "-s"])
     pytest.main([f"{__file__}::TestRepixelization::test_repixelize_pol_QU", "-v", "-s"])
     pytest.main(
         [f"{__file__}::TestRepixelization::test_repixelize_pol_IQU", "-v", "-s"]
+    )
+    pytest.main(
+        [
+            f"{__file__}::TestFlagBadPixelSamples::test_flag_bad_pixel_samples",
+            "-v",
+            "-s",
+        ]
     )

@@ -24,24 +24,28 @@ class ProcessTimeSamples(object):
         noise_weights: np.ndarray = None,
         threshold_cond: float = 1.0e3,
         dtype_float=None,
+        update_pointings_inplace: bool = True,
     ):
         self.npix = npix
-        self.pointings = pointings
         self.nsamples = len(pointings)
 
-        if dtype_float is None:
-            dtype_float = np.float64
-        self.dtype_float = dtype_float
+        if update_pointings_inplace:
+            self.pointings = pointings
+            self.pointings_flag = pointings_flag
+        else:
+            self.pointings = pointings.copy()
+            if pointings_flag is not None:
+                self.pointings_flag = pointings_flag.copy()
 
-        if pointings_flag is None:
-            pointings_flag = np.ones(self.nsamples, dtype=bool)
-        self.pointings_flag = pointings_flag
+        if self.pointings_flag is None:
+            self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
         if len(self.pointings_flag) != self.nsamples:
             raise AssertionError(
                 f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(pointings_flag)}\nlen(pointings) = {self.nsamples}"
             )
 
+        self.threshold = threshold_cond
         self.solver_type = solver_type
 
         if self.solver_type not in [1, 2, 3]:
@@ -49,11 +53,18 @@ class ProcessTimeSamples(object):
                 "Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3)."
             )
 
-        if self.solver_type != 1:
-            if len(pol_angles) != self.nsamples:
-                raise AssertionError(
-                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
-                )
+        # setting the dtype for the `float` arrays: if one or both of `noise_weights` and `pol_angles` are supplied, the `dtype_float` will be inferred from them. Otherwise, the it will be set to `np.float64`
+        if dtype_float is not None:
+            self.dtype_float = dtype_float
+        elif noise_weights is not None and pol_angles is not None:
+            # if both `noise_weights` and `pol_angles` are given, `dtype_float` will be assigned the higher `dtype`
+            self.dtype_float = np.promote_types(noise_weights.dtype, pol_angles.dtype)
+        elif noise_weights is not None:
+            self.dtype_float = noise_weights.dtype
+        elif pol_angles is not None:
+            self.dtype_float = pol_angles.dtype
+        else:
+            self.dtype_float = np.float64
 
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
@@ -63,14 +74,25 @@ class ProcessTimeSamples(object):
                 f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}"
             )
 
-        self.threshold = threshold_cond
-
         if noise_weights.dtype != self.dtype_float:
             warnings.warn(
                 f"dtype of `noise_weights` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            noise_weights = noise_weights.astype(dtype=self.dtype_float)
+            noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
+
+        if self.solver_type != 1:
+            if len(pol_angles) != self.nsamples:
+                raise AssertionError(
+                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
+                )
+
+            if pol_angles.dtype != self.dtype_float:
+                warnings.warn(
+                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
+                pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
 
         self._compute_weights(
             pol_angles,
@@ -78,6 +100,7 @@ class ProcessTimeSamples(object):
         )
 
         self._repixelization()
+        self._flag_bad_pixel_samples()
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
@@ -113,13 +136,6 @@ class ProcessTimeSamples(object):
             )
 
         else:
-            if pol_angles.dtype != self.dtype_float:
-                warnings.warn(
-                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-                pol_angles = pol_angles.astype(dtype=self.dtype_float)
-
             self.sin2phi = np.zeros(self.nsamples, dtype=self.dtype_float)
             self.cos2phi = np.zeros(self.nsamples, dtype=self.dtype_float)
 
@@ -221,6 +237,11 @@ class ProcessTimeSamples(object):
             self.weighted_sin.resize(self.new_npix, refcheck=False)
             self.weighted_cos.resize(self.new_npix, refcheck=False)
 
-        # self.pixel_flag = np.zeros(self.npix, dtype=bool)
-        # for pixel in self.pixel_mask:
-        #     self.pixel_flag[pixel] = True
+    def _flag_bad_pixel_samples(self):
+        repixelize.flag_bad_pixel_samples(
+            nsamples=self.nsamples,
+            pixel_flag=self.pixel_flag,
+            old2new_pixel=self.__old2new_pixel,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+        )

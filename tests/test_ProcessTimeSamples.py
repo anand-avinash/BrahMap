@@ -8,10 +8,10 @@ import helper_ProcessTimeSamples as hpts
 class InitCommonParams:
     np.random.seed(12345)
     npix = 128
-    nsamples = npix * 10
+    nsamples = npix * 6
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=200)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
     pointings_flag[bad_samples] = False
 
 
@@ -76,26 +76,26 @@ class TestProcessTimeSamples(InitCommonParams):
 
         cpp_PTS = bmutils.ProcessTimeSamples(
             npix=self.npix,
-            pointings=initint.pointings.copy(),
-            pointings_flag=self.pointings_flag.copy(),
+            pointings=initint.pointings,
+            pointings_flag=self.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
         py_PTS = hpts.ProcessTimeSamples(
             npix=self.npix,
-            pointings=initint.pointings.copy(),
-            pointings_flag=self.pointings_flag.copy(),
+            pointings=initint.pointings,
+            pointings_flag=self.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
-        # The following two assertions are to make sure that we don't change the
-        # `pointings` and `pointings_flag` arrays in-place within `ProcessTimeSamples`.
-        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
-        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
+        np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(
@@ -115,6 +115,7 @@ class TestProcessTimeSamples(InitCommonParams):
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
         py_PTS = hpts.ProcessTimeSamples(
@@ -125,10 +126,11 @@ class TestProcessTimeSamples(InitCommonParams):
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
-        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
-        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
+        np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
@@ -159,6 +161,7 @@ class TestProcessTimeSamples(InitCommonParams):
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
         py_PTS = hpts.ProcessTimeSamples(
@@ -169,10 +172,11 @@ class TestProcessTimeSamples(InitCommonParams):
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
         )
 
-        np.testing.assert_array_equal(cpp_PTS.pointings, initint.pointings)
-        np.testing.assert_array_equal(cpp_PTS.pointings_flag, self.pointings_flag)
+        np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
+        np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)

@@ -129,7 +129,12 @@ def get_pix_mask_pol(
     sqrtf = np.sqrt(trace * trace / 4.0 - determinant)
     lambda_max = trace / 2.0 + sqrtf
     lambda_min = trace / 2.0 - sqrtf
-    cond_num = np.abs(lambda_max / lambda_min)
+    # cond_num = np.abs(lambda_max / lambda_min)
+    # ^ This division produced `divided by zero warning` in multiple cases. So replaced it with `np.divide`. see <https://stackoverflow.com/a/54364060>
+    cond_num = 1.0e-7 * np.ones(len(lambda_max))
+    np.divide(lambda_max, lambda_min, out=cond_num, where=lambda_min != 0)
+    cond_num = np.abs(cond_num)
+
     cond_num_mask = np.where(cond_num <= threshold)[0]
     count_mask = np.where(weighted_counts > (solver_type - 1))[0]
     pixel_mask = np.intersect1d(count_mask, cond_num_mask)

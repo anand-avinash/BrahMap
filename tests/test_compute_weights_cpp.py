@@ -6,12 +6,12 @@ import helper_ComputeWeights as cw
 
 
 class InitCommonParams:
-    np.random.seed(123)
+    np.random.seed(1234)
     npix = 128
-    nsamples = npix * 10
+    nsamples = npix * 6
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=200)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
     pointings_flag[bad_samples] = False
 
 
@@ -103,6 +103,8 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             dtype_float=initfloat.dtype,
         )
+
+        cpp_pixel_mask.resize(cpp_new_npix, refcheck=False)
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
         np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)

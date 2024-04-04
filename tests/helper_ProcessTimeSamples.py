@@ -1,8 +1,11 @@
 from enum import IntEnum
 import numpy as np
+import warnings
 
 import helper_ComputeWeights as cw
 import helper_Repixelization as rp
+
+from brahmap.utilities import TypeChangeWarning
 
 
 class SolverType(IntEnum):
@@ -22,32 +25,61 @@ class ProcessTimeSamples(object):
         noise_weights: np.ndarray = None,
         threshold_cond: float = 1.0e3,
         dtype_float=None,
+        update_pointings_inplace: bool = True,
     ):
         self.npix = npix
-        self.pointings = pointings
         self.nsamples = len(pointings)
 
-        if dtype_float is None:
-            dtype_float = np.float64
-        self.dtype_float = dtype_float
+        if update_pointings_inplace:
+            self.pointings = pointings
+            self.pointings_flag = pointings_flag
+        else:
+            self.pointings = pointings.copy()
+            if pointings_flag is not None:
+                self.pointings_flag = pointings_flag.copy()
 
-        if pointings_flag is None:
-            pointings_flag = np.ones(self.nsamples, dtype=bool)
-        self.pointings_flag = pointings_flag
+        if self.pointings_flag is None:
+            self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
+        self.threshold = threshold_cond
         self.solver_type = solver_type
+
+        if dtype_float is not None:
+            self.dtype_float = dtype_float
+        elif noise_weights is not None and pol_angles is not None:
+            self.dtype_float = np.promote_types(noise_weights.dtype, pol_angles.dtype)
+        elif noise_weights is not None:
+            self.dtype_float = noise_weights.dtype
+        elif pol_angles is not None:
+            self.dtype_float = pol_angles.dtype
+        else:
+            self.dtype_float = np.float64
 
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
 
-        self.threshold = threshold_cond
+        noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
+
+        if self.solver_type != 1:
+            if len(pol_angles) != self.nsamples:
+                raise AssertionError(
+                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
+                )
+
+            if pol_angles.dtype != self.dtype_float:
+                warnings.warn(
+                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
+                pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
 
         self._compute_weights(
             pol_angles,
-            noise_weights.astype(dtype=self.dtype_float),
+            noise_weights,
         )
 
         self._repixelization()
+        self._flag_bad_pixel_samples()
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
@@ -81,8 +113,6 @@ class ProcessTimeSamples(object):
             )
 
         else:
-            pol_angles = pol_angles.astype(dtype=self.dtype_float)
-
             if self.solver_type == SolverType.QU:
                 (
                     self.weighted_counts,
@@ -178,3 +208,12 @@ class ProcessTimeSamples(object):
                 weighted_sin=self.weighted_sin,
                 weighted_cos=self.weighted_cos,
             )
+
+    def _flag_bad_pixel_samples(self):
+        rp.flag_bad_pixel_samples(
+            self.nsamples,
+            self.pixel_flag,
+            self.__old2new_pixel,
+            self.pointings,
+            self.pointings_flag,
+        )

@@ -1,4 +1,9 @@
-def repixelize_pol_I(new_npix, pixel_mask, weighted_counts):
+import numpy as np
+
+
+def repixelize_pol_I(
+    new_npix: int, pixel_mask: np.ndarray, weighted_counts: np.ndarray
+):
     for idx in range(new_npix):
         pixel = pixel_mask[idx]
         weighted_counts[idx] = weighted_counts[pixel]
@@ -9,12 +14,12 @@ def repixelize_pol_I(new_npix, pixel_mask, weighted_counts):
 
 
 def repixelize_pol_QU(
-    new_npix,
-    pixel_mask,
-    weighted_counts,
-    weighted_sin_sq,
-    weighted_cos_sq,
-    weighted_sincos,
+    new_npix: int,
+    pixel_mask: np.ndarray,
+    weighted_counts: np.ndarray,
+    weighted_sin_sq: np.ndarray,
+    weighted_cos_sq: np.ndarray,
+    weighted_sincos: np.ndarray,
 ):
     for idx in range(new_npix):
         pixel = pixel_mask[idx]
@@ -32,14 +37,14 @@ def repixelize_pol_QU(
 
 
 def repixelize_pol_IQU(
-    new_npix,
-    pixel_mask,
-    weighted_counts,
-    weighted_sin_sq,
-    weighted_cos_sq,
-    weighted_sincos,
-    weighted_sin,
-    weighted_cos,
+    new_npix: int,
+    pixel_mask: np.ndarray,
+    weighted_counts: np.ndarray,
+    weighted_sin_sq: np.ndarray,
+    weighted_cos_sq: np.ndarray,
+    weighted_sincos: np.ndarray,
+    weighted_sin: np.ndarray,
+    weighted_cos: np.ndarray,
 ):
     for idx in range(new_npix):
         pixel = pixel_mask[idx]
@@ -65,3 +70,19 @@ def repixelize_pol_IQU(
         weighted_sin,
         weighted_cos,
     )
+
+
+def flag_bad_pixel_samples(
+    nsamples: int,
+    pixel_flag: np.ndarray,
+    old2new_pixel: np.ndarray,
+    pointings: np.ndarray,
+    pointings_flag: np.ndarray,
+):
+    for idx in range(nsamples):
+        pixel = pointings[idx]
+        if pixel_flag[pixel]:
+            pointings[idx] = old2new_pixel[pixel]
+        else:
+            pointings[idx] = 0
+            pointings_flag[idx] = False
