@@ -1,0 +1,203 @@
+import numpy as np
+import warnings
+import brahmap.linop as lp
+from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
+
+import helper_PointingLO_tools as hplo
+
+
+class PointingLO(lp.LinearOperator):
+    def __init__(
+        self,
+        processed_samples: ProcessTimeSamples,
+    ):
+        self.solver_type = processed_samples.solver_type
+
+        self.ncols = processed_samples.new_npix * self.solver_type
+        self.nrows = processed_samples.nsamples
+
+        self.pointings = processed_samples.pointings
+        self.pointings_flag = processed_samples.pointings_flag
+        self.dtype_float = processed_samples.dtype_float
+
+        if self.solver_type > 1:
+            self.sin2phi = processed_samples.sin2phi
+            self.cos2phi = processed_samples.cos2phi
+
+        if self.solver_type == 1:
+            self.__runcase = "I"
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                symmetric=False,
+                matvec=self._mult_I,
+                rmatvec=self._rmult_I,
+            )
+        elif self.solver_type == 2:
+            self.__runcase = "QU"
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                symmetric=False,
+                matvec=self._mult_QU,
+                rmatvec=self._rmult_QU,
+            )
+        else:
+            self.__runcase = "IQU"
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                matvec=self._mult_IQU,
+                symmetric=False,
+                rmatvec=self._rmult_IQU,
+            )
+
+    def _mult_I(self, vec: np.ndarray):
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.mult_I(
+            nrows=self.nrows,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            vec=vec,
+        )
+
+        return prod
+
+    def _rmult_I(self, vec: np.ndarray):
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.rmult_I(
+            nrows=self.nrows,
+            ncols=self.ncols,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            vec=vec,
+        )
+
+        return prod
+
+    def _mult_QU(self, vec: np.ndarray):
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.mult_QU(
+            nrows=self.nrows,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+        )
+
+        return prod
+
+    def _rmult_QU(self, vec: np.ndarray):
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.rmult_QU(
+            nrows=self.nrows,
+            ncols=self.ncols,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+        )
+
+        return prod
+
+    def _mult_IQU(self, vec: np.ndarray):
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.mult_IQU(
+            nrows=self.nrows,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+        )
+
+        return prod
+
+    def _rmult_IQU(self, vec: np.ndarray):
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = hplo.rmult_IQU(
+            nrows=self.nrows,
+            ncols=self.ncols,
+            pointings=self.pointings,
+            pointings_flags=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+        )
+
+        return prod
+
+    @property
+    def solver_case(self):
+        """
+        Return a string depending on the map you are processing
+        """
+        return self.__runcase

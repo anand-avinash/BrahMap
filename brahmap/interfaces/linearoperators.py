@@ -37,7 +37,6 @@ class PointingLO(lp.LinearOperator):
 
         self.pointings = processed_samples.pointings
         self.pointings_flag = processed_samples.pointings_flag
-        self.pixel_flag = processed_samples.pixel_flag
         self.dtype_float = processed_samples.dtype_float
 
         if self.solver_type > 1:
@@ -92,7 +91,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype_float)
 
@@ -100,7 +99,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             vec=vec,
             prod=prod,
         )
@@ -123,7 +121,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
@@ -131,7 +129,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             vec=vec,
             prod=prod,
         )
@@ -157,7 +154,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.nrows, dtype=vec.dtype)
 
@@ -165,7 +162,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             sin2phi=self.sin2phi,
             cos2phi=self.cos2phi,
             vec=vec,
@@ -189,7 +185,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
@@ -197,7 +193,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             sin2phi=self.sin2phi,
             cos2phi=self.cos2phi,
             vec=vec,
@@ -232,7 +227,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.nrows, dtype=vec.dtype)
 
@@ -240,7 +235,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             sin2phi=self.sin2phi,
             cos2phi=self.cos2phi,
             vec=vec,
@@ -267,7 +261,7 @@ class PointingLO(lp.LinearOperator):
                 f"dtype of `vec` will be changed to {self.dtype_float}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float)
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
@@ -275,7 +269,6 @@ class PointingLO(lp.LinearOperator):
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
-            pixel_flag=self.pixel_flag,
             sin2phi=self.sin2phi,
             cos2phi=self.cos2phi,
             vec=vec,
@@ -285,7 +278,7 @@ class PointingLO(lp.LinearOperator):
         return prod
 
     @property
-    def solver_type(self):
+    def solver_case(self):
         """
         Return a string depending on the map you are processing
         """
