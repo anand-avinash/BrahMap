@@ -31,20 +31,19 @@ class PointingLO(lp.LinearOperator):
         processed_samples: ProcessTimeSamples,
     ):
         self.solver_type = processed_samples.solver_type
+        self.dtype_float = processed_samples.dtype_float
 
         self.ncols = processed_samples.new_npix * self.solver_type
         self.nrows = processed_samples.nsamples
 
         self.pointings = processed_samples.pointings
         self.pointings_flag = processed_samples.pointings_flag
-        self.dtype_float = processed_samples.dtype_float
 
         if self.solver_type > 1:
             self.sin2phi = processed_samples.sin2phi
             self.cos2phi = processed_samples.cos2phi
 
         if self.solver_type == 1:
-            self.__runcase = "I"
             super(PointingLO, self).__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
@@ -53,7 +52,6 @@ class PointingLO(lp.LinearOperator):
                 rmatvec=self._rmult_I,
             )
         elif self.solver_type == 2:
-            self.__runcase = "QU"
             super(PointingLO, self).__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
@@ -62,7 +60,6 @@ class PointingLO(lp.LinearOperator):
                 rmatvec=self._rmult_QU,
             )
         else:
-            self.__runcase = "IQU"
             super(PointingLO, self).__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
@@ -95,7 +92,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.nrows, dtype=self.dtype_float)
 
-        PointingLO_tools.mult_I(
+        PointingLO_tools.PLO_mult_I(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -125,7 +122,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
-        PointingLO_tools.rmult_I(
+        PointingLO_tools.PLO_rmult_I(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -158,7 +155,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.nrows, dtype=vec.dtype)
 
-        PointingLO_tools.mult_QU(
+        PointingLO_tools.PLO_mult_QU(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -189,7 +186,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
-        PointingLO_tools.rmult_QU(
+        PointingLO_tools.PLO_rmult_QU(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -231,7 +228,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.nrows, dtype=vec.dtype)
 
-        PointingLO_tools.mult_IQU(
+        PointingLO_tools.PLO_mult_IQU(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -265,7 +262,7 @@ class PointingLO(lp.LinearOperator):
 
         prod = np.zeros(self.ncols, dtype=vec.dtype)
 
-        PointingLO_tools.rmult_IQU(
+        PointingLO_tools.PLO_rmult_IQU(
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -277,12 +274,16 @@ class PointingLO(lp.LinearOperator):
 
         return prod
 
-    @property
-    def solver_case(self):
+    def solver_string(self):
         """
         Return a string depending on the map you are processing
         """
-        return self.__runcase
+        if self.solver_type == 1:
+            return "I"
+        elif self.solver_type == 2:
+            return "QU"
+        else:
+            return "IQU"
 
 
 class ToeplitzLO(lp.LinearOperator):
@@ -432,55 +433,139 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         the size of each block of the matrix.
     """
 
-    def mult(self, x):
+    def __init__(self, processed_samples: ProcessTimeSamples):
+        self.solver_type = processed_samples.solver_type
+        self.dtype_float = processed_samples.dtype_float
+        self.new_npix = processed_samples.new_npix
+        self.size = processed_samples.new_npix * self.solver_type
+
+        if self.solver_type == 1:
+            self.weighted_counts = processed_samples.weighted_counts
+        else:
+            self.weighted_sin_sq = processed_samples.weighted_sin_sq
+            self.weighted_cos_sq = processed_samples.weighted_cos_sq
+            self.weighted_sincos = processed_samples.weighted_sincos
+            if self.solver_type == 3:
+                self.weighted_counts = processed_samples.weighted_counts
+                self.weighted_sin = processed_samples.weighted_sin
+                self.weighted_cos = processed_samples.weighted_cos
+
+        if self.solver_type == 1:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size, nargout=self.size, symmetric=True, matvec=self._mult_I
+            )
+        elif self.solver_type == 2:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_QU,
+            )
+        else:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_IQU,
+            )
+
+    def _mult_I(self, vec: np.ndarray):
         r"""
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-        y = x * 0.0
-        npix = int(self.size / self.pol)
 
-        if self.pol == 1:
-            nan = np.ma.masked_greater(self.counts, 0)
-
-            y[nan.mask] = x[nan.mask] / self.counts[nan.mask]
-        elif self.pol == 2:
-            y = BlkDiagPrecondLO_tools.py_BlkDiagPrecondLO_mult_qu(
-                npix, self.sin2, self.cos2, self.sincos, x
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        elif self.pol == 3:
-            y = BlkDiagPrecondLO_tools.py_BlkDiagPrecondLO_mult_iqu(
-                npix,
-                self.counts,
-                self.sine,
-                self.cosine,
-                self.sin2,
-                self.cos2,
-                self.sincos,
-                x,
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = vec / self.weighted_counts
+
+        return prod
+
+    def _mult_QU(self, vec: np.ndarray):
+        r"""
+        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
+        where :math:`x` is   an :math:`n_{pix}` array.
+        """
+
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        return y
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-    def __init__(self, processed_samples: ProcessTimeSamples, n, pol=1):
-        self.size = pol * n
-        self.pixels = np.arange(n)
-        self.pol = pol
-        if pol == 1:
-            self.counts = processed_samples.weighted_counts
-        elif pol > 1:
-            self.sin2 = processed_samples.weighted_sin_sq
-            self.cos2 = processed_samples.weighted_cos_sq
-            self.sincos = processed_samples.weighted_sincos
-            if pol == 3:
-                self.counts = processed_samples.weighted_counts
-                self.cosine = processed_samples.weighted_cos
-                self.sine = processed_samples.weighted_sin
+        prod = np.zeros(self.size, dtype=self.dtype_float)
 
-        super(BlockDiagonalPreconditionerLO, self).__init__(
-            nargin=self.size, nargout=self.size, matvec=self.mult, symmetric=True
+        BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+            new_npix=self.new_npix,
+            weighted_sin_sq=self.weighted_sin_sq,
+            weighted_cos_sq=self.weighted_cos_sq,
+            weighted_sincos=self.weighted_sincos,
+            vec=vec,
+            prod=prod,
         )
+
+        return prod
+
+    def _mult_IQU(self, vec: np.ndarray):
+        r"""
+        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
+        where :math:`x` is   an :math:`n_{pix}` array.
+        """
+
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = np.zeros(self.size, dtype=self.dtype_float)
+
+        BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+            new_npix=self.new_npix,
+            weighted_counts=self.weighted_counts,
+            weighted_sin_sq=self.weighted_sin_sq,
+            weighted_cos_sq=self.weighted_cos_sq,
+            weighted_sincos=self.weighted_sincos,
+            weighted_sin=self.weighted_sin,
+            weighted_cos=self.weighted_cos,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+    def solver_string(self):
+        """
+        Return a string depending on the map you are processing
+        """
+        if self.solver_type == 1:
+            return "I"
+        elif self.solver_type == 2:
+            return "QU"
+        else:
+            return "IQU"
 
 
 class InverseLO(lp.LinearOperator):

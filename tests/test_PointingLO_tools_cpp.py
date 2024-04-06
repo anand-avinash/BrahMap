@@ -97,14 +97,14 @@ class TestPointingLOTools_I(InitCommonParams):
         cpp_mult_prod = np.zeros(nrows, dtype=initfloat.dtype)
         vec = np.resize(initfloat.vec, ncols)
 
-        PointingLO_tools.mult_I(
+        PointingLO_tools.PLO_mult_I(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
             vec,
             cpp_mult_prod,
         )
-        py_mult_prod = hplo_tools.mult_I(
+        py_mult_prod = hplo_tools.PLO_mult_I(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -114,14 +114,14 @@ class TestPointingLOTools_I(InitCommonParams):
         cpp_rmult_prod = np.zeros(ncols, dtype=initfloat.dtype)
         rvec = initfloat.rvec
 
-        PointingLO_tools.rmult_I(
+        PointingLO_tools.PLO_rmult_I(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
             rvec,
             cpp_rmult_prod,
         )
-        py_rmult_prod = hplo_tools.rmult_I(
+        py_rmult_prod = hplo_tools.PLO_rmult_I(
             nrows,
             ncols,
             PTS.pointings,
@@ -163,7 +163,7 @@ class TestPointingLOTools_QU(InitCommonParams):
         cpp_mult_prod = np.zeros(nrows, dtype=initfloat.dtype)
         vec = np.resize(initfloat.vec, ncols)
 
-        PointingLO_tools.mult_QU(
+        PointingLO_tools.PLO_mult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -172,7 +172,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             vec,
             cpp_mult_prod,
         )
-        py_mult_prod = hplo_tools.mult_QU(
+        py_mult_prod = hplo_tools.PLO_mult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -184,7 +184,7 @@ class TestPointingLOTools_QU(InitCommonParams):
         cpp_rmult_prod = np.zeros(ncols, dtype=initfloat.dtype)
         rvec = initfloat.rvec
 
-        PointingLO_tools.rmult_QU(
+        PointingLO_tools.PLO_rmult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -193,7 +193,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             rvec,
             cpp_rmult_prod,
         )
-        py_rmult_prod = hplo_tools.rmult_QU(
+        py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
             ncols,
             PTS.pointings,
@@ -237,7 +237,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
         cpp_mult_prod = np.zeros(nrows, dtype=initfloat.dtype)
         vec = np.resize(initfloat.vec, ncols)
 
-        PointingLO_tools.mult_QU(
+        PointingLO_tools.PLO_mult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -246,7 +246,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             vec,
             cpp_mult_prod,
         )
-        py_mult_prod = hplo_tools.mult_QU(
+        py_mult_prod = hplo_tools.PLO_mult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -258,7 +258,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
         cpp_rmult_prod = np.zeros(ncols, dtype=initfloat.dtype)
         rvec = initfloat.rvec
 
-        PointingLO_tools.rmult_QU(
+        PointingLO_tools.PLO_rmult_QU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -267,7 +267,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             rvec,
             cpp_rmult_prod,
         )
-        py_rmult_prod = hplo_tools.rmult_QU(
+        py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
             ncols,
             PTS.pointings,

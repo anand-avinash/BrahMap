@@ -1,13 +1,13 @@
 import pytest
 import numpy as np
-import BlkDiagPrecondLO_tools
+import brahmap
 
+import helper_BlkDiagPrecondLO as bdplo
 import helper_ProcessTimeSamples as hpts
-import helper_BlkDiagPrecondLO_tools as bdplo_tools
 
 
 class InitCommonParams:
-    np.random.seed(987)
+    np.random.seed(654)
     npix = 128
     nsamples = npix * 6
 
@@ -71,7 +71,7 @@ class InitFloat64Params(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestBlkDiagPrecondLOTools(InitCommonParams):
+class TestBlkDiagPrecondLO_I(InitCommonParams):
     def test_I(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
@@ -84,20 +84,30 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
+        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
             dtype=initfloat.dtype, copy=False
         )
 
-        cpp_prod = vec / PTS.weighted_counts
+        cpp_prod = BDP_cpp * vec
 
-        py_prod = bdplo_tools.BDPLO_mult_I(
-            PTS.weighted_counts,
-            vec,
-        )
+        py_prod = BDP_py * vec
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
+
+@pytest.mark.parametrize(
+    "initint, initfloat, rtol",
+    [
+        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
+        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+    ],
+)
+class TestBlkDiagPrecondLO_QU(InitCommonParams):
     def test_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
@@ -111,32 +121,30 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
+        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
             dtype=initfloat.dtype, copy=False
         )
 
-        cpp_prod = np.zeros(PTS.new_npix * PTS.solver_type, dtype=initfloat.dtype)
-        BlkDiagPrecondLO_tools.BDPLO_mult_QU(
-            PTS.new_npix,
-            PTS.weighted_sin_sq,
-            PTS.weighted_cos_sq,
-            PTS.weighted_sincos,
-            vec,
-            cpp_prod,
-        )
+        cpp_prod = BDP_cpp * vec
 
-        py_prod = bdplo_tools.BDPLO_mult_QU(
-            PTS.solver_type,
-            PTS.new_npix,
-            PTS.weighted_sin_sq,
-            PTS.weighted_cos_sq,
-            PTS.weighted_sincos,
-            vec,
-        )
+        py_prod = BDP_py * vec
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
+
+@pytest.mark.parametrize(
+    "initint, initfloat, rtol",
+    [
+        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
+        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+    ],
+)
+class TestBlkDiagPrecondLO_IQU(InitCommonParams):
     def test_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
@@ -150,35 +158,16 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
+        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
             dtype=initfloat.dtype, copy=False
         )
 
-        cpp_prod = np.zeros(PTS.new_npix * PTS.solver_type, dtype=initfloat.dtype)
-        BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
-            PTS.new_npix,
-            PTS.weighted_counts,
-            PTS.weighted_sin_sq,
-            PTS.weighted_cos_sq,
-            PTS.weighted_sincos,
-            PTS.weighted_sin,
-            PTS.weighted_cos,
-            vec,
-            cpp_prod,
-        )
+        cpp_prod = BDP_cpp * vec
 
-        py_prod = bdplo_tools.BDPLO_mult_IQU(
-            PTS.solver_type,
-            PTS.new_npix,
-            PTS.weighted_counts,
-            PTS.weighted_sin_sq,
-            PTS.weighted_cos_sq,
-            PTS.weighted_sincos,
-            PTS.weighted_sin,
-            PTS.weighted_cos,
-            vec,
-        )
+        py_prod = BDP_py * vec
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
@@ -186,21 +175,21 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
 if __name__ == "__main__":
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_I",
+            f"{__file__}::TestBlkDiagPrecondLO_I::test_I",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_QU",
+            f"{__file__}::TestBlkDiagPrecondLO_QU::test_QU",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_IQU",
+            f"{__file__}::TestBlkDiagPrecondLO_IQU::test_IQU",
             "-v",
             "-s",
         ]

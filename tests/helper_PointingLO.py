@@ -3,7 +3,7 @@ import warnings
 import brahmap.linop as lp
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import helper_PointingLO_tools as hplo
+import helper_PointingLO_tools as hplo_tools
 
 
 class PointingLO(lp.LinearOperator):
@@ -65,7 +65,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.mult_I(
+        prod = hplo_tools.PLO_mult_I(
             nrows=self.nrows,
             pointings=self.pointings,
             pointings_flags=self.pointings_flag,
@@ -87,7 +87,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.rmult_I(
+        prod = hplo_tools.PLO_rmult_I(
             nrows=self.nrows,
             ncols=self.ncols,
             pointings=self.pointings,
@@ -110,7 +110,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.mult_QU(
+        prod = hplo_tools.PLO_mult_QU(
             nrows=self.nrows,
             pointings=self.pointings,
             pointings_flags=self.pointings_flag,
@@ -134,7 +134,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.rmult_QU(
+        prod = hplo_tools.PLO_rmult_QU(
             nrows=self.nrows,
             ncols=self.ncols,
             pointings=self.pointings,
@@ -159,7 +159,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.mult_IQU(
+        prod = hplo_tools.PLO_mult_IQU(
             nrows=self.nrows,
             pointings=self.pointings,
             pointings_flags=self.pointings_flag,
@@ -183,7 +183,7 @@ class PointingLO(lp.LinearOperator):
             )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
-        prod = hplo.rmult_IQU(
+        prod = hplo_tools.PLO_rmult_IQU(
             nrows=self.nrows,
             ncols=self.ncols,
             pointings=self.pointings,
@@ -195,9 +195,13 @@ class PointingLO(lp.LinearOperator):
 
         return prod
 
-    @property
-    def solver_case(self):
+    def solver_string(self):
         """
         Return a string depending on the map you are processing
         """
-        return self.__runcase
+        if self.solver_type == 1:
+            return "I"
+        elif self.solver_type == 2:
+            return "QU"
+        else:
+            return "IQU"

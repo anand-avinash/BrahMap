@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def mult_I(
+def PLO_mult_I(
     nrows,
     pointings: np.ndarray,
     pointings_flags: np.ndarray,
@@ -17,7 +17,7 @@ def mult_I(
     return prod
 
 
-def rmult_I(
+def PLO_rmult_I(
     nrows,
     ncols,
     pointings: np.ndarray,
@@ -34,7 +34,7 @@ def rmult_I(
     return prod
 
 
-def mult_QU(
+def PLO_mult_QU(
     nrows,
     pointings: np.ndarray,
     pointings_flags: np.ndarray,
@@ -54,7 +54,7 @@ def mult_QU(
     return prod
 
 
-def rmult_QU(
+def PLO_rmult_QU(
     nrows,
     ncols,
     pointings: np.ndarray,
@@ -74,7 +74,7 @@ def rmult_QU(
     return prod
 
 
-def mult_IQU(
+def PLO_mult_IQU(
     nrows,
     pointings: np.ndarray,
     pointings_flags: np.ndarray,
@@ -96,7 +96,7 @@ def mult_IQU(
     return prod
 
 
-def rmult_IQU(
+def PLO_rmult_IQU(
     nrows,
     ncols,
     pointings: np.ndarray,
