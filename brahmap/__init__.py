@@ -1,7 +1,3 @@
-from . import interfaces, utilities, linop
+from . import interfaces, utilities, linop, mapmakers
 
-__all__ = [
-    "interfaces",
-    "utilities",
-    "linop",
-]
+__all__ = ["interfaces", "utilities", "linop", "mapmakers"]

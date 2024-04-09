@@ -81,9 +81,19 @@ class ProcessTimeSamples(object):
         self._repixelization()
         self._flag_bad_pixel_samples()
 
-    def get_hit_counts(self):
+    def get_hit_counts(self, mask_fill_value=np.nan):
         """Returns hit counts of the pixel indices"""
-        pass
+        hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
+        for idx in range(self.nsamples):
+            hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
+
+        hit_counts = np.ma.masked_array(
+            data=np.zeros(self.npix, dtype=int),
+            mask=np.logical_not(self.pixel_flag),
+        )
+
+        hit_counts[~hit_counts.mask] = hit_counts_newidx
+        return hit_counts
 
     @property
     def old2new_pixel(self):

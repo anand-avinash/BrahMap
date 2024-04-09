@@ -354,7 +354,6 @@ class BlockLO(blk.BlockDiagonalLinearOperator):
                     :math:`bandsize != blocksize`
             - False : ``t`` is an array, ``shape(t)=[nblocks]``.
                     each block is identified by a scalar value in the diagonal.
-
     """
 
     def build_blocks(self):
@@ -368,8 +367,6 @@ class BlockLO(blk.BlockDiagonalLinearOperator):
 
         ``self.diag``: {numpy array}
             the array resuming the :math:`diag(N^{-1})`.
-
-
         """
 
         tmplist = []
