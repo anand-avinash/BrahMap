@@ -81,7 +81,26 @@ ext4 = Extension(
     ],
 )
 
+ext5 = Extension(
+    "InvNoiseCov_tools",
+    sources=[os.path.join("brahmap", "src", "InvNoiseCov_tools.cpp")],
+    include_dirs=[
+        os.path.join("brahmap", "src"),
+        os.path.join("extern", "pybind11", "include"),
+    ],
+    define_macros=None,
+    extra_compile_args=[
+        "-O3",
+        # "-march=native",
+        "-Wall",
+        "-shared",
+        "-std=c++20",
+        "-fPIC",
+        "-fvisibility=hidden",
+    ],
+)
+
 setup(
-    ext_modules=[ext1, ext2, ext3, ext4],
+    ext_modules=[ext1, ext2, ext3, ext4, ext5],
     # include_package_data=True,
 )

@@ -6,6 +6,7 @@ from ..utilities import ProcessTimeSamples, TypeChangeWarning
 
 import PointingLO_tools
 import BlkDiagPrecondLO_tools
+import InvNoiseCov_tools
 
 
 class PointingLO(lp.LinearOperator):
@@ -327,6 +328,62 @@ class ToeplitzLO(lp.LinearOperator):
             nargin=size, nargout=size, matvec=self.mult, symmetric=True
         )
         self.array = a
+
+
+class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
+    """
+    Class representing a inverse noise covariance operator for uncorrelated noise.
+
+    A diagonal linear operator defined by its diagonal `diag` (a Numpy array.)
+    The type must be specified in the `diag` argument, e.g.,
+    `np.ones(5, dtype=np.complex)` or `np.ones(5).astype(np.complex)`.
+
+    """
+
+    def __init__(self, diag: np.ndarray, dtype_float=None):
+        self.diag = np.asarray(diag)
+        if dtype_float is not None:
+            self.dtype_float = dtype_float
+        elif np.issubdtype(self.diag.dtype, np.floating):
+            self.dtype_float = self.diag.dtype
+        else:
+            self.dtype_float = np.float64
+
+        if self.diag.ndim != 1:
+            msg = "diag array must be 1-d"
+            raise ValueError(msg)
+
+        super(InvNoiseCovLO_Uncorrelated, self).__init__(
+            nargin=self.diag.shape[0],
+            nargout=self.diag.shape[0],
+            symmetric=True,
+            matvec=self._mult,
+            rmatvec=self._mult,
+        )
+
+    def _mult(self, vec: np.ndarray):
+        if len(vec) != self.diag.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype_float:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype_float}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype_float, copy=False)
+
+        prod = np.zeros(self.diag.shape[0], dtype=self.dtype_float)
+
+        InvNoiseCov_tools.uncorrelated_mult(
+            nsamples=self.diag.shape[0],
+            diag=self.diag,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
 
 
 class BlockLO(blk.BlockDiagonalLinearOperator):

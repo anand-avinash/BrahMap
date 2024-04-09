@@ -160,10 +160,11 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_mult_I(             //
@@ -197,10 +198,11 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_rmult_I(            //
@@ -240,12 +242,15 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
-      const dfloat *cos2phi_ptr = reinterpret_cast<dfloat *>(cos2phi_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *sin2phi_ptr =
+          reinterpret_cast<const dfloat *>(sin2phi_info.ptr);
+      const dfloat *cos2phi_ptr =
+          reinterpret_cast<const dfloat *>(cos2phi_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_mult_QU(            //
@@ -287,12 +292,15 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
-      const dfloat *cos2phi_ptr = reinterpret_cast<dfloat *>(cos2phi_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *sin2phi_ptr =
+          reinterpret_cast<const dfloat *>(sin2phi_info.ptr);
+      const dfloat *cos2phi_ptr =
+          reinterpret_cast<const dfloat *>(cos2phi_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_rmult_QU(           //
@@ -334,12 +342,15 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
-      const dfloat *cos2phi_ptr = reinterpret_cast<dfloat *>(cos2phi_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *sin2phi_ptr =
+          reinterpret_cast<const dfloat *>(sin2phi_info.ptr);
+      const dfloat *cos2phi_ptr =
+          reinterpret_cast<const dfloat *>(cos2phi_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_mult_IQU(           //
@@ -381,12 +392,15 @@ std::function<void(                         //
       py::buffer_info vec_info = vec.request();
       py::buffer_info prod_info = prod.request();
 
-      const dint *pointings_ptr = reinterpret_cast<dint *>(pointings_info.ptr);
+      const dint *pointings_ptr =
+          reinterpret_cast<const dint *>(pointings_info.ptr);
       const bool *pointings_flag_ptr =
-          reinterpret_cast<bool *>(pointings_flag_info.ptr);
-      const dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
-      const dfloat *cos2phi_ptr = reinterpret_cast<dfloat *>(cos2phi_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const bool *>(pointings_flag_info.ptr);
+      const dfloat *sin2phi_ptr =
+          reinterpret_cast<const dfloat *>(sin2phi_info.ptr);
+      const dfloat *cos2phi_ptr =
+          reinterpret_cast<const dfloat *>(cos2phi_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       PLO_rmult_IQU(          //

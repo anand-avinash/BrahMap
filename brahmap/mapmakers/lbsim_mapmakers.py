@@ -5,10 +5,7 @@ import litebird_sim as lbs
 
 from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
 from brahmap.linop import DiagonalOperator
-from brahmap.interfaces import (
-    ToeplitzLO,
-    BlockLO,
-)
+from brahmap.interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
 from brahmap.utilities import ProcessTimeSamples
 
 
@@ -29,7 +26,9 @@ def LBSim_compute_GLS_maps(
     tod: np.ndarray,
     pointings_flag: np.ndarray = None,
     pol_angles: np.ndarray = None,
-    inv_noise_cov_operator: ToeplitzLO | BlockLO | DiagonalOperator = None,
+    inv_noise_cov_operator: (
+        ToeplitzLO | BlockLO | DiagonalOperator | InvNoiseCovLO_Uncorrelated
+    ) = None,
     threshold_cond: float = 1.0e3,
     dtype_float=None,
     update_pointings_inplace: bool = True,

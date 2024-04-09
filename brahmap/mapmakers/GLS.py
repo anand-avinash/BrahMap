@@ -9,6 +9,7 @@ from brahmap.interfaces import (
     ToeplitzLO,
     BlockLO,
     BlockDiagonalPreconditionerLO,
+    InvNoiseCovLO_Uncorrelated,
 )
 
 
@@ -41,19 +42,29 @@ def compute_GLS_maps(
     time_ordered_data: np.ndarray,
     pointings_flag: np.ndarray = None,
     pol_angles: np.ndarray = None,
-    inv_noise_cov_operator: ToeplitzLO | BlockLO | DiagonalOperator = None,
+    inv_noise_cov_operator: (
+        ToeplitzLO | BlockLO | DiagonalOperator | InvNoiseCovLO_Uncorrelated
+    ) = None,
     threshold_cond: float = 1.0e3,
     dtype_float=None,
     update_pointings_inplace: bool = True,
     GLSParameters: GLSParameters = GLSParameters(),
-) -> tuple[ProcessTimeSamples, GLSResult]:
+) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
     if len(pointings) != len(time_ordered_data):
         raise ValueError(
             f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {len(pointings)}\nlen(time_ordered_data) = {len(time_ordered_data)}"
         )
 
+    if dtype_float is None:
+        if pol_angles is not None:
+            dtype_float = pol_angles.dtype
+    else:
+        dtype_float = np.float64
+
     if inv_noise_cov_operator is None:
-        inv_noise_cov_operator = DiagonalOperator(diag=np.ones(len(pointings)))
+        inv_noise_cov_operator = InvNoiseCovLO_Uncorrelated(
+            diag=np.ones(len(pointings)), dtype_float=dtype_float
+        )
     else:
         if inv_noise_cov_operator.shape[0] != len(time_ordered_data):
             raise ValueError(

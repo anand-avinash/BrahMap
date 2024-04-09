@@ -117,12 +117,12 @@ std::function<void(                            //
       py::buffer_info prod_info = prod.request();
 
       const dfloat *weighted_sin_sq_ptr =
-          reinterpret_cast<dfloat *>(weighted_sin_sq_info.ptr);
+          reinterpret_cast<const dfloat *>(weighted_sin_sq_info.ptr);
       const dfloat *weighted_cos_sq_ptr =
-          reinterpret_cast<dfloat *>(weighted_cos_sq_info.ptr);
+          reinterpret_cast<const dfloat *>(weighted_cos_sq_info.ptr);
       const dfloat *weighted_sincos_ptr =
-          reinterpret_cast<dfloat *>(weighted_sincos_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<dfloat *>(vec_info.ptr);
+          reinterpret_cast<const dfloat *>(weighted_sincos_info.ptr);
+      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
       BDPLO_mult_QU(           //
