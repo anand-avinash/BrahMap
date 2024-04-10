@@ -109,8 +109,9 @@ class ProcessTimeSamples(object):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
 
         hit_counts = np.ma.masked_array(
-            data=np.zeros(self.npix, dtype=int),
+            data=np.zeros(self.npix),
             mask=np.logical_not(self.pixel_flag),
+            fill_value=-1.6375e30,
         )
 
         hit_counts[~hit_counts.mask] = hit_counts_newidx

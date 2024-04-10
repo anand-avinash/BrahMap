@@ -86,6 +86,7 @@ def compute_GLS_maps(
     inv_noise_cov_operator.pointings_flag = processed_samples.pointings_flag
 
     pointing_operator = PointingLO(processed_samples=processed_samples)
+
     blockdiagprecond_operator = BlockDiagonalPreconditionerLO(
         processed_samples=processed_samples
     )
@@ -121,7 +122,9 @@ def compute_GLS_maps(
     )
 
     output_maps = np.ma.MaskedArray(
-        data=np.empty(processed_samples.npix), mask=~processed_samples.pixel_flag
+        data=np.empty(processed_samples.npix),
+        mask=~processed_samples.pixel_flag,
+        fill_value=-1.6375e30,
     )
 
     output_maps = np.tile(A=output_maps, reps=(processed_samples.solver_type, 1))

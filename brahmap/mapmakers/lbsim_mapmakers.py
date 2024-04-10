@@ -17,7 +17,7 @@ class LBSimGLSParameters(GLSParameters):
 @dataclass
 class LBSimGLSResult(GLSResult):
     nside: int
-    coordinate_system: lbs.CoordinateSystem
+    coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic
 
 
 def LBSim_compute_GLS_maps(
@@ -62,9 +62,9 @@ def LBSim_compute_GLS_maps(
         gls_result = temp_result
 
     lbsim_gls_result = LBSimGLSResult(
-        **asdict(gls_result),
         nside=nside,
-        convergence_status=LBSimGLSParameters.output_coordinate_system,
+        coordinate_system=LBSimGLSParameters.output_coordinate_system,
+        **asdict(gls_result),
     )
 
     if LBSimGLSParameters.return_processed_samples is True:
