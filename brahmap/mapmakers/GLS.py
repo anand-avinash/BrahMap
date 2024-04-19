@@ -63,7 +63,7 @@ def compute_GLS_maps(
 
     if inv_noise_cov_operator is None:
         inv_noise_cov_operator = InvNoiseCovLO_Uncorrelated(
-            diag=np.ones(len(pointings)), dtype_float=dtype_float
+            diag=np.ones(len(pointings)), dtype=dtype_float
         )
     else:
         if inv_noise_cov_operator.shape[0] != len(time_ordered_data):

@@ -77,7 +77,7 @@ class InitFloat64Params(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLO_I(InitCommonParams):
+class TestPointingLOCpp_I(InitCommonParams):
     def test_I(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
@@ -117,7 +117,7 @@ class TestPointingLO_I(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLO_QU(InitCommonParams):
+class TestPointingLOCpp_QU(InitCommonParams):
     def test_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
@@ -158,7 +158,7 @@ class TestPointingLO_QU(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLO_IQU(InitCommonParams):
+class TestPointingLOCpp_IQU(InitCommonParams):
     def test_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
@@ -190,7 +190,166 @@ class TestPointingLO_IQU(InitCommonParams):
         np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
 
 
+@pytest.mark.parametrize(
+    "initint, initfloat, rtol",
+    [
+        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
+        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+    ],
+)
+class TestPointingLO_I(InitCommonParams):
+    def test_I(self, initint, initfloat, rtol):
+        solver_type = hpts.SolverType.I
+
+        PTS = hpts.ProcessTimeSamples(
+            npix=self.npix,
+            pointings=initint.pointings,
+            pointings_flag=self.pointings_flag,
+            solver_type=solver_type,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+
+        P = brahmap.interfaces.PointingLO(PTS)
+
+        # Test for P.T * <vector>
+        weights = P.T * initfloat.noise_weights
+
+        np.testing.assert_allclose(PTS.weighted_counts, weights)
+
+        # Test for P * <vector>
+        ncols = PTS.new_npix * PTS.solver_type
+        vec = np.resize(initfloat.vec, ncols)
+        signal = P * vec
+
+        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+
+        for idx in range(self.nsamples):
+            pixel = PTS.pointings[idx]
+            if PTS.pointings_flag[idx]:
+                signal_test[idx] += vec[pixel]
+
+        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+
+
+@pytest.mark.parametrize(
+    "initint, initfloat, rtol",
+    [
+        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
+        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+    ],
+)
+class TestPointingLO_QU(InitCommonParams):
+    def test_QU(self, initint, initfloat, rtol):
+        solver_type = hpts.SolverType.QU
+
+        PTS = hpts.ProcessTimeSamples(
+            npix=self.npix,
+            pointings=initint.pointings,
+            pointings_flag=self.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+
+        P = brahmap.interfaces.PointingLO(PTS)
+
+        # Test for P.T * <vector>
+        weights = P.T * initfloat.noise_weights
+
+        weighted_sin = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
+        weighted_cos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
+
+        for idx in range(self.nsamples):
+            if PTS.pointings_flag[idx]:
+                pixel = PTS.pointings[idx]
+                weighted_sin[pixel] += PTS.sin2phi[idx] * initfloat.noise_weights[idx]
+                weighted_cos[pixel] += PTS.cos2phi[idx] * initfloat.noise_weights[idx]
+
+        np.testing.assert_allclose(weighted_sin, weights[1::2])
+        np.testing.assert_allclose(weighted_cos, weights[0::2])
+
+        # Test for P * <vector>
+        ncols = PTS.new_npix * PTS.solver_type
+        vec = np.resize(initfloat.vec, ncols)
+        signal = P * vec
+
+        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+
+        for idx in range(self.nsamples):
+            pixel = PTS.pointings[idx]
+            if PTS.pointings_flag[idx]:
+                signal_test[idx] += (
+                    vec[2 * pixel + 0] * PTS.cos2phi[idx]
+                    + vec[2 * pixel + 1] * PTS.sin2phi[idx]
+                )
+
+        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+
+
+@pytest.mark.parametrize(
+    "initint, initfloat, rtol",
+    [
+        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
+        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+    ],
+)
+class TestPointingLO_IQU(InitCommonParams):
+    def test_IQU(self, initint, initfloat, rtol):
+        solver_type = hpts.SolverType.IQU
+
+        PTS = hpts.ProcessTimeSamples(
+            npix=self.npix,
+            pointings=initint.pointings,
+            pointings_flag=self.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+
+        P = brahmap.interfaces.PointingLO(PTS)
+
+        # Test for P.T * <vector>
+        weights = P.T * initfloat.noise_weights
+
+        np.testing.assert_allclose(PTS.weighted_counts, weights[0::3])
+        np.testing.assert_allclose(PTS.weighted_cos, weights[1::3])
+        np.testing.assert_allclose(PTS.weighted_sin, weights[2::3])
+
+        # Test for P * <vector>
+        ncols = PTS.new_npix * PTS.solver_type
+        vec = np.resize(initfloat.vec, ncols)
+        signal = P * vec
+
+        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+
+        for idx in range(self.nsamples):
+            pixel = PTS.pointings[idx]
+            if PTS.pointings_flag[idx]:
+                signal_test[idx] += (
+                    vec[3 * pixel + 0] * 1.0
+                    + vec[3 * pixel + 1] * PTS.cos2phi[idx]
+                    + vec[3 * pixel + 2] * PTS.sin2phi[idx]
+                )
+
+        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+
+
 if __name__ == "__main__":
+    pytest.main([f"{__file__}::TestPointingLOCpp_I::test_I", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLOCpp_QU::test_QU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLOCpp_IQU::test_IQU", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_I::test_I", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_QU::test_QU", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_IQU::test_IQU", "-v", "-s"])

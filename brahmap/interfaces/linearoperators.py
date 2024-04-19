@@ -32,7 +32,6 @@ class PointingLO(lp.LinearOperator):
         processed_samples: ProcessTimeSamples,
     ):
         self.solver_type = processed_samples.solver_type
-        self.dtype_float = processed_samples.dtype_float
 
         self.ncols = processed_samples.new_npix * self.solver_type
         self.nrows = processed_samples.nsamples
@@ -51,6 +50,7 @@ class PointingLO(lp.LinearOperator):
                 symmetric=False,
                 matvec=self._mult_I,
                 rmatvec=self._rmult_I,
+                dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
             super(PointingLO, self).__init__(
@@ -59,6 +59,7 @@ class PointingLO(lp.LinearOperator):
                 symmetric=False,
                 matvec=self._mult_QU,
                 rmatvec=self._rmult_QU,
+                dtype=processed_samples.dtype_float,
             )
         else:
             super(PointingLO, self).__init__(
@@ -67,6 +68,7 @@ class PointingLO(lp.LinearOperator):
                 matvec=self._mult_IQU,
                 symmetric=False,
                 rmatvec=self._rmult_IQU,
+                dtype=processed_samples.dtype_float,
             )
 
     def _mult_I(self, vec: np.ndarray):
@@ -84,14 +86,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.nrows, dtype=self.dtype_float)
+        prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_I(
             nsamples=self.nrows,
@@ -114,14 +116,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.ncols, dtype=vec.dtype)
+        prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_I(
             nsamples=self.nrows,
@@ -147,14 +149,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.nrows, dtype=vec.dtype)
+        prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_QU(
             nsamples=self.nrows,
@@ -178,14 +180,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.ncols, dtype=vec.dtype)
+        prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_QU(
             nsamples=self.nrows,
@@ -220,14 +222,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.nrows, dtype=vec.dtype)
+        prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_IQU(
             nsamples=self.nrows,
@@ -254,14 +256,14 @@ class PointingLO(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.ncols, dtype=vec.dtype)
+        prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_IQU(
             nsamples=self.nrows,
@@ -340,14 +342,14 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
 
     """
 
-    def __init__(self, diag: np.ndarray, dtype_float=None):
-        self.diag = np.asarray(diag)
-        if dtype_float is not None:
-            self.dtype_float = dtype_float
-        elif np.issubdtype(self.diag.dtype, np.floating):
-            self.dtype_float = self.diag.dtype
+    def __init__(self, diag: np.ndarray, dtype=None):
+        if dtype is not None:
+            self.diag = np.asarray(diag, dtype=dtype)
+        elif isinstance(diag, np.ndarray):
+            dtype = self.diag.dtype
         else:
-            self.dtype_float = np.float64
+            dtype = np.float64
+            self.diag = np.asarray(diag, dtype=dtype)
 
         if self.diag.ndim != 1:
             msg = "diag array must be 1-d"
@@ -359,6 +361,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
             symmetric=True,
             matvec=self._mult,
             rmatvec=self._mult,
+            dtype=dtype,
         )
 
     def _mult(self, vec: np.ndarray):
@@ -367,14 +370,14 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
                 f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.diag.shape[0], dtype=self.dtype_float)
+        prod = np.zeros(self.diag.shape[0], dtype=self.dtype)
 
         InvNoiseCov_tools.uncorrelated_mult(
             nsamples=self.diag.shape[0],
@@ -489,7 +492,6 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
     def __init__(self, processed_samples: ProcessTimeSamples):
         self.solver_type = processed_samples.solver_type
-        self.dtype_float = processed_samples.dtype_float
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
 
@@ -506,7 +508,11 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
         if self.solver_type == 1:
             super(BlockDiagonalPreconditionerLO, self).__init__(
-                nargin=self.size, nargout=self.size, symmetric=True, matvec=self._mult_I
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_I,
+                dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
             super(BlockDiagonalPreconditionerLO, self).__init__(
@@ -514,6 +520,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 nargout=self.size,
                 symmetric=True,
                 matvec=self._mult_QU,
+                dtype=processed_samples.dtype_float,
             )
         else:
             super(BlockDiagonalPreconditionerLO, self).__init__(
@@ -521,6 +528,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 nargout=self.size,
                 symmetric=True,
                 matvec=self._mult_IQU,
+                dtype=processed_samples.dtype_float,
             )
 
     def _mult_I(self, vec: np.ndarray):
@@ -534,12 +542,12 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = vec / self.weighted_counts
 
@@ -556,14 +564,14 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.size, dtype=self.dtype_float)
+        prod = np.zeros(self.size, dtype=self.dtype)
 
         BlkDiagPrecondLO_tools.BDPLO_mult_QU(
             new_npix=self.new_npix,
@@ -587,14 +595,14 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        if vec.dtype != self.dtype_float:
+        if vec.dtype != self.dtype:
             warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
+                f"dtype of `vec` will be changed to {self.dtype}",
                 TypeChangeWarning,
             )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.zeros(self.size, dtype=self.dtype_float)
+        prod = np.zeros(self.size, dtype=self.dtype)
 
         BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
             new_npix=self.new_npix,

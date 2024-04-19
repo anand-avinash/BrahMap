@@ -57,12 +57,14 @@ class BaseLinearOperator(object):
 
     """
 
-    def __init__(self, nargin, nargout, symmetric: bool = False, **kwargs):
+    def __init__(
+        self, nargin, nargout, symmetric: bool = False, dtype=np.float64, **kwargs
+    ):
         self.__nargin = nargin
         self.__nargout = nargout
         self.__symmetric = symmetric
         self.__shape = (nargout, nargin)
-        self.__dtype = kwargs.get("dtype", np.float64)
+        self.dtype = dtype
         self._nMatvec = 0
 
         # Log activity.
@@ -94,6 +96,10 @@ class BaseLinearOperator(object):
     def dtype(self):
         """The data type of the operator."""
         return self.__dtype
+
+    @dtype.setter
+    def dtype(self, dtype):
+        self.__dtype = dtype
 
     @property
     def nMatvec(self):
