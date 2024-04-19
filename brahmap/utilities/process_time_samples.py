@@ -4,7 +4,7 @@ import warnings
 
 import compute_weights
 import repixelize
-from .tools import TypeChangeWarning
+from brahmap.utilities.tools import TypeChangeWarning
 
 
 class SolverType(IntEnum):

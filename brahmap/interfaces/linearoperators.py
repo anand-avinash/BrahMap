@@ -1,8 +1,8 @@
 import numpy as np
 import warnings
-from ..linop import linop as lp
-from ..linop import blkop as blk
-from ..utilities import ProcessTimeSamples, TypeChangeWarning
+from brahmap.linop import linop as lp
+from brahmap.linop import blkop as blk
+from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
 import PointingLO_tools
 import BlkDiagPrecondLO_tools

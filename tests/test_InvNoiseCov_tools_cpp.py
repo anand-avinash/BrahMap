@@ -66,3 +66,14 @@ class TestInvNoiseCovLO_Uncorrelated(InitCommonParams):
         py_prod = initfloat.diag * initfloat.vec
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::TestInvNoiseCov_tools::test_mult", "-v", "-s"])
+    pytest.main(
+        [
+            f"{__file__}::TestInvNoiseCovLO_Uncorrelated::test_InvNoiseCovLO_Uncorrelated",
+            "-v",
+            "-s",
+        ]
+    )

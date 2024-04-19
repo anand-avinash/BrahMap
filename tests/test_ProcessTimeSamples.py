@@ -71,7 +71,7 @@ class InitFloat64Params(InitCommonParams):
     ],
 )
 class TestProcessTimeSamplesCpp(InitCommonParams):
-    def test_ProcessTimeSamples_I(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
         cpp_PTS = bmutils.ProcessTimeSamples(
@@ -104,7 +104,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
         cpp_PTS = bmutils.ProcessTimeSamples(
@@ -150,7 +150,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
         cpp_PTS = bmutils.ProcessTimeSamples(
@@ -327,21 +327,21 @@ class TestProcessTimeSamples(InitCommonParams):
 if __name__ == "__main__":
     pytest.main(
         [
-            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_I",
+            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_I_Cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_QU",
+            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_QU_Cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_IQU",
+            f"{__file__}::TestProcessTimeSamplesCpp::test_ProcessTimeSamples_IQU_Cpp",
             "-v",
             "-s",
         ]

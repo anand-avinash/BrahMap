@@ -77,8 +77,8 @@ class InitFloat64Params(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLOCpp_I(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol):
+class TestPointingLO_I_Cpp(InitCommonParams):
+    def test_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
         PTS = hpts.ProcessTimeSamples(
@@ -117,8 +117,8 @@ class TestPointingLOCpp_I(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLOCpp_QU(InitCommonParams):
-    def test_QU(self, initint, initfloat, rtol):
+class TestPointingLO_QU_Cpp(InitCommonParams):
+    def test_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
         PTS = hpts.ProcessTimeSamples(
@@ -158,8 +158,8 @@ class TestPointingLOCpp_QU(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestPointingLOCpp_IQU(InitCommonParams):
-    def test_IQU(self, initint, initfloat, rtol):
+class TestPointingLO_IQU_Cpp(InitCommonParams):
+    def test_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
         PTS = hpts.ProcessTimeSamples(
@@ -347,9 +347,9 @@ class TestPointingLO_IQU(InitCommonParams):
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::TestPointingLOCpp_I::test_I", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLOCpp_QU::test_QU", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLOCpp_IQU::test_IQU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_I_Cpp::test_I_Cpp", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_QU_Cpp::test_QU_Cpp", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_IQU_Cpp::test_IQU_Cpp", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_I::test_I", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_QU::test_QU", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO_IQU::test_IQU", "-v", "-s"])
