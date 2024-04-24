@@ -71,8 +71,8 @@ class InitFloat64Params(InitCommonParams):
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
 )
-class TestBlkDiagPrecondLOTools(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol):
+class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
+    def test_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
         PTS = hpts.ProcessTimeSamples(
@@ -98,7 +98,7 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
-    def test_QU(self, initint, initfloat, rtol):
+    def test_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
         PTS = hpts.ProcessTimeSamples(
@@ -122,6 +122,7 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             PTS.weighted_sin_sq,
             PTS.weighted_cos_sq,
             PTS.weighted_sincos,
+            PTS.one_over_determinant,
             vec,
             cpp_prod,
         )
@@ -132,12 +133,13 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             PTS.weighted_sin_sq,
             PTS.weighted_cos_sq,
             PTS.weighted_sincos,
+            PTS.one_over_determinant,
             vec,
         )
 
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
-    def test_IQU(self, initint, initfloat, rtol):
+    def test_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
         PTS = hpts.ProcessTimeSamples(
@@ -164,6 +166,7 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             PTS.weighted_sincos,
             PTS.weighted_sin,
             PTS.weighted_cos,
+            PTS.one_over_determinant,
             vec,
             cpp_prod,
         )
@@ -177,6 +180,7 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
             PTS.weighted_sincos,
             PTS.weighted_sin,
             PTS.weighted_cos,
+            PTS.one_over_determinant,
             vec,
         )
 
@@ -186,21 +190,21 @@ class TestBlkDiagPrecondLOTools(InitCommonParams):
 if __name__ == "__main__":
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_I",
+            f"{__file__}::TestBlkDiagPrecondLOToolsCpp::test_I_Cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_QU",
+            f"{__file__}::TestBlkDiagPrecondLOToolsCpp::test_QU_Cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLOTools::test_IQU",
+            f"{__file__}::TestBlkDiagPrecondLOToolsCpp::test_IQU_Cpp",
             "-v",
             "-s",
         ]

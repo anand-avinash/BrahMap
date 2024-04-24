@@ -23,7 +23,7 @@ class ProcessTimeSamples(object):
         solver_type: SolverType = SolverType.IQU,
         pol_angles: np.ndarray = None,
         noise_weights: np.ndarray = None,
-        threshold_cond: float = 1.0e3,
+        threshold: float = 1.0e-5,
         dtype_float=None,
         update_pointings_inplace: bool = True,
     ):
@@ -41,7 +41,7 @@ class ProcessTimeSamples(object):
         if self.pointings_flag is None:
             self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
-        self.threshold = threshold_cond
+        self.threshold = threshold
         self.solver_type = solver_type
 
         if dtype_float is not None:
@@ -131,6 +131,7 @@ class ProcessTimeSamples(object):
                     self.weighted_sin_sq,
                     self.weighted_cos_sq,
                     self.weighted_sincos,
+                    self.one_over_determinant,
                 ) = cw.computeweights_pol_QU(
                     npix=self.npix,
                     nsamples=self.nsamples,
@@ -151,6 +152,7 @@ class ProcessTimeSamples(object):
                     self.weighted_sincos,
                     self.weighted_sin,
                     self.weighted_cos,
+                    self.one_over_determinant,
                 ) = cw.computeweights_pol_IQU(
                     npix=self.npix,
                     nsamples=self.nsamples,
@@ -171,9 +173,7 @@ class ProcessTimeSamples(object):
                 solver_type=self.solver_type,
                 threshold=self.threshold,
                 weighted_counts=self.weighted_counts,
-                weighted_sin_sq=self.weighted_sin_sq,
-                weighted_cos_sq=self.weighted_cos_sq,
-                weighted_sincos=self.weighted_sincos,
+                one_over_determinant=self.one_over_determinant,
                 dtype_int=self.pointings.dtype,
             )
 
@@ -191,6 +191,7 @@ class ProcessTimeSamples(object):
                 self.weighted_sin_sq,
                 self.weighted_cos_sq,
                 self.weighted_sincos,
+                self.one_over_determinant,
             ) = rp.repixelize_pol_QU(
                 new_npix=self.new_npix,
                 pixel_mask=self.pixel_mask,
@@ -198,6 +199,7 @@ class ProcessTimeSamples(object):
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
                 weighted_sincos=self.weighted_sincos,
+                one_over_determinant=self.one_over_determinant,
             )
 
         elif self.solver_type == SolverType.IQU:
@@ -208,6 +210,7 @@ class ProcessTimeSamples(object):
                 self.weighted_sincos,
                 self.weighted_sin,
                 self.weighted_cos,
+                self.one_over_determinant,
             ) = rp.repixelize_pol_IQU(
                 new_npix=self.new_npix,
                 pixel_mask=self.pixel_mask,
@@ -217,6 +220,7 @@ class ProcessTimeSamples(object):
                 weighted_sincos=self.weighted_sincos,
                 weighted_sin=self.weighted_sin,
                 weighted_cos=self.weighted_cos,
+                one_over_determinant=self.one_over_determinant,
             )
 
     def _flag_bad_pixel_samples(self):

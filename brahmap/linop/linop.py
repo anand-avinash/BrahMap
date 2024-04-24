@@ -220,11 +220,11 @@ class LinearOperator(BaseLinearOperator):
 
         return y
 
-    def to_array(self):
+    def to_array(self, dtype=np.float64):
         n, m = self.shape
-        H = np.empty((n, m))
+        H = np.empty((n, m), dtype=dtype)
         for j in range(m):
-            ej = np.zeros(m)
+            ej = np.zeros(m, dtype=dtype)
             ej[j] = 1.0
             H[:, j] = self * ej
         return H

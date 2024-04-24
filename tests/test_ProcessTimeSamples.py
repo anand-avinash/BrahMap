@@ -147,6 +147,9 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_allclose(
             cpp_PTS.weighted_sincos, py_PTS.weighted_sincos, rtol=rtol
         )
+        np.testing.assert_allclose(
+            cpp_PTS.one_over_determinant, py_PTS.one_over_determinant, rtol=rtol
+        )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
@@ -195,6 +198,9 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         )
         np.testing.assert_allclose(cpp_PTS.weighted_sin, py_PTS.weighted_sin, rtol=rtol)
         np.testing.assert_allclose(cpp_PTS.weighted_cos, py_PTS.weighted_cos, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_PTS.one_over_determinant, py_PTS.one_over_determinant, rtol=rtol
+        )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
@@ -267,12 +273,19 @@ class TestProcessTimeSamples(InitCommonParams):
                     initfloat.noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
                 )
 
+        one_over_determinant = 1.0 / (
+            (weighted_cos_sq * weighted_sin_sq) - (weighted_sincos * weighted_sincos)
+        )
+
         np.testing.assert_allclose(PTS.sin2phi, sin2phi, rtol=rtol)
         np.testing.assert_allclose(PTS.cos2phi, cos2phi, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_sin_sq, weighted_sin_sq, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_cos_sq, weighted_cos_sq, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_sincos, weighted_sincos, rtol=rtol)
+        np.testing.assert_allclose(
+            PTS.one_over_determinant, one_over_determinant, rtol=rtol
+        )
 
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
@@ -314,6 +327,14 @@ class TestProcessTimeSamples(InitCommonParams):
                 weighted_sin[pixel] += initfloat.noise_weights[idx] * sin2phi[idx]
                 weighted_cos[pixel] += initfloat.noise_weights[idx] * cos2phi[idx]
 
+        one_over_determinant = 1.0 / (
+            weighted_counts
+            * (weighted_cos_sq * weighted_sin_sq - weighted_sincos * weighted_sincos)
+            - weighted_cos * weighted_cos * weighted_sin_sq
+            - weighted_sin * weighted_sin * weighted_cos_sq
+            + 2.0 * weighted_cos * weighted_sin * weighted_sincos
+        )
+
         np.testing.assert_allclose(PTS.sin2phi, sin2phi, rtol=rtol)
         np.testing.assert_allclose(PTS.cos2phi, cos2phi, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
@@ -322,6 +343,9 @@ class TestProcessTimeSamples(InitCommonParams):
         np.testing.assert_allclose(PTS.weighted_sincos, weighted_sincos, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_sin, weighted_sin, rtol=rtol)
         np.testing.assert_allclose(PTS.weighted_cos, weighted_cos, rtol=rtol)
+        np.testing.assert_allclose(
+            PTS.one_over_determinant, one_over_determinant, rtol=rtol
+        )
 
 
 if __name__ == "__main__":

@@ -41,6 +41,7 @@ dint compute_weights_pol_I(      //
 
 template <typename dint, typename dfloat>
 void compute_weights_pol_QU(     //
+    const ssize_t npix,          //
     const ssize_t nsamples,      //
     const dint *pointings,       //
     const bool *pointings_flag,  //
@@ -51,7 +52,8 @@ void compute_weights_pol_QU(     //
     dfloat *cos2phi,             //
     dfloat *weighted_sin_sq,     //
     dfloat *weighted_cos_sq,     //
-    dfloat *weighted_sincos      //
+    dfloat *weighted_sincos,     //
+    dfloat *one_over_determinant //
 
 ) {
 
@@ -71,12 +73,20 @@ void compute_weights_pol_QU(     //
     weighted_sincos[pixel] += weight * sin2phi[idx] * cos2phi[idx];
   } // for
 
+  for (ssize_t idx = 0; idx < npix; ++idx) {
+    dfloat determinant = weighted_sin_sq[idx] * weighted_cos_sq[idx] -
+                         weighted_sincos[idx] * weighted_sincos[idx];
+
+    one_over_determinant[idx] = determinant;
+  } // for
+
   return;
 
 } // compute_weights_pol_QU()
 
 template <typename dint, typename dfloat>
 void compute_weights_pol_IQU(    //
+    const ssize_t npix,          //
     const ssize_t nsamples,      //
     const dint *pointings,       //
     const bool *pointings_flag,  //
@@ -89,8 +99,8 @@ void compute_weights_pol_IQU(    //
     dfloat *weighted_cos_sq,     //
     dfloat *weighted_sincos,     //
     dfloat *weighted_sin,        //
-    dfloat *weighted_cos         //
-
+    dfloat *weighted_cos,        //
+    dfloat *one_over_determinant //
 ) {
 
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
@@ -111,39 +121,42 @@ void compute_weights_pol_IQU(    //
     weighted_sincos[pixel] += weight * sin2phi[idx] * cos2phi[idx];
   } // for
 
+  for (ssize_t idx = 0; idx < npix; ++idx) {
+    dfloat determinant =
+        weighted_counts[idx] * weighted_cos_sq[idx] * weighted_sin_sq[idx] +
+        2.0 * weighted_cos[idx] * weighted_sin[idx] * weighted_sincos[idx] -
+        weighted_counts[idx] * weighted_sincos[idx] * weighted_sincos[idx] -
+        weighted_cos[idx] * weighted_cos[idx] * weighted_sin_sq[idx] -
+        weighted_sin[idx] * weighted_sin[idx] * weighted_cos_sq[idx];
+
+    one_over_determinant[idx] = determinant;
+  } // for
+
   return;
 
 } // compute_weights_pol_IQU()
 
 template <typename dint, typename dfloat>
-dint get_pixel_mask_pol(           //
-    const int solver_type,         //
-    const ssize_t npix,            //
-    const dfloat threshold,        //
-    const dfloat *weighted_counts, //
-    const dfloat *weighted_sin_sq, //
-    const dfloat *weighted_cos_sq, //
-    const dfloat *weighted_sincos, //
-    dint *pixel_mask,              //
-    dint *__old2new_pixel,         //
-    bool *pixel_flag               //
+dint get_pixel_mask_pol(                //
+    const int solver_type,              //
+    const ssize_t npix,                 //
+    const dfloat threshold,             //
+    const dfloat *weighted_counts,      //
+    const dfloat *one_over_determinant, //
+    dint *pixel_mask,                   //
+    dint *__old2new_pixel,              //
+    bool *pixel_flag                    //
 ) {
 
   dfloat weight_threshold = (dfloat)(solver_type - 1);
 
   dint new_npix = 0;
   for (ssize_t idx = 0; idx < npix; ++idx) {
-    dfloat determinant = weighted_sin_sq[idx] * weighted_cos_sq[idx] -
-                         weighted_sincos[idx] * weighted_sincos[idx];
-    dfloat trace = weighted_cos_sq[idx] + weighted_sin_sq[idx];
-    dfloat dsqrt = std::sqrt(trace * trace / 4.0 - determinant);
-    dfloat lambda_max = trace / 2.0 + dsqrt;
-    dfloat lambda_min = trace / 2.0 - dsqrt;
-    dfloat cond_num = std::abs(lambda_max / lambda_min);
 
     dfloat weight = weighted_counts[idx];
+    dfloat determinant = one_over_determinant[idx];
 
-    if ((cond_num <= threshold) && (weight > weight_threshold)) {
+    if ((determinant > threshold) && (weight > weight_threshold)) {
       pixel_mask[new_npix] = idx;
       __old2new_pixel[idx] = new_npix;
       pixel_flag[idx] = true;
@@ -217,6 +230,7 @@ std::function<dint(                          //
 
 template <typename dint, typename dfloat>
 std::function<void(                          //
+    const ssize_t npix,                      //
     const ssize_t nsamples,                  //
     const py::array_t<dint> pointings,       //
     const py::array_t<bool> pointings_flag,  //
@@ -227,10 +241,12 @@ std::function<void(                          //
     py::array_t<dfloat> cos2phi,             //
     py::array_t<dfloat> weighted_sin_sq,     //
     py::array_t<dfloat> weighted_cos_sq,     //
-    py::array_t<dfloat> weighted_sincos      //
+    py::array_t<dfloat> weighted_sincos,     //
+    py::array_t<dfloat> one_over_determinant //
     )>
     numpy_bind_compute_weights_pol_QU = //
-    [](const ssize_t nsamples,          //
+    [](const ssize_t npix,              //
+       const ssize_t nsamples,          //
        const py::buffer pointings,      //
        const py::buffer pointings_flag, //
        const py::buffer noise_weights,  //
@@ -240,7 +256,8 @@ std::function<void(                          //
        py::buffer cos2phi,              //
        py::buffer weighted_sin_sq,      //
        py::buffer weighted_cos_sq,      //
-       py::buffer weighted_sincos       //
+       py::buffer weighted_sincos,      //
+       py::buffer one_over_determinant  //
     ) {
       py::buffer_info pointings_info = pointings.request();
       py::buffer_info pointings_flag_info = pointings_flag.request();
@@ -252,6 +269,8 @@ std::function<void(                          //
       py::buffer_info weighted_sin_sq_info = weighted_sin_sq.request();
       py::buffer_info weighted_cos_sq_info = weighted_cos_sq.request();
       py::buffer_info weighted_sincos_info = weighted_sincos.request();
+      py::buffer_info one_over_determinant_info =
+          one_over_determinant.request();
 
       const dint *pointings_ptr =
           reinterpret_cast<const dint *>(pointings_info.ptr);
@@ -271,19 +290,23 @@ std::function<void(                          //
           reinterpret_cast<dfloat *>(weighted_cos_sq_info.ptr);
       dfloat *weighted_sincos_ptr =
           reinterpret_cast<dfloat *>(weighted_sincos_info.ptr);
+      dfloat *one_over_determinant_ptr =
+          reinterpret_cast<dfloat *>(one_over_determinant_info.ptr);
 
-      compute_weights_pol_QU(  //
-          nsamples,            //
-          pointings_ptr,       //
-          pointings_flag_ptr,  //
-          noise_weights_ptr,   //
-          pol_angles_ptr,      //
-          weighted_counts_ptr, //
-          sin2phi_ptr,         //
-          cos2phi_ptr,         //
-          weighted_sin_sq_ptr, //
-          weighted_cos_sq_ptr, //
-          weighted_sincos_ptr  //
+      compute_weights_pol_QU(      //
+          npix,                    //
+          nsamples,                //
+          pointings_ptr,           //
+          pointings_flag_ptr,      //
+          noise_weights_ptr,       //
+          pol_angles_ptr,          //
+          weighted_counts_ptr,     //
+          sin2phi_ptr,             //
+          cos2phi_ptr,             //
+          weighted_sin_sq_ptr,     //
+          weighted_cos_sq_ptr,     //
+          weighted_sincos_ptr,     //
+          one_over_determinant_ptr //
       );
 
       return;
@@ -291,6 +314,7 @@ std::function<void(                          //
 
 template <typename dint, typename dfloat>
 std::function<void(                          //
+    const ssize_t npix,                      //
     const ssize_t nsamples,                  //
     const py::array_t<dint> pointings,       //
     const py::array_t<bool> pointings_flag,  //
@@ -303,10 +327,12 @@ std::function<void(                          //
     py::array_t<dfloat> weighted_cos_sq,     //
     py::array_t<dfloat> weighted_sincos,     //
     py::array_t<dfloat> weighted_sin,        //
-    py::array_t<dfloat> weighted_cos         //
+    py::array_t<dfloat> weighted_cos,        //
+    py::array_t<dfloat> one_over_determinant //
     )>
     numpy_bind_compute_weights_pol_IQU = //
-    [](const ssize_t nsamples,           //
+    [](const ssize_t npix,               //
+       const ssize_t nsamples,           //
        const py::buffer pointings,       //
        const py::buffer pointings_flag,  //
        const py::buffer noise_weights,   //
@@ -318,7 +344,8 @@ std::function<void(                          //
        py::buffer weighted_cos_sq,       //
        py::buffer weighted_sincos,       //
        py::buffer weighted_sin,          //
-       py::buffer weighted_cos           //
+       py::buffer weighted_cos,          //
+       py::buffer one_over_determinant   //
     ) {
       py::buffer_info pointings_info = pointings.request();
       py::buffer_info pointings_flag_info = pointings_flag.request();
@@ -332,6 +359,8 @@ std::function<void(                          //
       py::buffer_info weighted_sincos_info = weighted_sincos.request();
       py::buffer_info weighted_sin_info = weighted_sin.request();
       py::buffer_info weighted_cos_info = weighted_cos.request();
+      py::buffer_info one_over_determinant_info =
+          one_over_determinant.request();
 
       const dint *pointings_ptr =
           reinterpret_cast<const dint *>(pointings_info.ptr);
@@ -355,68 +384,62 @@ std::function<void(                          //
           reinterpret_cast<dfloat *>(weighted_sin_info.ptr);
       dfloat *weighted_cos_ptr =
           reinterpret_cast<dfloat *>(weighted_cos_info.ptr);
+      dfloat *one_over_determinant_ptr =
+          reinterpret_cast<dfloat *>(one_over_determinant_info.ptr);
 
-      compute_weights_pol_IQU( //
-          nsamples,            //
-          pointings_ptr,       //
-          pointings_flag_ptr,  //
-          noise_weights_ptr,   //
-          pol_angles_ptr,      //
-          weighted_counts_ptr, //
-          sin2phi_ptr,         //
-          cos2phi_ptr,         //
-          weighted_sin_sq_ptr, //
-          weighted_cos_sq_ptr, //
-          weighted_sincos_ptr, //
-          weighted_sin_ptr,    //
-          weighted_cos_ptr     //
+      compute_weights_pol_IQU(     //
+          npix,                    //
+          nsamples,                //
+          pointings_ptr,           //
+          pointings_flag_ptr,      //
+          noise_weights_ptr,       //
+          pol_angles_ptr,          //
+          weighted_counts_ptr,     //
+          sin2phi_ptr,             //
+          cos2phi_ptr,             //
+          weighted_sin_sq_ptr,     //
+          weighted_cos_sq_ptr,     //
+          weighted_sincos_ptr,     //
+          weighted_sin_ptr,        //
+          weighted_cos_ptr,        //
+          one_over_determinant_ptr //
       );
 
       return;
     }; // numpy_bind_compute_weights_pol_IQU()
 
 template <typename dint, typename dfloat>
-std::function<dint(                            //
-    const int solver_type,                     //
-    const ssize_t npix,                        //
-    const dfloat threshold,                    //
-    const py::array_t<dfloat> weighted_counts, //
-    const py::array_t<dfloat> weighted_sin_sq, //
-    const py::array_t<dfloat> weighted_cos_sq, //
-    const py::array_t<dfloat> weighted_sincos, //
-    py::array_t<dint> pixel_mask,              //
-    py::array_t<dint> __old2new_pixel,         //
-    py::array_t<bool> pixel_flag               //
+std::function<dint(                                 //
+    const int solver_type,                          //
+    const ssize_t npix,                             //
+    const dfloat threshold,                         //
+    const py::array_t<dfloat> weighted_counts,      //
+    const py::array_t<dfloat> one_over_determinant, //
+    py::array_t<dint> pixel_mask,                   //
+    py::array_t<dint> __old2new_pixel,              //
+    py::array_t<bool> pixel_flag                    //
 
     )>
-    numpy_bind_get_pixel_mask_pol =      //
-    [](const int solver_type,            //
-       const ssize_t npix,               //
-       const dfloat threshold,           //
-       const py::buffer weighted_counts, //
-       const py::buffer weighted_sin_sq, //
-       const py::buffer weighted_cos_sq, //
-       const py::buffer weighted_sincos, //
-       py::buffer pixel_mask,            //
-       py::buffer __old2new_pixel,       //
-       py::buffer pixel_flag             //
+    numpy_bind_get_pixel_mask_pol =           //
+    [](const int solver_type,                 //
+       const ssize_t npix,                    //
+       const dfloat threshold,                //
+       const py::buffer weighted_counts,      //
+       const py::buffer one_over_determinant, //
+       py::buffer pixel_mask,                 //
+       py::buffer __old2new_pixel,            //
+       py::buffer pixel_flag                  //
        ) -> dint {
   py::buffer_info weighted_counts_info = weighted_counts.request();
-  py::buffer_info weighted_sin_sq_info = weighted_sin_sq.request();
-  py::buffer_info weighted_cos_sq_info = weighted_cos_sq.request();
-  py::buffer_info weighted_sincos_info = weighted_sincos.request();
+  py::buffer_info one_over_determinant_info = one_over_determinant.request();
   py::buffer_info pixel_mask_info = pixel_mask.request();
   py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
   py::buffer_info pixel_flag_info = pixel_flag.request();
 
   const dfloat *weighted_counts_ptr =
       reinterpret_cast<const dfloat *>(weighted_counts_info.ptr);
-  const dfloat *weighted_sin_sq_ptr =
-      reinterpret_cast<const dfloat *>(weighted_sin_sq_info.ptr);
-  const dfloat *weighted_cos_sq_ptr =
-      reinterpret_cast<const dfloat *>(weighted_cos_sq_info.ptr);
-  const dfloat *weighted_sincos_ptr =
-      reinterpret_cast<const dfloat *>(weighted_sincos_info.ptr);
+  const dfloat *one_over_determinant_ptr =
+      reinterpret_cast<const dfloat *>(one_over_determinant_info.ptr);
   dint *pixel_mask_ptr = reinterpret_cast<dint *>(pixel_mask_info.ptr);
   dint *__old2new_pixel_ptr =
       reinterpret_cast<dint *>(__old2new_pixel_info.ptr);
@@ -427,9 +450,7 @@ std::function<dint(                            //
       npix,                           //
       threshold,                      //
       weighted_counts_ptr,            //
-      weighted_sin_sq_ptr,            //
-      weighted_cos_sq_ptr,            //
-      weighted_sincos_ptr,            //
+      one_over_determinant_ptr,       //
       pixel_mask_ptr,                 //
       __old2new_pixel_ptr,            //
       pixel_flag_ptr                  //
@@ -491,178 +512,186 @@ PYBIND11_MODULE(compute_weights, m) {
 
   m.def("compute_weights_pol_QU",
         numpy_bind_compute_weights_pol_QU<int32_t, float>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert()  //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_QU",
         numpy_bind_compute_weights_pol_QU<int64_t, float>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert()  //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_QU",
         numpy_bind_compute_weights_pol_QU<int32_t, double>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert()  //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_QU",
         numpy_bind_compute_weights_pol_QU<int64_t, double>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert()  //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_IQU",
         numpy_bind_compute_weights_pol_IQU<int32_t, float>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("weighted_sin").noconvert(),    //
-        py::arg("weighted_cos").noconvert()     //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("weighted_sin").noconvert(),        //
+        py::arg("weighted_cos").noconvert(),        //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_IQU",
         numpy_bind_compute_weights_pol_IQU<int64_t, float>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("weighted_sin").noconvert(),    //
-        py::arg("weighted_cos").noconvert()     //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("weighted_sin").noconvert(),        //
+        py::arg("weighted_cos").noconvert(),        //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_IQU",
         numpy_bind_compute_weights_pol_IQU<int32_t, double>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("weighted_sin").noconvert(),    //
-        py::arg("weighted_cos").noconvert()     //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("weighted_sin").noconvert(),        //
+        py::arg("weighted_cos").noconvert(),        //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("compute_weights_pol_IQU",
         numpy_bind_compute_weights_pol_IQU<int64_t, double>,
-        py::arg("nsamples"),                    //
-        py::arg("pointings").noconvert(),       //
-        py::arg("pointings_flag").noconvert(),  //
-        py::arg("noise_weights").noconvert(),   //
-        py::arg("pol_angles").noconvert(),      //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("sin2phi").noconvert(),         //
-        py::arg("cos2phi").noconvert(),         //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("weighted_sin").noconvert(),    //
-        py::arg("weighted_cos").noconvert()     //
+        py::arg("npix"),                            //
+        py::arg("nsamples"),                        //
+        py::arg("pointings").noconvert(),           //
+        py::arg("pointings_flag").noconvert(),      //
+        py::arg("noise_weights").noconvert(),       //
+        py::arg("pol_angles").noconvert(),          //
+        py::arg("weighted_counts").noconvert(),     //
+        py::arg("sin2phi").noconvert(),             //
+        py::arg("cos2phi").noconvert(),             //
+        py::arg("weighted_sin_sq").noconvert(),     //
+        py::arg("weighted_cos_sq").noconvert(),     //
+        py::arg("weighted_sincos").noconvert(),     //
+        py::arg("weighted_sin").noconvert(),        //
+        py::arg("weighted_cos").noconvert(),        //
+        py::arg("one_over_determinant").noconvert() //
   );
 
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int32_t, float>,
-        py::arg("solver_type"),                 //
-        py::arg("npix"),                        //
-        py::arg("threshold"),                   //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
-        py::arg("__old2new_pixel").noconvert(), //
-        py::arg("pixel_flag").noconvert()       //
+        py::arg("solver_type"),                      //
+        py::arg("npix"),                             //
+        py::arg("threshold"),                        //
+        py::arg("weighted_counts").noconvert(),      //
+        py::arg("one_over_determinant").noconvert(), //
+        py::arg("pixel_mask").noconvert(),           //
+        py::arg("__old2new_pixel").noconvert(),      //
+        py::arg("pixel_flag").noconvert()            //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, float>,
-        py::arg("solver_type"),                 //
-        py::arg("npix"),                        //
-        py::arg("threshold"),                   //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
-        py::arg("__old2new_pixel").noconvert(), //
-        py::arg("pixel_flag").noconvert()       //
+        py::arg("solver_type"),                      //
+        py::arg("npix"),                             //
+        py::arg("threshold"),                        //
+        py::arg("weighted_counts").noconvert(),      //
+        py::arg("one_over_determinant").noconvert(), //
+        py::arg("pixel_mask").noconvert(),           //
+        py::arg("__old2new_pixel").noconvert(),      //
+        py::arg("pixel_flag").noconvert()            //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int32_t, double>,
-        py::arg("solver_type"),                 //
-        py::arg("npix"),                        //
-        py::arg("threshold"),                   //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
-        py::arg("__old2new_pixel").noconvert(), //
-        py::arg("pixel_flag").noconvert()       //
+        py::arg("solver_type"),                      //
+        py::arg("npix"),                             //
+        py::arg("threshold"),                        //
+        py::arg("weighted_counts").noconvert(),      //
+        py::arg("one_over_determinant").noconvert(), //
+        py::arg("pixel_mask").noconvert(),           //
+        py::arg("__old2new_pixel").noconvert(),      //
+        py::arg("pixel_flag").noconvert()            //
   );
   m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, double>,
-        py::arg("solver_type"),                 //
-        py::arg("npix"),                        //
-        py::arg("threshold"),                   //
-        py::arg("weighted_counts").noconvert(), //
-        py::arg("weighted_sin_sq").noconvert(), //
-        py::arg("weighted_cos_sq").noconvert(), //
-        py::arg("weighted_sincos").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
-        py::arg("__old2new_pixel").noconvert(), //
-        py::arg("pixel_flag").noconvert()       //
+        py::arg("solver_type"),                      //
+        py::arg("npix"),                             //
+        py::arg("threshold"),                        //
+        py::arg("weighted_counts").noconvert(),      //
+        py::arg("one_over_determinant").noconvert(), //
+        py::arg("pixel_mask").noconvert(),           //
+        py::arg("__old2new_pixel").noconvert(),      //
+        py::arg("pixel_flag").noconvert()            //
   );
 }

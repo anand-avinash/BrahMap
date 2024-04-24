@@ -120,8 +120,10 @@ class TestComputeWeights(InitCommonParams):
         cpp_weighted_sin_sq = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_cos_sq = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_sincos = np.zeros(self.npix, dtype=initfloat.dtype)
+        cpp_one_over_determinant = np.zeros(self.npix, dtype=initfloat.dtype)
 
         compute_weights.compute_weights_pol_QU(
+            self.npix,
             self.nsamples,
             initint.pointings,
             self.pointings_flag,
@@ -133,6 +135,7 @@ class TestComputeWeights(InitCommonParams):
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
             cpp_weighted_sincos,
+            cpp_one_over_determinant,
         )
 
         (
@@ -142,6 +145,7 @@ class TestComputeWeights(InitCommonParams):
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            __,
         ) = cw.computeweights_pol_QU(
             self.npix,
             self.nsamples,
@@ -169,8 +173,10 @@ class TestComputeWeights(InitCommonParams):
         cpp_weighted_sincos = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_sin = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_cos = np.zeros(self.npix, dtype=initfloat.dtype)
+        cpp_one_over_determinant = np.zeros(self.npix, dtype=initfloat.dtype)
 
         compute_weights.compute_weights_pol_IQU(
+            self.npix,
             self.nsamples,
             initint.pointings,
             self.pointings_flag,
@@ -184,6 +190,7 @@ class TestComputeWeights(InitCommonParams):
             cpp_weighted_sincos,
             cpp_weighted_sin,
             cpp_weighted_cos,
+            cpp_one_over_determinant,
         )
 
         (
@@ -195,6 +202,7 @@ class TestComputeWeights(InitCommonParams):
             py_weighted_sincos,
             py_weighted_sin,
             py_weighted_cos,
+            __,
         ) = cw.computeweights_pol_IQU(
             self.npix,
             self.nsamples,
@@ -219,9 +227,10 @@ class TestComputeWeights(InitCommonParams):
             weighted_counts,
             __,
             __,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
+            __,
+            __,
+            __,
+            one_over_determinant,
         ) = cw.computeweights_pol_QU(
             self.npix,
             self.nsamples,
@@ -241,9 +250,7 @@ class TestComputeWeights(InitCommonParams):
             self.npix,
             1.0e3,
             weighted_counts,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
+            one_over_determinant,
             cpp_pixel_mask,
             cpp_old2new_pixel,
             cpp_pixel_flag,
@@ -261,9 +268,7 @@ class TestComputeWeights(InitCommonParams):
             2,
             1.0e3,
             weighted_counts,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
+            one_over_determinant,
             dtype_int=initint.dtype,
         )
 
@@ -277,11 +282,12 @@ class TestComputeWeights(InitCommonParams):
             weighted_counts,
             __,
             __,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
             __,
             __,
+            __,
+            __,
+            __,
+            one_over_determinant,
         ) = cw.computeweights_pol_IQU(
             self.npix,
             self.nsamples,
@@ -301,9 +307,7 @@ class TestComputeWeights(InitCommonParams):
             self.npix,
             1.0e3,
             weighted_counts,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
+            one_over_determinant,
             cpp_pixel_mask,
             cpp_old2new_pixel,
             cpp_pixel_flag,
@@ -321,9 +325,7 @@ class TestComputeWeights(InitCommonParams):
             3,
             1.0e3,
             weighted_counts,
-            weighted_sin_sq,
-            weighted_cos_sq,
-            weighted_sincos,
+            one_over_determinant,
             dtype_int=initint.dtype,
         )
 

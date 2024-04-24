@@ -102,6 +102,7 @@ class TestRepixelization(InitCommonParams):
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            py_one_over_determinant,
         ) = cw.computeweights_pol_QU(
             self.npix,
             self.nsamples,
@@ -115,11 +116,9 @@ class TestRepixelization(InitCommonParams):
         new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
             self.npix,
             2,
-            1.0e3,
+            1.0e-5,
             py_weighted_counts,
-            py_weighted_sin_sq,
-            py_weighted_cos_sq,
-            py_weighted_sincos,
+            py_one_over_determinant,
             initint.pointings.dtype,
         )
 
@@ -127,6 +126,7 @@ class TestRepixelization(InitCommonParams):
         cpp_weighted_sin_sq = py_weighted_sin_sq.copy()
         cpp_weighted_cos_sq = py_weighted_cos_sq.copy()
         cpp_weighted_sincos = py_weighted_sincos.copy()
+        cpp_one_over_determinant = py_one_over_determinant.copy()
 
         repixelize.repixelize_pol_QU(
             new_npix,
@@ -135,18 +135,21 @@ class TestRepixelization(InitCommonParams):
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
             cpp_weighted_sincos,
+            cpp_one_over_determinant,
         )
 
         cpp_weighted_counts.resize(new_npix, refcheck=False)
         cpp_weighted_sin_sq.resize(new_npix, refcheck=False)
         cpp_weighted_cos_sq.resize(new_npix, refcheck=False)
         cpp_weighted_sincos.resize(new_npix, refcheck=False)
+        cpp_one_over_determinant.resize(new_npix, refcheck=False)
 
         (
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            py_one_over_determinant,
         ) = rp.repixelize_pol_QU(
             new_npix,
             pixel_mask,
@@ -154,12 +157,16 @@ class TestRepixelization(InitCommonParams):
             py_weighted_sin_sq,
             py_weighted_cos_sq,
             py_weighted_sincos,
+            py_one_over_determinant,
         )
 
         np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
         np.testing.assert_allclose(py_weighted_sin_sq, cpp_weighted_sin_sq, rtol=rtol)
         np.testing.assert_allclose(py_weighted_cos_sq, cpp_weighted_cos_sq, rtol=rtol)
         np.testing.assert_allclose(py_weighted_sincos, cpp_weighted_sincos, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_one_over_determinant, py_one_over_determinant, rtol=rtol
+        )
 
     def test_repixelize_pol_IQU(self, initint, initfloat, rtol):
         (
@@ -171,6 +178,7 @@ class TestRepixelization(InitCommonParams):
             py_weighted_sincos,
             py_weighted_sin,
             py_weighted_cos,
+            py_one_over_determinant,
         ) = cw.computeweights_pol_IQU(
             self.npix,
             self.nsamples,
@@ -184,11 +192,9 @@ class TestRepixelization(InitCommonParams):
         new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
             self.npix,
             3,
-            1.0e3,
+            1.0e-5,
             py_weighted_counts,
-            py_weighted_sin_sq,
-            py_weighted_cos_sq,
-            py_weighted_sincos,
+            py_one_over_determinant,
             initint.dtype,
         )
 
@@ -198,6 +204,7 @@ class TestRepixelization(InitCommonParams):
         cpp_weighted_sincos = py_weighted_sincos.copy()
         cpp_weighted_sin = py_weighted_sin.copy()
         cpp_weighted_cos = py_weighted_cos.copy()
+        cpp_one_over_determinant = py_one_over_determinant.copy()
 
         repixelize.repixelize_pol_IQU(
             new_npix,
@@ -208,6 +215,7 @@ class TestRepixelization(InitCommonParams):
             cpp_weighted_sincos,
             cpp_weighted_sin,
             cpp_weighted_cos,
+            cpp_one_over_determinant,
         )
 
         cpp_weighted_counts.resize(new_npix, refcheck=False)
@@ -216,6 +224,7 @@ class TestRepixelization(InitCommonParams):
         cpp_weighted_sincos.resize(new_npix, refcheck=False)
         cpp_weighted_sin.resize(new_npix, refcheck=False)
         cpp_weighted_cos.resize(new_npix, refcheck=False)
+        cpp_one_over_determinant.resize(new_npix, refcheck=False)
 
         (
             py_weighted_counts,
@@ -224,6 +233,7 @@ class TestRepixelization(InitCommonParams):
             py_weighted_sincos,
             py_weighted_sin,
             py_weighted_cos,
+            py_one_over_determinant,
         ) = rp.repixelize_pol_IQU(
             new_npix,
             pixel_mask,
@@ -233,6 +243,7 @@ class TestRepixelization(InitCommonParams):
             py_weighted_sincos,
             py_weighted_sin,
             py_weighted_cos,
+            py_one_over_determinant,
         )
 
         np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
@@ -241,6 +252,9 @@ class TestRepixelization(InitCommonParams):
         np.testing.assert_allclose(py_weighted_sincos, cpp_weighted_sincos, rtol=rtol)
         np.testing.assert_allclose(py_weighted_sin, cpp_weighted_sin, rtol=rtol)
         np.testing.assert_allclose(py_weighted_cos, cpp_weighted_cos, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_one_over_determinant, py_one_over_determinant, rtol=rtol
+        )
 
 
 @pytest.mark.parametrize(
@@ -263,6 +277,7 @@ class TestFlagBadPixelSamples(InitCommonParams):
             py_weighted_sincos,
             __,
             __,
+            py_one_over_determinant,
         ) = cw.computeweights_pol_IQU(
             self.npix,
             self.nsamples,
@@ -276,11 +291,9 @@ class TestFlagBadPixelSamples(InitCommonParams):
         __, __, old2new_pixel, pixel_flag = cw.get_pix_mask_pol(
             self.npix,
             3,
-            1.0e3,
+            1.0e-5,
             py_weighted_counts,
-            py_weighted_sin_sq,
-            py_weighted_cos_sq,
-            py_weighted_sincos,
+            py_one_over_determinant,
             initint.dtype,
         )
 

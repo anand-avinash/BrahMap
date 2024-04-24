@@ -47,6 +47,7 @@ def computeweights_pol_QU(
     weighted_sin_sq = np.zeros(npix, dtype=dtype_float)
     weighted_cos_sq = np.zeros(npix, dtype=dtype_float)
     weighted_sincos = np.zeros(npix, dtype=dtype_float)
+    one_over_determinant = np.zeros(npix, dtype=dtype_float)
 
     sin2phi = np.sin(2.0 * pol_angles)
     cos2phi = np.cos(2.0 * pol_angles)
@@ -60,6 +61,10 @@ def computeweights_pol_QU(
             weighted_cos_sq[pixel] += noise_weights[idx] * cos2phi[idx] * cos2phi[idx]
             weighted_sincos[pixel] += noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
 
+    one_over_determinant = (weighted_cos_sq * weighted_sin_sq) - (
+        weighted_sincos * weighted_sincos
+    )
+
     return (
         weighted_counts,
         sin2phi,
@@ -67,6 +72,7 @@ def computeweights_pol_QU(
         weighted_sin_sq,
         weighted_cos_sq,
         weighted_sincos,
+        one_over_determinant,
     )
 
 
@@ -85,6 +91,7 @@ def computeweights_pol_IQU(
     weighted_sincos = np.zeros(npix, dtype=dtype_float)
     weighted_sin = np.zeros(npix, dtype=dtype_float)
     weighted_cos = np.zeros(npix, dtype=dtype_float)
+    one_over_determinant = np.zeros(npix, dtype=dtype_float)
 
     sin2phi = np.sin(2.0 * pol_angles)
     cos2phi = np.cos(2.0 * pol_angles)
@@ -100,6 +107,14 @@ def computeweights_pol_IQU(
             weighted_sin[pixel] += noise_weights[idx] * sin2phi[idx]
             weighted_cos[pixel] += noise_weights[idx] * cos2phi[idx]
 
+    one_over_determinant = (
+        weighted_counts
+        * (weighted_cos_sq * weighted_sin_sq - weighted_sincos * weighted_sincos)
+        - weighted_cos * weighted_cos * weighted_sin_sq
+        - weighted_sin * weighted_sin * weighted_cos_sq
+        + 2.0 * weighted_cos * weighted_sin * weighted_sincos
+    )
+
     return (
         weighted_counts,
         sin2phi,
@@ -109,6 +124,7 @@ def computeweights_pol_IQU(
         weighted_sincos,
         weighted_sin,
         weighted_cos,
+        one_over_determinant,
     )
 
 
@@ -117,27 +133,12 @@ def get_pix_mask_pol(
     solver_type: int,
     threshold: float,
     weighted_counts: np.ndarray,
-    weighted_sin_sq: np.ndarray,
-    weighted_cos_sq: np.ndarray,
-    weighted_sincos: np.ndarray,
+    one_over_determinant: np.ndarray,
     dtype_int,
 ):
-    determinant = (weighted_sin_sq * weighted_cos_sq) - (
-        weighted_sincos * weighted_sincos
-    )
-    trace = weighted_sin_sq + weighted_cos_sq
-    sqrtf = np.sqrt(trace * trace / 4.0 - determinant)
-    lambda_max = trace / 2.0 + sqrtf
-    lambda_min = trace / 2.0 - sqrtf
-    # cond_num = np.abs(lambda_max / lambda_min)
-    # ^ This division produced `divided by zero warning` in multiple cases. So replaced it with `np.divide`. see <https://stackoverflow.com/a/54364060>
-    cond_num = 1.0e-7 * np.ones(len(lambda_max))
-    np.divide(lambda_max, lambda_min, out=cond_num, where=lambda_min != 0)
-    cond_num = np.abs(cond_num)
-
-    cond_num_mask = np.where(cond_num <= threshold)[0]
+    determinant_mask = np.where(one_over_determinant > threshold)[0]
     count_mask = np.where(weighted_counts > (solver_type - 1))[0]
-    pixel_mask = np.intersect1d(count_mask, cond_num_mask)
+    pixel_mask = np.intersect1d(count_mask, determinant_mask)
     new_npix = len(pixel_mask)
 
     pixel_mask = pixel_mask.astype(dtype=dtype_int)

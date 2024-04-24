@@ -19,6 +19,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
             self.weighted_sin_sq = processed_samples.weighted_sin_sq
             self.weighted_cos_sq = processed_samples.weighted_cos_sq
             self.weighted_sincos = processed_samples.weighted_sincos
+            self.one_over_determinant = processed_samples.one_over_determinant
             if self.solver_type == 3:
                 self.weighted_counts = processed_samples.weighted_counts
                 self.weighted_sin = processed_samples.weighted_sin
@@ -89,6 +90,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
             weighted_sin_sq=self.weighted_sin_sq,
             weighted_cos_sq=self.weighted_cos_sq,
             weighted_sincos=self.weighted_sincos,
+            one_over_determinant=self.one_over_determinant,
             vec=vec,
         )
 
@@ -121,6 +123,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
             weighted_sincos=self.weighted_sincos,
             weighted_sin=self.weighted_sin,
             weighted_cos=self.weighted_cos,
+            one_over_determinant=self.one_over_determinant,
             vec=vec,
         )
 
