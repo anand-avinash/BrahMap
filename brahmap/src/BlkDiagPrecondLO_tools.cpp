@@ -79,15 +79,15 @@ void BDPLO_mult_IQU(                    //
   return;
 } // BDPLO_mult_IQU()
 
-template <typename dfloat>
-std::function<void(                                 //
-    const ssize_t new_npix,                         //
-    const py::array_t<dfloat> weighted_sin_sq,      //
-    const py::array_t<dfloat> weighted_cos_sq,      //
-    const py::array_t<dfloat> weighted_sincos,      //
-    const py::array_t<dfloat> one_over_determinant, //
-    const py::array_t<dfloat> vec,                  //
-    py::array_t<dfloat> prod                        //
+template <template <typename> class buffer_t, typename dfloat>
+std::function<void(                              //
+    const ssize_t new_npix,                      //
+    const buffer_t<dfloat> weighted_sin_sq,      //
+    const buffer_t<dfloat> weighted_cos_sq,      //
+    const buffer_t<dfloat> weighted_sincos,      //
+    const buffer_t<dfloat> one_over_determinant, //
+    const buffer_t<dfloat> vec,                  //
+    buffer_t<dfloat> prod                        //
     )>
     numpy_bind_BDPLO_mult_QU =                //
     [](const ssize_t new_npix,                //
@@ -130,18 +130,18 @@ std::function<void(                                 //
       return;
     }; // numpy_bind_BDPLO_mult_QU()
 
-template <typename dfloat>
-std::function<void(                                 //
-    const ssize_t new_npix,                         //
-    const py::array_t<dfloat> weighted_counts,      //
-    const py::array_t<dfloat> weighted_sin_sq,      //
-    const py::array_t<dfloat> weighted_cos_sq,      //
-    const py::array_t<dfloat> weighted_sincos,      //
-    const py::array_t<dfloat> weighted_sin,         //
-    const py::array_t<dfloat> weighted_cos,         //
-    const py::array_t<dfloat> one_over_determinant, //
-    const py::array_t<dfloat> vec,                  //
-    py::array_t<dfloat> prod                        //
+template <template <typename> class buffer_t, typename dfloat>
+std::function<void(                              //
+    const ssize_t new_npix,                      //
+    const buffer_t<dfloat> weighted_counts,      //
+    const buffer_t<dfloat> weighted_sin_sq,      //
+    const buffer_t<dfloat> weighted_cos_sq,      //
+    const buffer_t<dfloat> weighted_sincos,      //
+    const buffer_t<dfloat> weighted_sin,         //
+    const buffer_t<dfloat> weighted_cos,         //
+    const buffer_t<dfloat> one_over_determinant, //
+    const buffer_t<dfloat> vec,                  //
+    buffer_t<dfloat> prod                        //
     )>
     numpy_bind_BDPLO_mult_IQU =               //
     [](const ssize_t new_npix,                //
@@ -201,47 +201,47 @@ std::function<void(                                 //
 
 PYBIND11_MODULE(BlkDiagPrecondLO_tools, m) {
   m.doc() = "BlkDiagPrecondLO_tools";
-  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<float>, //
-        py::arg("new_npix"),                              //
-        py::arg("weighted_sin_sq").noconvert(),           //
-        py::arg("weighted_cos_sq").noconvert(),           //
-        py::arg("weighted_sincos").noconvert(),           //
-        py::arg("one_over_determinant").noconvert(),      //
-        py::arg("vec").noconvert(),                       //
-        py::arg("prod").noconvert()                       //
+  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<py::array_t, float>, //
+        py::arg("new_npix"),                                           //
+        py::arg("weighted_sin_sq").noconvert(),                        //
+        py::arg("weighted_cos_sq").noconvert(),                        //
+        py::arg("weighted_sincos").noconvert(),                        //
+        py::arg("one_over_determinant").noconvert(),                   //
+        py::arg("vec").noconvert(),                                    //
+        py::arg("prod").noconvert()                                    //
   );
-  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<double>, //
-        py::arg("new_npix"),                               //
-        py::arg("weighted_sin_sq").noconvert(),            //
-        py::arg("weighted_cos_sq").noconvert(),            //
-        py::arg("weighted_sincos").noconvert(),            //
-        py::arg("one_over_determinant").noconvert(),       //
-        py::arg("vec").noconvert(),                        //
-        py::arg("prod").noconvert()                        //
+  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<py::array_t, double>, //
+        py::arg("new_npix"),                                            //
+        py::arg("weighted_sin_sq").noconvert(),                         //
+        py::arg("weighted_cos_sq").noconvert(),                         //
+        py::arg("weighted_sincos").noconvert(),                         //
+        py::arg("one_over_determinant").noconvert(),                    //
+        py::arg("vec").noconvert(),                                     //
+        py::arg("prod").noconvert()                                     //
   );
 
-  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<float>, //
-        py::arg("new_npix"),                                //
-        py::arg("weighted_counts").noconvert(),             //
-        py::arg("weighted_sin_sq").noconvert(),             //
-        py::arg("weighted_cos_sq").noconvert(),             //
-        py::arg("weighted_sincos").noconvert(),             //
-        py::arg("weighted_sin").noconvert(),                //
-        py::arg("weighted_cos").noconvert(),                //
-        py::arg("one_over_determinant").noconvert(),        //
-        py::arg("vec").noconvert(),                         //
-        py::arg("prod").noconvert()                         //
+  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<py::array_t, float>, //
+        py::arg("new_npix"),                                             //
+        py::arg("weighted_counts").noconvert(),                          //
+        py::arg("weighted_sin_sq").noconvert(),                          //
+        py::arg("weighted_cos_sq").noconvert(),                          //
+        py::arg("weighted_sincos").noconvert(),                          //
+        py::arg("weighted_sin").noconvert(),                             //
+        py::arg("weighted_cos").noconvert(),                             //
+        py::arg("one_over_determinant").noconvert(),                     //
+        py::arg("vec").noconvert(),                                      //
+        py::arg("prod").noconvert()                                      //
   );
-  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<double>, //
-        py::arg("new_npix"),                                 //
-        py::arg("weighted_counts").noconvert(),              //
-        py::arg("weighted_sin_sq").noconvert(),              //
-        py::arg("weighted_cos_sq").noconvert(),              //
-        py::arg("weighted_sincos").noconvert(),              //
-        py::arg("weighted_sin").noconvert(),                 //
-        py::arg("weighted_cos").noconvert(),                 //
-        py::arg("one_over_determinant").noconvert(),         //
-        py::arg("vec").noconvert(),                          //
-        py::arg("prod").noconvert()                          //
+  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<py::array_t, double>, //
+        py::arg("new_npix"),                                              //
+        py::arg("weighted_counts").noconvert(),                           //
+        py::arg("weighted_sin_sq").noconvert(),                           //
+        py::arg("weighted_cos_sq").noconvert(),                           //
+        py::arg("weighted_sincos").noconvert(),                           //
+        py::arg("weighted_sin").noconvert(),                              //
+        py::arg("weighted_cos").noconvert(),                              //
+        py::arg("one_over_determinant").noconvert(),                      //
+        py::arg("vec").noconvert(),                                       //
+        py::arg("prod").noconvert()                                       //
   );
 }

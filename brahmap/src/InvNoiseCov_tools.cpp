@@ -18,12 +18,12 @@ void uncorrelated_mult(     //
   return;
 } // uncorrelated_mult()
 
-template <typename dfloat>
-std::function<void(                 //
-    const ssize_t nsamples,         //
-    const py::array_t<dfloat> diag, //
-    const py::array_t<dfloat> vec,  //
-    py::array_t<dfloat> prod        //
+template <template <typename> class buffer_t, typename dfloat>
+std::function<void(              //
+    const ssize_t nsamples,      //
+    const buffer_t<dfloat> diag, //
+    const buffer_t<dfloat> vec,  //
+    buffer_t<dfloat> prod        //
     )>
     numpy_bind_uncorrelated_mult = //
     [](const ssize_t nsamples,     //
@@ -52,13 +52,13 @@ std::function<void(                 //
 
 PYBIND11_MODULE(InvNoiseCov_tools, m) {
   m.doc() = "InvNoiseCov_tools";
-  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<float>,
+  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, float>,
         py::arg("nsamples"),         //
         py::arg("diag").noconvert(), //
         py::arg("vec").noconvert(),  //
         py::arg("prod").noconvert()  //
   );
-  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<double>,
+  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, double>,
         py::arg("nsamples"),         //
         py::arg("diag").noconvert(), //
         py::arg("vec").noconvert(),  //

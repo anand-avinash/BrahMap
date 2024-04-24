@@ -169,17 +169,17 @@ dint get_pixel_mask_pol(                //
 
 } // get_pixel_mask_pol()
 
-template <typename dint, typename dfloat>
-std::function<dint(                          //
-    const ssize_t npix,                      //
-    const ssize_t nsamples,                  //
-    const py::array_t<dint> pointings,       //
-    const py::array_t<bool> pointings_flag,  //
-    const py::array_t<dfloat> noise_weights, //
-    py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dint> pixel_mask,            //
-    py::array_t<dint> __old2new_pixel,       //
-    py::array_t<bool> pixel_flag             //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<dint(                       //
+    const ssize_t npix,                   //
+    const ssize_t nsamples,               //
+    const buffer_t<dint> pointings,       //
+    const buffer_t<bool> pointings_flag,  //
+    const buffer_t<dfloat> noise_weights, //
+    buffer_t<dfloat> weighted_counts,     //
+    buffer_t<dint> pixel_mask,            //
+    buffer_t<dint> __old2new_pixel,       //
+    buffer_t<bool> pixel_flag             //
     )>
     numpy_bind_compute_weights_pol_I =  //
     [](const ssize_t npix,              //
@@ -228,21 +228,21 @@ std::function<dint(                          //
   return new_npix;
 }; // numpy_bind_compute_weights_pol_I
 
-template <typename dint, typename dfloat>
-std::function<void(                          //
-    const ssize_t npix,                      //
-    const ssize_t nsamples,                  //
-    const py::array_t<dint> pointings,       //
-    const py::array_t<bool> pointings_flag,  //
-    const py::array_t<dfloat> noise_weights, //
-    const py::array_t<dfloat> pol_angles,    //
-    py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dfloat> sin2phi,             //
-    py::array_t<dfloat> cos2phi,             //
-    py::array_t<dfloat> weighted_sin_sq,     //
-    py::array_t<dfloat> weighted_cos_sq,     //
-    py::array_t<dfloat> weighted_sincos,     //
-    py::array_t<dfloat> one_over_determinant //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                       //
+    const ssize_t npix,                   //
+    const ssize_t nsamples,               //
+    const buffer_t<dint> pointings,       //
+    const buffer_t<bool> pointings_flag,  //
+    const buffer_t<dfloat> noise_weights, //
+    const buffer_t<dfloat> pol_angles,    //
+    buffer_t<dfloat> weighted_counts,     //
+    buffer_t<dfloat> sin2phi,             //
+    buffer_t<dfloat> cos2phi,             //
+    buffer_t<dfloat> weighted_sin_sq,     //
+    buffer_t<dfloat> weighted_cos_sq,     //
+    buffer_t<dfloat> weighted_sincos,     //
+    buffer_t<dfloat> one_over_determinant //
     )>
     numpy_bind_compute_weights_pol_QU = //
     [](const ssize_t npix,              //
@@ -312,23 +312,23 @@ std::function<void(                          //
       return;
     }; // numpy_bind_compute_weights_pol_QU()
 
-template <typename dint, typename dfloat>
-std::function<void(                          //
-    const ssize_t npix,                      //
-    const ssize_t nsamples,                  //
-    const py::array_t<dint> pointings,       //
-    const py::array_t<bool> pointings_flag,  //
-    const py::array_t<dfloat> noise_weights, //
-    const py::array_t<dfloat> pol_angles,    //
-    py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dfloat> sin2phi,             //
-    py::array_t<dfloat> cos2phi,             //
-    py::array_t<dfloat> weighted_sin_sq,     //
-    py::array_t<dfloat> weighted_cos_sq,     //
-    py::array_t<dfloat> weighted_sincos,     //
-    py::array_t<dfloat> weighted_sin,        //
-    py::array_t<dfloat> weighted_cos,        //
-    py::array_t<dfloat> one_over_determinant //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                       //
+    const ssize_t npix,                   //
+    const ssize_t nsamples,               //
+    const buffer_t<dint> pointings,       //
+    const buffer_t<bool> pointings_flag,  //
+    const buffer_t<dfloat> noise_weights, //
+    const buffer_t<dfloat> pol_angles,    //
+    buffer_t<dfloat> weighted_counts,     //
+    buffer_t<dfloat> sin2phi,             //
+    buffer_t<dfloat> cos2phi,             //
+    buffer_t<dfloat> weighted_sin_sq,     //
+    buffer_t<dfloat> weighted_cos_sq,     //
+    buffer_t<dfloat> weighted_sincos,     //
+    buffer_t<dfloat> weighted_sin,        //
+    buffer_t<dfloat> weighted_cos,        //
+    buffer_t<dfloat> one_over_determinant //
     )>
     numpy_bind_compute_weights_pol_IQU = //
     [](const ssize_t npix,               //
@@ -408,16 +408,16 @@ std::function<void(                          //
       return;
     }; // numpy_bind_compute_weights_pol_IQU()
 
-template <typename dint, typename dfloat>
-std::function<dint(                                 //
-    const int solver_type,                          //
-    const ssize_t npix,                             //
-    const dfloat threshold,                         //
-    const py::array_t<dfloat> weighted_counts,      //
-    const py::array_t<dfloat> one_over_determinant, //
-    py::array_t<dint> pixel_mask,                   //
-    py::array_t<dint> __old2new_pixel,              //
-    py::array_t<bool> pixel_flag                    //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<dint(                              //
+    const int solver_type,                       //
+    const ssize_t npix,                          //
+    const dfloat threshold,                      //
+    const buffer_t<dfloat> weighted_counts,      //
+    const buffer_t<dfloat> one_over_determinant, //
+    buffer_t<dint> pixel_mask,                   //
+    buffer_t<dint> __old2new_pixel,              //
+    buffer_t<bool> pixel_flag                    //
 
     )>
     numpy_bind_get_pixel_mask_pol =           //
@@ -462,7 +462,7 @@ std::function<dint(                                 //
 PYBIND11_MODULE(compute_weights, m) {
   m.doc() = "compute_weights";
   m.def("compute_weights_pol_I",
-        numpy_bind_compute_weights_pol_I<int32_t, float>,
+        numpy_bind_compute_weights_pol_I<py::array_t, int32_t, float>,
         py::arg("npix"),                        //
         py::arg("nsamples"),                    //
         py::arg("pointings").noconvert(),       //
@@ -474,7 +474,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
-        numpy_bind_compute_weights_pol_I<int64_t, float>,
+        numpy_bind_compute_weights_pol_I<py::array_t, int64_t, float>,
         py::arg("npix"),                        //
         py::arg("nsamples"),                    //
         py::arg("pointings").noconvert(),       //
@@ -486,7 +486,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
-        numpy_bind_compute_weights_pol_I<int32_t, double>,
+        numpy_bind_compute_weights_pol_I<py::array_t, int32_t, double>,
         py::arg("npix"),                        //
         py::arg("nsamples"),                    //
         py::arg("pointings").noconvert(),       //
@@ -498,7 +498,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pixel_flag").noconvert()       //
   );
   m.def("compute_weights_pol_I",
-        numpy_bind_compute_weights_pol_I<int64_t, double>,
+        numpy_bind_compute_weights_pol_I<py::array_t, int64_t, double>,
         py::arg("npix"),                        //
         py::arg("nsamples"),                    //
         py::arg("pointings").noconvert(),       //
@@ -511,7 +511,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_QU",
-        numpy_bind_compute_weights_pol_QU<int32_t, float>,
+        numpy_bind_compute_weights_pol_QU<py::array_t, int32_t, float>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -528,7 +528,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_QU",
-        numpy_bind_compute_weights_pol_QU<int64_t, float>,
+        numpy_bind_compute_weights_pol_QU<py::array_t, int64_t, float>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -545,7 +545,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_QU",
-        numpy_bind_compute_weights_pol_QU<int32_t, double>,
+        numpy_bind_compute_weights_pol_QU<py::array_t, int32_t, double>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -562,7 +562,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_QU",
-        numpy_bind_compute_weights_pol_QU<int64_t, double>,
+        numpy_bind_compute_weights_pol_QU<py::array_t, int64_t, double>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -579,7 +579,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_IQU",
-        numpy_bind_compute_weights_pol_IQU<int32_t, float>,
+        numpy_bind_compute_weights_pol_IQU<py::array_t, int32_t, float>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -598,7 +598,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_IQU",
-        numpy_bind_compute_weights_pol_IQU<int64_t, float>,
+        numpy_bind_compute_weights_pol_IQU<py::array_t, int64_t, float>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -617,7 +617,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_IQU",
-        numpy_bind_compute_weights_pol_IQU<int32_t, double>,
+        numpy_bind_compute_weights_pol_IQU<py::array_t, int32_t, double>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -636,7 +636,7 @@ PYBIND11_MODULE(compute_weights, m) {
   );
 
   m.def("compute_weights_pol_IQU",
-        numpy_bind_compute_weights_pol_IQU<int64_t, double>,
+        numpy_bind_compute_weights_pol_IQU<py::array_t, int64_t, double>,
         py::arg("npix"),                            //
         py::arg("nsamples"),                        //
         py::arg("pointings").noconvert(),           //
@@ -654,7 +654,8 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("one_over_determinant").noconvert() //
   );
 
-  m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int32_t, float>,
+  m.def("get_pixel_mask_pol",
+        numpy_bind_get_pixel_mask_pol<py::array_t, int32_t, float>,
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
@@ -664,7 +665,8 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
-  m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, float>,
+  m.def("get_pixel_mask_pol",
+        numpy_bind_get_pixel_mask_pol<py::array_t, int64_t, float>,
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
@@ -674,7 +676,8 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
-  m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int32_t, double>,
+  m.def("get_pixel_mask_pol",
+        numpy_bind_get_pixel_mask_pol<py::array_t, int32_t, double>,
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
@@ -684,7 +687,8 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
-  m.def("get_pixel_mask_pol", numpy_bind_get_pixel_mask_pol<int64_t, double>,
+  m.def("get_pixel_mask_pol",
+        numpy_bind_get_pixel_mask_pol<py::array_t, int64_t, double>,
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //

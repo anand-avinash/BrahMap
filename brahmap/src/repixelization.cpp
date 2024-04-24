@@ -89,11 +89,11 @@ void flag_bad_pixel_samples(const ssize_t nsamples,    //
   return;
 } //  flag_bad_pixel_samples()
 
-template <typename dint, typename dfloat>
-std::function<void(                     //
-    const ssize_t new_npix,             //
-    const py::array_t<dint> pixel_mask, //
-    py::array_t<dfloat> weighted_counts //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                  //
+    const ssize_t new_npix,          //
+    const buffer_t<dint> pixel_mask, //
+    buffer_t<dfloat> weighted_counts //
     )>
     numpy_bind_repixelize_pol_I =   //
     [](const ssize_t new_npix,      //
@@ -115,15 +115,15 @@ std::function<void(                     //
       );
     }; // numpy_bind_repixelize_pol_I()
 
-template <typename dint, typename dfloat>
-std::function<void(                          //
-    const ssize_t new_npix,                  //
-    const py::array_t<dint> pixel_mask,      //
-    py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dfloat> weighted_sin_sq,     //
-    py::array_t<dfloat> weighted_cos_sq,     //
-    py::array_t<dfloat> weighted_sincos,     //
-    py::array_t<dfloat> one_over_determinant //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                       //
+    const ssize_t new_npix,               //
+    const buffer_t<dint> pixel_mask,      //
+    buffer_t<dfloat> weighted_counts,     //
+    buffer_t<dfloat> weighted_sin_sq,     //
+    buffer_t<dfloat> weighted_cos_sq,     //
+    buffer_t<dfloat> weighted_sincos,     //
+    buffer_t<dfloat> one_over_determinant //
     )>
     numpy_bind_repixelize_pol_QU =     //
     [](const ssize_t new_npix,         //
@@ -166,17 +166,17 @@ std::function<void(                          //
       );
     }; // numpy_bind_repixelize_pol_QU()
 
-template <typename dint, typename dfloat>
-std::function<void(                          //
-    const ssize_t new_npix,                  //
-    const py::array_t<dint> pixel_mask,      //
-    py::array_t<dfloat> weighted_counts,     //
-    py::array_t<dfloat> weighted_sin_sq,     //
-    py::array_t<dfloat> weighted_cos_sq,     //
-    py::array_t<dfloat> weighted_sincos,     //
-    py::array_t<dfloat> weighted_sin,        //
-    py::array_t<dfloat> weighted_cos,        //
-    py::array_t<dfloat> one_over_determinant //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                       //
+    const ssize_t new_npix,               //
+    const buffer_t<dint> pixel_mask,      //
+    buffer_t<dfloat> weighted_counts,     //
+    buffer_t<dfloat> weighted_sin_sq,     //
+    buffer_t<dfloat> weighted_cos_sq,     //
+    buffer_t<dfloat> weighted_sincos,     //
+    buffer_t<dfloat> weighted_sin,        //
+    buffer_t<dfloat> weighted_cos,        //
+    buffer_t<dfloat> one_over_determinant //
     )>
     numpy_bind_repixelize_pol_IQU =    //
     [](const ssize_t new_npix,         //
@@ -229,13 +229,13 @@ std::function<void(                          //
       );
     }; // numpy_bind_repixelize_pol_IQU()
 
-template <typename dint>
-std::function<void(                        //
-    const ssize_t nsamples,                //
-    const py::array_t<bool> pixel_flag,    //
-    const py::array_t<dint> old2new_pixel, //
-    py::array_t<dint> pointings,           //
-    py::array_t<bool> poitnings_flag       //
+template <template <typename> class buffer_t, typename dint>
+std::function<void(                     //
+    const ssize_t nsamples,             //
+    const buffer_t<bool> pixel_flag,    //
+    const buffer_t<dint> old2new_pixel, //
+    buffer_t<dint> pointings,           //
+    buffer_t<bool> poitnings_flag       //
     )>
     numpy_bind_flag_bad_pixel_samples = //
     [](const ssize_t nsamples,          //
@@ -265,28 +265,33 @@ std::function<void(                        //
 
 PYBIND11_MODULE(repixelize, m) {
   m.doc() = "repixelize";
-  m.def("repixelize_pol_I", numpy_bind_repixelize_pol_I<int32_t, float>,
+  m.def("repixelize_pol_I",
+        numpy_bind_repixelize_pol_I<py::array_t, int32_t, float>,
         py::arg("new_npix"),                   //
         py::arg("pixel_mask").noconvert(),     //
         py::arg("weighted_counts").noconvert() //
   );
-  m.def("repixelize_pol_I", numpy_bind_repixelize_pol_I<int64_t, float>,
+  m.def("repixelize_pol_I",
+        numpy_bind_repixelize_pol_I<py::array_t, int64_t, float>,
         py::arg("new_npix"),                   //
         py::arg("pixel_mask").noconvert(),     //
         py::arg("weighted_counts").noconvert() //
   );
-  m.def("repixelize_pol_I", numpy_bind_repixelize_pol_I<int32_t, double>,
+  m.def("repixelize_pol_I",
+        numpy_bind_repixelize_pol_I<py::array_t, int32_t, double>,
         py::arg("new_npix"),                   //
         py::arg("pixel_mask").noconvert(),     //
         py::arg("weighted_counts").noconvert() //
   );
-  m.def("repixelize_pol_I", numpy_bind_repixelize_pol_I<int64_t, double>,
+  m.def("repixelize_pol_I",
+        numpy_bind_repixelize_pol_I<py::array_t, int64_t, double>,
         py::arg("new_npix"),                   //
         py::arg("pixel_mask").noconvert(),     //
         py::arg("weighted_counts").noconvert() //
   );
 
-  m.def("repixelize_pol_QU", numpy_bind_repixelize_pol_QU<int32_t, float>,
+  m.def("repixelize_pol_QU",
+        numpy_bind_repixelize_pol_QU<py::array_t, int32_t, float>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -295,7 +300,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_sincos").noconvert(),     //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_QU", numpy_bind_repixelize_pol_QU<int64_t, float>,
+  m.def("repixelize_pol_QU",
+        numpy_bind_repixelize_pol_QU<py::array_t, int64_t, float>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -304,7 +310,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_sincos").noconvert(),     //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_QU", numpy_bind_repixelize_pol_QU<int32_t, double>,
+  m.def("repixelize_pol_QU",
+        numpy_bind_repixelize_pol_QU<py::array_t, int32_t, double>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -313,7 +320,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_sincos").noconvert(),     //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_QU", numpy_bind_repixelize_pol_QU<int64_t, double>,
+  m.def("repixelize_pol_QU",
+        numpy_bind_repixelize_pol_QU<py::array_t, int64_t, double>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -323,7 +331,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("one_over_determinant").noconvert() //
   );
 
-  m.def("repixelize_pol_IQU", numpy_bind_repixelize_pol_IQU<int32_t, float>,
+  m.def("repixelize_pol_IQU",
+        numpy_bind_repixelize_pol_IQU<py::array_t, int32_t, float>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -334,7 +343,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_cos").noconvert(),        //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_IQU", numpy_bind_repixelize_pol_IQU<int64_t, float>,
+  m.def("repixelize_pol_IQU",
+        numpy_bind_repixelize_pol_IQU<py::array_t, int64_t, float>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -345,7 +355,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_cos").noconvert(),        //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_IQU", numpy_bind_repixelize_pol_IQU<int32_t, double>,
+  m.def("repixelize_pol_IQU",
+        numpy_bind_repixelize_pol_IQU<py::array_t, int32_t, double>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -356,7 +367,8 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_cos").noconvert(),        //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("repixelize_pol_IQU", numpy_bind_repixelize_pol_IQU<int64_t, double>,
+  m.def("repixelize_pol_IQU",
+        numpy_bind_repixelize_pol_IQU<py::array_t, int64_t, double>,
         py::arg("new_npix"),                        //
         py::arg("pixel_mask").noconvert(),          //
         py::arg("weighted_counts").noconvert(),     //
@@ -367,14 +379,16 @@ PYBIND11_MODULE(repixelize, m) {
         py::arg("weighted_cos").noconvert(),        //
         py::arg("one_over_determinant").noconvert() //
   );
-  m.def("flag_bad_pixel_samples", numpy_bind_flag_bad_pixel_samples<int32_t>,
+  m.def("flag_bad_pixel_samples",
+        numpy_bind_flag_bad_pixel_samples<py::array_t, int32_t>,
         py::arg("nsamples"),
         py::arg("pixel_flag").noconvert(),    //
         py::arg("old2new_pixel").noconvert(), //
         py::arg("pointings").noconvert(),     //
         py::arg("pointings_flag").noconvert() //
   );
-  m.def("flag_bad_pixel_samples", numpy_bind_flag_bad_pixel_samples<int64_t>,
+  m.def("flag_bad_pixel_samples",
+        numpy_bind_flag_bad_pixel_samples<py::array_t, int64_t>,
         py::arg("nsamples"),
         py::arg("pixel_flag").noconvert(),    //
         py::arg("old2new_pixel").noconvert(), //

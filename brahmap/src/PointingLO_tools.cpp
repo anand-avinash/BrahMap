@@ -140,13 +140,13 @@ void PLO_rmult_IQU(             //
   return;
 } // PLO_rmult_IQU()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_mult_I =             //
     [](const ssize_t nsamples,          //
@@ -178,13 +178,13 @@ std::function<void(                         //
       return;
     }; // numpy_bind_PLO_mult_I()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_rmult_I =            //
     [](const ssize_t nsamples,          //
@@ -216,15 +216,15 @@ std::function<void(                         //
       return;
     }; // numpy_bind_PLO_rmult_I()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> sin2phi,      //
-    const py::array_t<dfloat> cos2phi,      //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> sin2phi,      //
+    const buffer_t<dfloat> cos2phi,      //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_mult_QU =            //
     [](const ssize_t nsamples,          //
@@ -266,15 +266,15 @@ std::function<void(                         //
       return;
     }; // numpy_bind_PLO_mult_QU()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> sin2phi,      //
-    const py::array_t<dfloat> cos2phi,      //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> sin2phi,      //
+    const buffer_t<dfloat> cos2phi,      //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_rmult_QU =           //
     [](const ssize_t nsamples,          //
@@ -316,15 +316,15 @@ std::function<void(                         //
       return;
     }; // numpy_bind_PLO_rmult_QU()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> sin2phi,      //
-    const py::array_t<dfloat> cos2phi,      //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> sin2phi,      //
+    const buffer_t<dfloat> cos2phi,      //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_mult_IQU =           //
     [](const ssize_t nsamples,          //
@@ -366,15 +366,15 @@ std::function<void(                         //
       return;
     }; // numpy_bind_PLO_mult_IQU()
 
-template <typename dint, typename dfloat>
-std::function<void(                         //
-    const ssize_t nsamples,                 //
-    const py::array_t<dint> pointings,      //
-    const py::array_t<bool> pointings_flag, //
-    const py::array_t<dfloat> sin2phi,      //
-    const py::array_t<dfloat> cos2phi,      //
-    const py::array_t<dfloat> vec,          //
-    py::array_t<dfloat> prod                //
+template <template <typename> class buffer_t, typename dint, typename dfloat>
+std::function<void(                      //
+    const ssize_t nsamples,              //
+    const buffer_t<dint> pointings,      //
+    const buffer_t<bool> pointings_flag, //
+    const buffer_t<dfloat> sin2phi,      //
+    const buffer_t<dfloat> cos2phi,      //
+    const buffer_t<dfloat> vec,          //
+    buffer_t<dfloat> prod                //
     )>
     numpy_bind_PLO_rmult_IQU =          //
     [](const ssize_t nsamples,          //
@@ -418,44 +418,35 @@ std::function<void(                         //
 
 PYBIND11_MODULE(PointingLO_tools, m) {
   m.doc() = "PointingLO_tools";
-  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<int32_t, float>,
+  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<int32_t, double>,
+  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<int64_t, float>,
+  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<py::array_t, int64_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<int64_t, double>,
+  m.def("PLO_mult_I", numpy_bind_PLO_mult_I<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<int32_t, float>,
-        py::arg("nsamples"),                   //
-        py::arg("pointings").noconvert(),      //
-        py::arg("pointings_flag").noconvert(), //
-        py::arg("sin2phi").noconvert(),        //
-        py::arg("cos2phi").noconvert(),        //
-        py::arg("vec").noconvert(),            //
-        py::arg("prod").noconvert()            //
-  );
-  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<int32_t, double>,
+  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -464,7 +455,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<int64_t, float>,
+  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -473,7 +464,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<int64_t, double>,
+  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<py::array_t, int64_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -482,7 +473,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<int32_t, float>,
+  m.def("PLO_mult_QU", numpy_bind_PLO_mult_QU<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -491,7 +482,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<int32_t, double>,
+  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -500,7 +491,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<int64_t, float>,
+  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -509,7 +500,16 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<int64_t, double>,
+  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<py::array_t, int64_t, float>,
+        py::arg("nsamples"),                   //
+        py::arg("pointings").noconvert(),      //
+        py::arg("pointings_flag").noconvert(), //
+        py::arg("sin2phi").noconvert(),        //
+        py::arg("cos2phi").noconvert(),        //
+        py::arg("vec").noconvert(),            //
+        py::arg("prod").noconvert()            //
+  );
+  m.def("PLO_mult_IQU", numpy_bind_PLO_mult_IQU<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -519,44 +519,35 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("prod").noconvert()            //
   );
 
-  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<int32_t, float>,
+  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<int32_t, double>,
+  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<int64_t, float>,
+  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<py::array_t, int64_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<int64_t, double>,
+  m.def("PLO_rmult_I", numpy_bind_PLO_rmult_I<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<int32_t, float>,
-        py::arg("nsamples"),                   //
-        py::arg("pointings").noconvert(),      //
-        py::arg("pointings_flag").noconvert(), //
-        py::arg("sin2phi").noconvert(),        //
-        py::arg("cos2phi").noconvert(),        //
-        py::arg("vec").noconvert(),            //
-        py::arg("prod").noconvert()            //
-  );
-  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<int32_t, double>,
+  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -565,7 +556,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<int64_t, float>,
+  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -574,7 +565,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<int64_t, double>,
+  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<py::array_t, int64_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -583,7 +574,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<int32_t, float>,
+  m.def("PLO_rmult_QU", numpy_bind_PLO_rmult_QU<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -592,7 +583,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<int32_t, double>,
+  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<py::array_t, int32_t, float>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -601,7 +592,7 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<int64_t, float>,
+  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<py::array_t, int32_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
@@ -610,7 +601,16 @@ PYBIND11_MODULE(PointingLO_tools, m) {
         py::arg("vec").noconvert(),            //
         py::arg("prod").noconvert()            //
   );
-  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<int64_t, double>,
+  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<py::array_t, int64_t, float>,
+        py::arg("nsamples"),                   //
+        py::arg("pointings").noconvert(),      //
+        py::arg("pointings_flag").noconvert(), //
+        py::arg("sin2phi").noconvert(),        //
+        py::arg("cos2phi").noconvert(),        //
+        py::arg("vec").noconvert(),            //
+        py::arg("prod").noconvert()            //
+  );
+  m.def("PLO_rmult_IQU", numpy_bind_PLO_rmult_IQU<py::array_t, int64_t, double>,
         py::arg("nsamples"),                   //
         py::arg("pointings").noconvert(),      //
         py::arg("pointings_flag").noconvert(), //
