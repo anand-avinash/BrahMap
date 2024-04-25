@@ -18,7 +18,8 @@ void uncorrelated_mult(     //
   return;
 } // uncorrelated_mult()
 
-template <template <typename> class buffer_t, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dfloat>
 std::function<void(              //
     const ssize_t nsamples,      //
     const buffer_t<dfloat> diag, //

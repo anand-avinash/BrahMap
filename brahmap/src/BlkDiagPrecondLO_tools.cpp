@@ -79,7 +79,8 @@ void BDPLO_mult_IQU(                    //
   return;
 } // BDPLO_mult_IQU()
 
-template <template <typename> class buffer_t, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dfloat>
 std::function<void(                              //
     const ssize_t new_npix,                      //
     const buffer_t<dfloat> weighted_sin_sq,      //
@@ -130,7 +131,8 @@ std::function<void(                              //
       return;
     }; // numpy_bind_BDPLO_mult_QU()
 
-template <template <typename> class buffer_t, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dfloat>
 std::function<void(                              //
     const ssize_t new_npix,                      //
     const buffer_t<dfloat> weighted_counts,      //

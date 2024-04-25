@@ -169,7 +169,9 @@ dint get_pixel_mask_pol(                //
 
 } // get_pixel_mask_pol()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint,
+          typename dfloat>
 std::function<dint(                       //
     const ssize_t npix,                   //
     const ssize_t nsamples,               //
@@ -228,7 +230,8 @@ std::function<dint(                       //
   return new_npix;
 }; // numpy_bind_compute_weights_pol_I
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                       //
     const ssize_t npix,                   //
     const ssize_t nsamples,               //
@@ -312,7 +315,9 @@ std::function<void(                       //
       return;
     }; // numpy_bind_compute_weights_pol_QU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint,
+          typename dfloat>
 std::function<void(                       //
     const ssize_t npix,                   //
     const ssize_t nsamples,               //
@@ -408,7 +413,9 @@ std::function<void(                       //
       return;
     }; // numpy_bind_compute_weights_pol_IQU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint,
+          typename dfloat>
 std::function<dint(                              //
     const int solver_type,                       //
     const ssize_t npix,                          //

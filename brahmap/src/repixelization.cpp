@@ -89,7 +89,8 @@ void flag_bad_pixel_samples(const ssize_t nsamples,    //
   return;
 } //  flag_bad_pixel_samples()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                  //
     const ssize_t new_npix,          //
     const buffer_t<dint> pixel_mask, //
@@ -115,7 +116,8 @@ std::function<void(                  //
       );
     }; // numpy_bind_repixelize_pol_I()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                       //
     const ssize_t new_npix,               //
     const buffer_t<dint> pixel_mask,      //
@@ -166,7 +168,8 @@ std::function<void(                       //
       );
     }; // numpy_bind_repixelize_pol_QU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                       //
     const ssize_t new_npix,               //
     const buffer_t<dint> pixel_mask,      //
@@ -229,7 +232,8 @@ std::function<void(                       //
       );
     }; // numpy_bind_repixelize_pol_IQU()
 
-template <template <typename> class buffer_t, typename dint>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint>
 std::function<void(                     //
     const ssize_t nsamples,             //
     const buffer_t<bool> pixel_flag,    //

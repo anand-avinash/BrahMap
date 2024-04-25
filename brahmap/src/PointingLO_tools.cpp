@@ -140,7 +140,8 @@ void PLO_rmult_IQU(             //
   return;
 } // PLO_rmult_IQU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
@@ -178,7 +179,8 @@ std::function<void(                      //
       return;
     }; // numpy_bind_PLO_mult_I()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
@@ -216,7 +218,8 @@ std::function<void(                      //
       return;
     }; // numpy_bind_PLO_rmult_I()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
@@ -266,7 +269,8 @@ std::function<void(                      //
       return;
     }; // numpy_bind_PLO_mult_QU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
@@ -316,7 +320,8 @@ std::function<void(                      //
       return;
     }; // numpy_bind_PLO_rmult_QU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
@@ -366,7 +371,8 @@ std::function<void(                      //
       return;
     }; // numpy_bind_PLO_mult_IQU()
 
-template <template <typename> class buffer_t, typename dint, typename dfloat>
+template <template <typename, int = py::array::c_style> class buffer_t,
+          typename dint, typename dfloat>
 std::function<void(                      //
     const ssize_t nsamples,              //
     const buffer_t<dint> pointings,      //
