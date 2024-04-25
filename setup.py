@@ -4,11 +4,11 @@ from setuptools import Extension, setup
 # g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 --includes) example9.cpp -o example9$(python3-config --extension-suffix)
 
 ext1 = Extension(
-    "compute_weights",
+    "brahmap._extensions.compute_weights",
     language="c++",
-    sources=[os.path.join("brahmap", "src", "compute_weights.cpp")],
+    sources=[os.path.join("brahmap", "_extensions", "compute_weights.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "src"),
+        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,
@@ -25,10 +25,10 @@ ext1 = Extension(
 )
 
 ext2 = Extension(
-    "repixelize",
-    sources=[os.path.join("brahmap", "src", "repixelization.cpp")],
+    "brahmap._extensions.repixelize",
+    sources=[os.path.join("brahmap", "_extensions", "repixelization.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "src"),
+        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,
@@ -44,10 +44,10 @@ ext2 = Extension(
 )
 
 ext3 = Extension(
-    "PointingLO_tools",
-    sources=[os.path.join("brahmap", "src", "PointingLO_tools.cpp")],
+    "brahmap._extensions.PointingLO_tools",
+    sources=[os.path.join("brahmap", "_extensions", "PointingLO_tools.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "src"),
+        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,
@@ -63,10 +63,10 @@ ext3 = Extension(
 )
 
 ext4 = Extension(
-    "BlkDiagPrecondLO_tools",
-    sources=[os.path.join("brahmap", "src", "BlkDiagPrecondLO_tools.cpp")],
+    "brahmap._extensions.BlkDiagPrecondLO_tools",
+    sources=[os.path.join("brahmap", "_extensions", "BlkDiagPrecondLO_tools.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "src"),
+        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,
@@ -82,10 +82,10 @@ ext4 = Extension(
 )
 
 ext5 = Extension(
-    "InvNoiseCov_tools",
-    sources=[os.path.join("brahmap", "src", "InvNoiseCov_tools.cpp")],
+    "brahmap._extensions.InvNoiseCov_tools",
+    sources=[os.path.join("brahmap", "_extensions", "InvNoiseCov_tools.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "src"),
+        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,

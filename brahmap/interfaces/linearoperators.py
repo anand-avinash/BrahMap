@@ -4,9 +4,9 @@ from brahmap.linop import linop as lp
 from brahmap.linop import blkop as blk
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import PointingLO_tools
-import BlkDiagPrecondLO_tools
-import InvNoiseCov_tools
+from brahmap._extensions import PointingLO_tools
+from brahmap._extensions import BlkDiagPrecondLO_tools
+from brahmap._extensions import InvNoiseCov_tools
 
 
 class PointingLO(lp.LinearOperator):

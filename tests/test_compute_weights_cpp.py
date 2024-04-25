@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import compute_weights
+from brahmap._extensions import compute_weights
 
 import helper_ComputeWeights as cw
 

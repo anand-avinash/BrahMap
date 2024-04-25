@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import BlkDiagPrecondLO_tools
+from brahmap._extensions import BlkDiagPrecondLO_tools
 
 import helper_ProcessTimeSamples as hpts
 import helper_BlkDiagPrecondLO_tools as bdplo_tools

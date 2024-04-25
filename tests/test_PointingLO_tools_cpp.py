@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import PointingLO_tools
+from brahmap._extensions import PointingLO_tools
 
 import helper_ProcessTimeSamples as hpts
 import helper_PointingLO_tools as hplo_tools

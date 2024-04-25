@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import repixelize
+from brahmap._extensions import repixelize
 
 import helper_ComputeWeights as cw
 import helper_Repixelization as rp

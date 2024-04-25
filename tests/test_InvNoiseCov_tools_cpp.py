@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import InvNoiseCov_tools
+from brahmap._extensions import InvNoiseCov_tools
 
 from brahmap.interfaces import InvNoiseCovLO_Uncorrelated
 

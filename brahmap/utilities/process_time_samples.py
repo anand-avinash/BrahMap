@@ -2,10 +2,11 @@ from enum import IntEnum
 import numpy as np
 import warnings
 
-import compute_weights
-import repixelize
 from brahmap.utilities.tools import TypeChangeWarning
 from brahmap.utilities import bash_colors
+
+from brahmap._extensions import compute_weights
+from brahmap._extensions import repixelize
 
 
 class SolverType(IntEnum):
