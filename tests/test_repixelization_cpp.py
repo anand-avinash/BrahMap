@@ -73,7 +73,7 @@ class InitFloat64Params(InitCommonParams):
 )
 class TestRepixelization(InitCommonParams):
     def test_repixelize_pol_I(self, initint, initfloat, rtol):
-        new_npix, py_weighted_counts, pixel_mask, __, __ = cw.computeweights_pol_I(
+        new_npix, py_weighted_counts, observed_pixels, __, __ = cw.computeweights_pol_I(
             self.npix,
             self.nsamples,
             initint.pointings,
@@ -84,12 +84,12 @@ class TestRepixelization(InitCommonParams):
 
         cpp_weighted_counts = py_weighted_counts.copy()
 
-        repixelize.repixelize_pol_I(new_npix, pixel_mask, cpp_weighted_counts)
+        repixelize.repixelize_pol_I(new_npix, observed_pixels, cpp_weighted_counts)
 
         cpp_weighted_counts.resize(new_npix, refcheck=False)
 
         py_weighted_counts = rp.repixelize_pol_I(
-            new_npix, pixel_mask, py_weighted_counts
+            new_npix, observed_pixels, py_weighted_counts
         )
 
         np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
@@ -113,7 +113,7 @@ class TestRepixelization(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
-        new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
+        new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
             self.npix,
             2,
             1.0e-5,
@@ -130,7 +130,7 @@ class TestRepixelization(InitCommonParams):
 
         repixelize.repixelize_pol_QU(
             new_npix,
-            pixel_mask,
+            observed_pixels,
             cpp_weighted_counts,
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
@@ -152,7 +152,7 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         ) = rp.repixelize_pol_QU(
             new_npix,
-            pixel_mask,
+            observed_pixels,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
@@ -189,7 +189,7 @@ class TestRepixelization(InitCommonParams):
             dtype_float=initfloat.dtype,
         )
 
-        new_npix, pixel_mask, __, __ = cw.get_pix_mask_pol(
+        new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
             self.npix,
             3,
             1.0e-5,
@@ -208,7 +208,7 @@ class TestRepixelization(InitCommonParams):
 
         repixelize.repixelize_pol_IQU(
             new_npix,
-            pixel_mask,
+            observed_pixels,
             cpp_weighted_counts,
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
@@ -236,7 +236,7 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         ) = rp.repixelize_pol_IQU(
             new_npix,
-            pixel_mask,
+            observed_pixels,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,

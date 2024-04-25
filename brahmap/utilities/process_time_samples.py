@@ -148,7 +148,7 @@ class ProcessTimeSamples(object):
 
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
-        self.pixel_mask = np.zeros(self.npix, dtype=self.pointings.dtype)
+        self.observed_pixels = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.__old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.pixel_flag = np.zeros(self.npix, dtype=bool)
 
@@ -160,7 +160,7 @@ class ProcessTimeSamples(object):
                 pointings_flag=self.pointings_flag,
                 noise_weights=noise_weights,
                 weighted_counts=self.weighted_counts,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
                 pixel_flag=self.pixel_flag,
             )
@@ -220,18 +220,18 @@ class ProcessTimeSamples(object):
                 threshold=self.threshold,
                 weighted_counts=self.weighted_counts,
                 one_over_determinant=self.one_over_determinant,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
                 pixel_flag=self.pixel_flag,
             )
 
-        self.pixel_mask.resize(self.new_npix, refcheck=False)
+        self.observed_pixels.resize(self.new_npix, refcheck=False)
 
     def _repixelization(self):
         if self.solver_type == SolverType.I:
             repixelize.repixelize_pol_I(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
             )
 
@@ -240,7 +240,7 @@ class ProcessTimeSamples(object):
         elif self.solver_type == SolverType.QU:
             repixelize.repixelize_pol_QU(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
@@ -257,7 +257,7 @@ class ProcessTimeSamples(object):
         elif self.solver_type == SolverType.IQU:
             repixelize.repixelize_pol_IQU(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,

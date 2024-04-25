@@ -97,7 +97,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
         np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
-        np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
+        np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
         np.testing.assert_allclose(
             cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
         )
@@ -132,7 +132,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
         np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
-        np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
+        np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
         np.testing.assert_allclose(cpp_PTS.cos2phi, py_PTS.cos2phi, rtol=rtol)
         np.testing.assert_allclose(
@@ -181,7 +181,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pointings, py_PTS.pointings)
         np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
-        np.testing.assert_array_equal(cpp_PTS.pixel_mask, py_PTS.pixel_mask)
+        np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
         np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
         np.testing.assert_allclose(cpp_PTS.cos2phi, py_PTS.cos2phi, rtol=rtol)
         np.testing.assert_allclose(

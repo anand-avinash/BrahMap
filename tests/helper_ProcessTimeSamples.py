@@ -110,7 +110,7 @@ class ProcessTimeSamples(object):
             (
                 self.new_npix,
                 self.weighted_counts,
-                self.pixel_mask,
+                self.observed_pixels,
                 self.__old2new_pixel,
                 self.pixel_flag,
             ) = cw.computeweights_pol_I(
@@ -165,7 +165,7 @@ class ProcessTimeSamples(object):
 
             (
                 self.new_npix,
-                self.pixel_mask,
+                self.observed_pixels,
                 self.__old2new_pixel,
                 self.pixel_flag,
             ) = cw.get_pix_mask_pol(
@@ -181,7 +181,7 @@ class ProcessTimeSamples(object):
         if self.solver_type == SolverType.I:
             self.weighted_counts = rp.repixelize_pol_I(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
             )
 
@@ -194,7 +194,7 @@ class ProcessTimeSamples(object):
                 self.one_over_determinant,
             ) = rp.repixelize_pol_QU(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
@@ -213,7 +213,7 @@ class ProcessTimeSamples(object):
                 self.one_over_determinant,
             ) = rp.repixelize_pol_IQU(
                 new_npix=self.new_npix,
-                pixel_mask=self.pixel_mask,
+                observed_pixels=self.observed_pixels,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,

@@ -17,21 +17,21 @@ def computeweights_pol_I(
         if pointings_flag[idx]:
             weighted_counts[pixel] += noise_weights[idx]
 
-    pixel_mask = np.where(weighted_counts > 0)[0]
+    observed_pixels = np.where(weighted_counts > 0)[0]
 
-    new_npix = len(pixel_mask)
+    new_npix = len(observed_pixels)
 
-    pixel_mask = pixel_mask.astype(dtype=pointings.dtype)
+    observed_pixels = observed_pixels.astype(dtype=pointings.dtype)
     old2new_pixel = np.zeros(npix, dtype=pointings.dtype)
     pixel_flag = np.zeros(npix, dtype=bool)
 
     for idx in range(npix):
-        if idx in pixel_mask:
-            new_idx = np.where(pixel_mask == idx)[0]
+        if idx in observed_pixels:
+            new_idx = np.where(observed_pixels == idx)[0]
             old2new_pixel[idx] = new_idx
             pixel_flag[idx] = True
 
-    return new_npix, weighted_counts, pixel_mask, old2new_pixel, pixel_flag
+    return new_npix, weighted_counts, observed_pixels, old2new_pixel, pixel_flag
 
 
 def computeweights_pol_QU(
@@ -138,17 +138,17 @@ def get_pix_mask_pol(
 ):
     determinant_mask = np.where(one_over_determinant > threshold)[0]
     count_mask = np.where(weighted_counts > (solver_type - 1))[0]
-    pixel_mask = np.intersect1d(count_mask, determinant_mask)
-    new_npix = len(pixel_mask)
+    observed_pixels = np.intersect1d(count_mask, determinant_mask)
+    new_npix = len(observed_pixels)
 
-    pixel_mask = pixel_mask.astype(dtype=dtype_int)
+    observed_pixels = observed_pixels.astype(dtype=dtype_int)
     old2new_pixel = np.zeros(npix, dtype=dtype_int)
     pixel_flag = np.zeros(npix, dtype=bool)
 
     for idx in range(npix):
-        if idx in pixel_mask:
-            new_idx = np.where(pixel_mask == idx)[0]
+        if idx in observed_pixels:
+            new_idx = np.where(observed_pixels == idx)[0]
             old2new_pixel[idx] = new_idx
             pixel_flag[idx] = True
 
-    return new_npix, pixel_mask, old2new_pixel, pixel_flag
+    return new_npix, observed_pixels, old2new_pixel, pixel_flag

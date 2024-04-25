@@ -13,7 +13,7 @@ dint compute_weights_pol_I(      //
     const bool *pointings_flag,  //
     const dfloat *noise_weights, //
     dfloat *weighted_counts,     //
-    dint *pixel_mask,            //
+    dint *observed_pixels,       //
     dint *__old2new_pixel,       //
     bool *pixel_flag             //
 ) {
@@ -28,7 +28,7 @@ dint compute_weights_pol_I(      //
   dint new_npix = 0;
   for (ssize_t idx = 0; idx < npix; ++idx) {
     if (weighted_counts[idx] > 0) {
-      pixel_mask[new_npix] = idx;
+      observed_pixels[new_npix] = idx;
       __old2new_pixel[idx] = new_npix;
       pixel_flag[idx] = true;
       ++new_npix;
@@ -143,7 +143,7 @@ dint get_pixel_mask_pol(                //
     const dfloat threshold,             //
     const dfloat *weighted_counts,      //
     const dfloat *one_over_determinant, //
-    dint *pixel_mask,                   //
+    dint *observed_pixels,              //
     dint *__old2new_pixel,              //
     bool *pixel_flag                    //
 ) {
@@ -157,7 +157,7 @@ dint get_pixel_mask_pol(                //
     dfloat determinant = one_over_determinant[idx];
 
     if ((determinant > threshold) && (weight > weight_threshold)) {
-      pixel_mask[new_npix] = idx;
+      observed_pixels[new_npix] = idx;
       __old2new_pixel[idx] = new_npix;
       pixel_flag[idx] = true;
       ++new_npix;
@@ -179,7 +179,7 @@ std::function<dint(                       //
     const buffer_t<bool> pointings_flag,  //
     const buffer_t<dfloat> noise_weights, //
     buffer_t<dfloat> weighted_counts,     //
-    buffer_t<dint> pixel_mask,            //
+    buffer_t<dint> observed_pixels,       //
     buffer_t<dint> __old2new_pixel,       //
     buffer_t<bool> pixel_flag             //
     )>
@@ -190,7 +190,7 @@ std::function<dint(                       //
        const py::buffer pointings_flag, //
        const py::buffer noise_weights,  //
        py::buffer weighted_counts,      //
-       py::buffer pixel_mask,           //
+       py::buffer observed_pixels,      //
        py::buffer __old2new_pixel,      //
        py::buffer pixel_flag            //
        ) -> dint {
@@ -198,7 +198,7 @@ std::function<dint(                       //
   py::buffer_info pointings_flags_info = pointings_flag.request();
   py::buffer_info noise_weights_info = noise_weights.request();
   py::buffer_info weighted_counts_info = weighted_counts.request();
-  py::buffer_info pixel_mask_info = pixel_mask.request();
+  py::buffer_info observed_pixels_info = observed_pixels.request();
   py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
   py::buffer_info pixel_flag_info = pixel_flag.request();
 
@@ -210,7 +210,8 @@ std::function<dint(                       //
       reinterpret_cast<const dfloat *>(noise_weights_info.ptr);
   dfloat *weighted_counts_ptr =
       reinterpret_cast<dfloat *>(weighted_counts_info.ptr);
-  dint *pixel_mask_ptr = reinterpret_cast<dint *>(pixel_mask_info.ptr);
+  dint *observed_pixels_ptr =
+      reinterpret_cast<dint *>(observed_pixels_info.ptr);
   dint *__old2new_pixel_ptr =
       reinterpret_cast<dint *>(__old2new_pixel_info.ptr);
   bool *pixel_flag_ptr = reinterpret_cast<bool *>(pixel_flag_info.ptr);
@@ -222,7 +223,7 @@ std::function<dint(                       //
       pointings_flags_ptr,               //
       noise_weights_ptr,                 //
       weighted_counts_ptr,               //
-      pixel_mask_ptr,                    //
+      observed_pixels_ptr,               //
       __old2new_pixel_ptr,               //
       pixel_flag_ptr                     //
   );
@@ -422,7 +423,7 @@ std::function<dint(                              //
     const dfloat threshold,                      //
     const buffer_t<dfloat> weighted_counts,      //
     const buffer_t<dfloat> one_over_determinant, //
-    buffer_t<dint> pixel_mask,                   //
+    buffer_t<dint> observed_pixels,              //
     buffer_t<dint> __old2new_pixel,              //
     buffer_t<bool> pixel_flag                    //
 
@@ -433,13 +434,13 @@ std::function<dint(                              //
        const dfloat threshold,                //
        const py::buffer weighted_counts,      //
        const py::buffer one_over_determinant, //
-       py::buffer pixel_mask,                 //
+       py::buffer observed_pixels,            //
        py::buffer __old2new_pixel,            //
        py::buffer pixel_flag                  //
        ) -> dint {
   py::buffer_info weighted_counts_info = weighted_counts.request();
   py::buffer_info one_over_determinant_info = one_over_determinant.request();
-  py::buffer_info pixel_mask_info = pixel_mask.request();
+  py::buffer_info observed_pixels_info = observed_pixels.request();
   py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
   py::buffer_info pixel_flag_info = pixel_flag.request();
 
@@ -447,7 +448,8 @@ std::function<dint(                              //
       reinterpret_cast<const dfloat *>(weighted_counts_info.ptr);
   const dfloat *one_over_determinant_ptr =
       reinterpret_cast<const dfloat *>(one_over_determinant_info.ptr);
-  dint *pixel_mask_ptr = reinterpret_cast<dint *>(pixel_mask_info.ptr);
+  dint *observed_pixels_ptr =
+      reinterpret_cast<dint *>(observed_pixels_info.ptr);
   dint *__old2new_pixel_ptr =
       reinterpret_cast<dint *>(__old2new_pixel_info.ptr);
   bool *pixel_flag_ptr = reinterpret_cast<bool *>(pixel_flag_info.ptr);
@@ -458,7 +460,7 @@ std::function<dint(                              //
       threshold,                      //
       weighted_counts_ptr,            //
       one_over_determinant_ptr,       //
-      pixel_mask_ptr,                 //
+      observed_pixels_ptr,            //
       __old2new_pixel_ptr,            //
       pixel_flag_ptr                  //
   );
@@ -476,7 +478,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
+        py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
         py::arg("pixel_flag").noconvert()       //
   );
@@ -488,7 +490,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
+        py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
         py::arg("pixel_flag").noconvert()       //
   );
@@ -500,7 +502,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
+        py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
         py::arg("pixel_flag").noconvert()       //
   );
@@ -512,7 +514,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
         py::arg("weighted_counts").noconvert(), //
-        py::arg("pixel_mask").noconvert(),      //
+        py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
         py::arg("pixel_flag").noconvert()       //
   );
@@ -668,7 +670,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("threshold"),                        //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("one_over_determinant").noconvert(), //
-        py::arg("pixel_mask").noconvert(),           //
+        py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
@@ -679,7 +681,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("threshold"),                        //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("one_over_determinant").noconvert(), //
-        py::arg("pixel_mask").noconvert(),           //
+        py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
@@ -690,7 +692,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("threshold"),                        //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("one_over_determinant").noconvert(), //
-        py::arg("pixel_mask").noconvert(),           //
+        py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
@@ -701,7 +703,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("threshold"),                        //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("one_over_determinant").noconvert(), //
-        py::arg("pixel_mask").noconvert(),           //
+        py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
         py::arg("pixel_flag").noconvert()            //
   );
