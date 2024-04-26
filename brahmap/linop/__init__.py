@@ -41,6 +41,7 @@ from .linop import (
     PysparseLinearOperator,
     linop_from_ndarray,
     aslinearoperator,
+    null_log,
 )
 from .blkop import (
     BlockLinearOperator,
@@ -70,4 +71,5 @@ __all__ = [
     "BlockDiagonalPreconditioner",
     "BlockHorizontalLinearOperator",
     "BlockVerticalLinearOperator",
+    "null_log",
 ]

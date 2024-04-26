@@ -17,7 +17,6 @@ dependencies = [
     "numpy",
     "scipy",
     "healpy",
-    "krypy",
     "ruff",
     "pre-commit",
     "pytest",

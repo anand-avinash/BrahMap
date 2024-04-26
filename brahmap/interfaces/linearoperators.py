@@ -1,12 +1,15 @@
 import numpy as np
-from ..linop import linop as lp
-from ..linop import blkop as blk
+import warnings
+from brahmap.linop import linop as lp
+from brahmap.linop import blkop as blk
+from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import SparseLO_tools
-import BlkDiagPrecondLO_tools
+from brahmap._extensions import PointingLO_tools
+from brahmap._extensions import BlkDiagPrecondLO_tools
+from brahmap._extensions import InvNoiseCov_tools
 
 
-class SparseLO(lp.LinearOperator):
+class PointingLO(lp.LinearOperator):
     r"""Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
     It constitutes an interface for dealing with the projection operator
     (pointing matrix).
@@ -17,25 +20,58 @@ class SparseLO(lp.LinearOperator):
 
     **Parameters**
 
-    - ``n`` : {int}
-        size of the pixel domain ;
-    - ``m`` : {int}
-        size of  time domain;
-        (or the non-null elements in a row of :math:`A_{i,j}`);
-    - ``pix_samples`` : {array}
-        list of pixels observed in the time domain,
-        (or the non-null elements in a row of :math:`A_{i,j}`);
-    - ``pol`` : {int,[*default* `pol=1`]}
-        process an intensity only (``pol=1``), polarization only ``pol=2``
-        and intensity+polarization map (``pol=3``);
-    - ``angle_processed``: {:class:`ProcessTimeSamples`}
-        the class (instantiated before :class:`SparseLO`)has already computed
-        the :math:`\cos 2\phi` and :math:`\sin 2\phi`, we link the ``cos`` and ``sin``
+    - ``processed_samples``: {:class:`ProcessTimeSamples`}
+        the class (instantiated before :class:`PointingLO`)has already computed
+        the :math:`\cos 2\phi` and :math:`\sin 2\phi`, we link the ``cos2phi`` and ``sin2phi``
         attributes of this class to the  :class:`ProcessTimeSamples` ones ;
 
     """
 
-    def mult(self, v):
+    def __init__(
+        self,
+        processed_samples: ProcessTimeSamples,
+    ):
+        self.solver_type = processed_samples.solver_type
+
+        self.ncols = processed_samples.new_npix * self.solver_type
+        self.nrows = processed_samples.nsamples
+
+        self.pointings = processed_samples.pointings
+        self.pointings_flag = processed_samples.pointings_flag
+
+        if self.solver_type > 1:
+            self.sin2phi = processed_samples.sin2phi
+            self.cos2phi = processed_samples.cos2phi
+
+        if self.solver_type == 1:
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                symmetric=False,
+                matvec=self._mult_I,
+                rmatvec=self._rmult_I,
+                dtype=processed_samples.dtype_float,
+            )
+        elif self.solver_type == 2:
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                symmetric=False,
+                matvec=self._mult_QU,
+                rmatvec=self._rmult_QU,
+                dtype=processed_samples.dtype_float,
+            )
+        else:
+            super(PointingLO, self).__init__(
+                nargin=self.ncols,
+                nargout=self.nrows,
+                matvec=self._mult_IQU,
+                symmetric=False,
+                rmatvec=self._rmult_IQU,
+                dtype=processed_samples.dtype_float,
+            )
+
+    def _mult_I(self, vec: np.ndarray):
         r"""
         Performs the product of a sparse matrix :math:`Av`,\
          with :math:`v` a  :mod:`numpy`  array (:math:`dim(v)=n_{pix}`)  .
@@ -44,20 +80,62 @@ class SparseLO(lp.LinearOperator):
         elements of the operator.
 
         """
-        x = SparseLO_tools.py_SparseLO_mult(self.nrows, self.pairs, v)
 
-        return x
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
-    def rmult(self, v):
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.nrows, dtype=self.dtype)
+
+        PointingLO_tools.PLO_mult_I(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+    def _rmult_I(self, vec: np.ndarray):
         r"""
         Performs the product for the transpose operator :math:`A^T`.
 
         """
-        x = SparseLO_tools.py_SparseLO_rmult(self.nrows, self.ncols, self.pairs, v)
 
-        return x
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
-    def mult_qu(self, v):
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.ncols, dtype=self.dtype)
+
+        PointingLO_tools.PLO_rmult_I(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+    def _mult_QU(self, vec: np.ndarray):
         r"""Performs :math:`A * v` with :math:`v` being a *polarization* vector.
         The output array will encode a linear combination of the two Stokes
         parameters,  (whose components are stored contiguously).
@@ -65,23 +143,65 @@ class SparseLO(lp.LinearOperator):
         .. math::
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
-        x = SparseLO_tools.py_SparseLO_mult_qu(
-            self.nrows, self.pairs, self.sin, self.cos, v
+
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.nrows, dtype=self.dtype)
+
+        PointingLO_tools.PLO_mult_QU(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            prod=prod,
         )
 
-        return x
+        return prod
 
-    def rmult_qu(self, v):
+    def _rmult_QU(self, vec: np.ndarray):
         r"""
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
-        vec_out = SparseLO_tools.py_SparseLO_rmult_qu(
-            self.nrows, self.ncols, self.pairs, self.sin, self.cos, v
+
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.ncols, dtype=self.dtype)
+
+        PointingLO_tools.PLO_rmult_QU(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            prod=prod,
         )
 
-        return vec_out
+        return prod
 
-    def mult_iqu(self, v):
+    def _mult_IQU(self, vec: np.ndarray):
         r"""Performs the product of a sparse matrix :math:`Av`,
         with ``v`` a  :mod:`numpy` array containing the
         three Stokes parameters [IQU] .
@@ -96,74 +216,77 @@ class SparseLO(lp.LinearOperator):
             with :math:`p` is the pixel observed at time :math:`t` with polarization angle
             :math:`\phi_t`.
         """
-        x = SparseLO_tools.py_SparseLO_mult_iqu(
-            self.nrows, self.pairs, self.sin, self.cos, v
+
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.nrows, dtype=self.dtype)
+
+        PointingLO_tools.PLO_mult_IQU(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            prod=prod,
         )
 
-        return x
+        return prod
 
-    def rmult_iqu(self, v):
+    def _rmult_IQU(self, vec: np.ndarray):
         r"""
         Performs the product for the transpose operator :math:`A^T` to get a IQU map-like vector.
         Since this vector resembles the pixel of 3 maps it has 3 times the size ``Npix``.
         IQU values referring to the same pixel are  contiguously stored in the memory.
 
         """
-        x = SparseLO_tools.py_SparseLO_rmult_iqu(
-            self.nrows, self.ncols, self.pairs, self.sin, self.cos, v
+
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.ncols, dtype=self.dtype)
+
+        PointingLO_tools.PLO_rmult_IQU(
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            prod=prod,
         )
 
-        return x
+        return prod
 
-    def __init__(self, n, m, pix_samples, pol=1, angle_processed=None):
-        self.ncols = n
-        self.nrows = m
-        self.pol = pol
-        self.pairs = pix_samples
-        if self.pol > 1:
-            self.cos = angle_processed.cos
-            self.sin = angle_processed.sin
-
-        if pol == 3:
-            self.__runcase = "IQU"
-            super(SparseLO, self).__init__(
-                nargin=self.pol * self.ncols,
-                nargout=self.nrows,
-                matvec=self.mult_iqu,
-                symmetric=False,
-                rmatvec=self.rmult_iqu,
-            )
-        elif pol == 1:
-            self.__runcase = "I"
-            super(SparseLO, self).__init__(
-                nargin=self.pol * self.ncols,
-                nargout=self.nrows,
-                matvec=self.mult,
-                symmetric=False,
-                rmatvec=self.rmult,
-            )
-        elif pol == 2:
-            self.__runcase = "QU"
-            super(SparseLO, self).__init__(
-                nargin=self.pol * self.ncols,
-                nargout=self.nrows,
-                matvec=self.mult_qu,
-                symmetric=False,
-                rmatvec=self.rmult_qu,
-            )
-        else:
-            raise RuntimeError(
-                "No valid polarization key set!\t=>\tpol=%d \n \
-                                    Possible values are pol=%d(I),%d(QU), %d(IQU)."
-                % (pol, 1, 2, 3)
-            )
-
-    @property
-    def maptype(self):
+    def solver_string(self):
         """
         Return a string depending on the map you are processing
         """
-        return self.__runcase
+        if self.solver_type == 1:
+            return "I"
+        elif self.solver_type == 2:
+            return "QU"
+        else:
+            return "IQU"
 
 
 class ToeplitzLO(lp.LinearOperator):
@@ -209,6 +332,63 @@ class ToeplitzLO(lp.LinearOperator):
         self.array = a
 
 
+class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
+    """
+    Class representing a inverse noise covariance operator for uncorrelated noise.
+
+    A diagonal linear operator defined by its diagonal `diag` (a Numpy array.)
+    The type must be specified in the `diag` argument, e.g.,
+    `np.ones(5, dtype=np.complex)` or `np.ones(5).astype(np.complex)`.
+
+    """
+
+    def __init__(self, diag: np.ndarray, dtype=None):
+        if dtype is not None:
+            self.diag = np.asarray(diag, dtype=dtype)
+        elif isinstance(diag, np.ndarray):
+            dtype = self.diag.dtype
+        else:
+            dtype = np.float64
+            self.diag = np.asarray(diag, dtype=dtype)
+
+        if self.diag.ndim != 1:
+            msg = "diag array must be 1-d"
+            raise ValueError(msg)
+
+        super(InvNoiseCovLO_Uncorrelated, self).__init__(
+            nargin=self.diag.shape[0],
+            nargout=self.diag.shape[0],
+            symmetric=True,
+            matvec=self._mult,
+            rmatvec=self._mult,
+            dtype=dtype,
+        )
+
+    def _mult(self, vec: np.ndarray):
+        if len(vec) != self.diag.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.diag.shape[0], dtype=self.dtype)
+
+        InvNoiseCov_tools.uncorrelated_mult(
+            nsamples=self.diag.shape[0],
+            diag=self.diag,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+
 class BlockLO(blk.BlockDiagonalLinearOperator):
     r"""
     Derived class from  :mod:`blkop.BlockDiagonalLinearOperator`.
@@ -234,7 +414,6 @@ class BlockLO(blk.BlockDiagonalLinearOperator):
                     :math:`bandsize != blocksize`
             - False : ``t`` is an array, ``shape(t)=[nblocks]``.
                     each block is identified by a scalar value in the diagonal.
-
     """
 
     def build_blocks(self):
@@ -248,8 +427,6 @@ class BlockLO(blk.BlockDiagonalLinearOperator):
 
         ``self.diag``: {numpy array}
             the array resuming the :math:`diag(N^{-1})`.
-
-
         """
 
         tmplist = []
@@ -287,67 +464,6 @@ class BlockLO(blk.BlockDiagonalLinearOperator):
         return self.__isoffdiag
 
 
-class BlockDiagonalLO(lp.LinearOperator):
-    r"""
-    Explicit implementation of :math:`A diag(N^{-1}) A^T`, in order to save time
-    in the application of the two matrices onto a vector (in this way the leading dimension  will be :math:`n_{pix}`
-    instead of  :math:`n_t`).
-
-    .. note::
-        it is initialized as the  :class:`BlockDiagonalPreconditionerLO` since it involves
-        computation with  the same matrices.
-    """
-
-    def __init__(self, CES, n, pol=1):
-        self.size = pol * n
-        self.pol = pol
-        super(BlockDiagonalLO, self).__init__(
-            nargin=self.size, nargout=self.size, matvec=self.mult, symmetric=True
-        )
-        self.pixels = np.arange(n)
-        if pol == 1:
-            self.counts = CES.counts
-        elif pol > 1:
-            self.sin2 = CES.sin2
-            self.sincos = CES.sincos
-            self.cos2 = CES.cos2
-            if pol == 3:
-                self.counts = CES.counts
-                self.cos = CES.cosine
-                self.sin = CES.sine
-
-    def mult(self, x):
-        r"""
-        Multiplication of  :math:`A diag(N^{-1}) A^T` on to a vector math:`x`
-        ( :math:`n_{pix}` array).
-        """
-        y = x * 0.0
-        if self.pol == 1:
-            y = x * self.counts
-        elif self.pol == 3:
-            for pix, s2, c2, cs, c, s, hits in zip(
-                self.pixels,
-                self.sin2,
-                self.cos2,
-                self.sincos,
-                self.cos,
-                self.sin,
-                self.counts,
-            ):
-                y[3 * pix] = hits * x[3 * pix] + c * x[3 * pix + 1] + s * x[3 * pix + 2]
-                y[3 * pix + 1] = (
-                    c * x[3 * pix] + c2 * x[3 * pix + 1] + cs * x[3 * pix + 2]
-                )
-                y[3 * pix + 2] = (
-                    s * x[3 * pix] + cs * x[3 * pix + 1] + s2 * x[3 * pix + 2]
-                )
-        elif self.pol == 2:
-            for pix, s2, c2, cs in zip(self.pixels, self.sin2, self.cos2, self.sincos):
-                y[pix * 2] = c2 * x[2 * pix] + cs * x[pix * 2 + 1]
-                y[pix * 2 + 1] = cs * x[2 * pix] + s2 * x[pix * 2 + 1]
-        return y
-
-
 class BlockDiagonalPreconditionerLO(lp.LinearOperator):
     r"""
     Standard preconditioner defined as:
@@ -356,7 +472,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
         M_{BD}=( A diag(N^{-1}) A^T)^{-1}
 
-    where :math:`A` is the *pointing matrix* (see  :class:`SparseLO`).
+    where :math:`A` is the *pointing matrix* (see  :class:`PointingLO`).
     Such inverse operator  could be easily computed given the structure of the
     matrix :math:`A`. It could be  sparse in the case of Intensity only analysis (`pol=1`),
     block-sparse if polarization is included (`pol=3,2`).
@@ -374,55 +490,147 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         the size of each block of the matrix.
     """
 
-    def mult(self, x):
+    def __init__(self, processed_samples: ProcessTimeSamples):
+        self.solver_type = processed_samples.solver_type
+        self.new_npix = processed_samples.new_npix
+        self.size = processed_samples.new_npix * self.solver_type
+
+        if self.solver_type == 1:
+            self.weighted_counts = processed_samples.weighted_counts
+        else:
+            self.weighted_sin_sq = processed_samples.weighted_sin_sq
+            self.weighted_cos_sq = processed_samples.weighted_cos_sq
+            self.weighted_sincos = processed_samples.weighted_sincos
+            self.one_over_determinant = processed_samples.one_over_determinant
+            if self.solver_type == 3:
+                self.weighted_counts = processed_samples.weighted_counts
+                self.weighted_sin = processed_samples.weighted_sin
+                self.weighted_cos = processed_samples.weighted_cos
+
+        if self.solver_type == 1:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_I,
+                dtype=processed_samples.dtype_float,
+            )
+        elif self.solver_type == 2:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_QU,
+                dtype=processed_samples.dtype_float,
+            )
+        else:
+            super(BlockDiagonalPreconditionerLO, self).__init__(
+                nargin=self.size,
+                nargout=self.size,
+                symmetric=True,
+                matvec=self._mult_IQU,
+                dtype=processed_samples.dtype_float,
+            )
+
+    def _mult_I(self, vec: np.ndarray):
         r"""
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-        y = x * 0.0
-        npix = int(self.size / self.pol)
 
-        if self.pol == 1:
-            nan = np.ma.masked_greater(self.counts, 0)
-
-            y[nan.mask] = x[nan.mask] / self.counts[nan.mask]
-        elif self.pol == 2:
-            y = BlkDiagPrecondLO_tools.py_BlkDiagPrecondLO_mult_qu(
-                npix, self.sin2, self.cos2, self.sincos, x
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        elif self.pol == 3:
-            y = BlkDiagPrecondLO_tools.py_BlkDiagPrecondLO_mult_iqu(
-                npix,
-                self.counts,
-                self.sine,
-                self.cosine,
-                self.sin2,
-                self.cos2,
-                self.sincos,
-                x,
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = vec / self.weighted_counts
+
+        return prod
+
+    def _mult_QU(self, vec: np.ndarray):
+        r"""
+        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
+        where :math:`x` is   an :math:`n_{pix}` array.
+        """
+
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
             )
 
-        return y
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
 
-    def __init__(self, CES, n, pol=1):
-        self.size = pol * n
-        self.pixels = np.arange(n)
-        self.pol = pol
-        if pol == 1:
-            self.counts = CES.counts
-        elif pol > 1:
-            self.sin2 = CES.sin2
-            self.cos2 = CES.cos2
-            self.sincos = CES.sincos
-            if pol == 3:
-                self.counts = CES.counts
-                self.cosine = CES.cosine
-                self.sine = CES.sine
+        prod = np.zeros(self.size, dtype=self.dtype)
 
-        super(BlockDiagonalPreconditionerLO, self).__init__(
-            nargin=self.size, nargout=self.size, matvec=self.mult, symmetric=True
+        BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+            new_npix=self.new_npix,
+            weighted_sin_sq=self.weighted_sin_sq,
+            weighted_cos_sq=self.weighted_cos_sq,
+            weighted_sincos=self.weighted_sincos,
+            one_over_determinant=self.one_over_determinant,
+            vec=vec,
+            prod=prod,
         )
+
+        return prod
+
+    def _mult_IQU(self, vec: np.ndarray):
+        r"""
+        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
+        where :math:`x` is   an :math:`n_{pix}` array.
+        """
+
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
+
+        if vec.dtype != self.dtype:
+            warnings.warn(
+                f"dtype of `vec` will be changed to {self.dtype}",
+                TypeChangeWarning,
+            )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.size, dtype=self.dtype)
+
+        BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+            new_npix=self.new_npix,
+            weighted_counts=self.weighted_counts,
+            weighted_sin_sq=self.weighted_sin_sq,
+            weighted_cos_sq=self.weighted_cos_sq,
+            weighted_sincos=self.weighted_sincos,
+            weighted_sin=self.weighted_sin,
+            weighted_cos=self.weighted_cos,
+            one_over_determinant=self.one_over_determinant,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+    def solver_string(self):
+        """
+        Return a string depending on the map you are processing
+        """
+        if self.solver_type == 1:
+            return "I"
+        elif self.solver_type == 2:
+            return "QU"
+        else:
+            return "IQU"
 
 
 class InverseLO(lp.LinearOperator):
@@ -460,9 +668,6 @@ class InverseLO(lp.LinearOperator):
 
         - ``info`` : {int}
             output of the solver method (usually :func:`scipy.sparse.cg`).
-
-
-
         """
         self.__converged = info
         if info == 0:
