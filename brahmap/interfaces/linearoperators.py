@@ -346,6 +346,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
         if dtype is not None:
             self.diag = np.asarray(diag, dtype=dtype)
         elif isinstance(diag, np.ndarray):
+            self.diag = diag
             dtype = self.diag.dtype
         else:
             dtype = np.float64

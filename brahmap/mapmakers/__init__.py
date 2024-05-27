@@ -7,10 +7,18 @@ if find_spec("litebird_sim") is not None:
     from .lbsim_mapmakers import (
         LBSimGLSParameters,
         LBSimGLSResult,
+        LBSim_InvNoiseCovLO_UnCorr,
+        LBSim_compute_GLS_maps_from_obs,
         LBSim_compute_GLS_maps,
     )
 
-    __all__ = ["LBSimGLSParameters", "LBSimGLSResult", "LBSim_compute_GLS_maps"]
+    __all__ = [
+        "LBSimGLSParameters",
+        "LBSimGLSResult",
+        "LBSim_InvNoiseCovLO_UnCorr",
+        "LBSim_compute_GLS_maps_from_obs",
+        "LBSim_compute_GLS_maps",
+    ]
 else:
     __all__ = []
 

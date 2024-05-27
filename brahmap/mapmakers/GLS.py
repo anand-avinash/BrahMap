@@ -45,7 +45,7 @@ def compute_GLS_maps(
     inv_noise_cov_operator: (
         ToeplitzLO | BlockLO | DiagonalOperator | InvNoiseCovLO_Uncorrelated
     ) = None,
-    threshold_cond: float = 1.0e3,
+    threshold: float = 1.0e-5,
     dtype_float=None,
     update_pointings_inplace: bool = True,
     GLSParameters: GLSParameters = GLSParameters(),
@@ -78,7 +78,7 @@ def compute_GLS_maps(
         solver_type=GLSParameters.solver_type,
         pol_angles=pol_angles,
         noise_weights=inv_noise_cov_operator.diag,
-        threshold_cond=threshold_cond,
+        threshold=threshold,
         dtype_float=dtype_float,
         update_pointings_inplace=update_pointings_inplace,
     )
