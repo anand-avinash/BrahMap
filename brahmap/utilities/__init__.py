@@ -22,6 +22,8 @@ from .tools import TypeChangeWarning
 
 from .process_time_samples import ProcessTimeSamples, SolverType
 
+from .mpi import Initialize
+
 __all__ = [
     "is_sorted",
     "bash_colors",
@@ -38,4 +40,5 @@ __all__ = [
     "ProcessTimeSamples",
     "SolverType",
     "TypeChangeWarning",
+    "Initialize",
 ]
