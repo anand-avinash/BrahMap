@@ -1,4 +1,5 @@
 import numpy as np
+from mpi4py import MPI
 
 
 def computeweights_pol_I(
@@ -8,6 +9,7 @@ def computeweights_pol_I(
     pointings_flag: np.ndarray,
     noise_weights: np.ndarray,
     dtype_float,
+    comm,
 ):
     weighted_counts = np.zeros(npix, dtype=dtype_float)
 
@@ -16,6 +18,8 @@ def computeweights_pol_I(
 
         if pointings_flag[idx]:
             weighted_counts[pixel] += noise_weights[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
 
     observed_pixels = np.where(weighted_counts > 0)[0]
 
@@ -42,6 +46,7 @@ def computeweights_pol_QU(
     noise_weights: np.ndarray,
     pol_angles: np.ndarray,
     dtype_float,
+    comm,
 ):
     weighted_counts = np.zeros(npix, dtype=dtype_float)
     weighted_sin_sq = np.zeros(npix, dtype=dtype_float)
@@ -60,6 +65,11 @@ def computeweights_pol_QU(
             weighted_sin_sq[pixel] += noise_weights[idx] * sin2phi[idx] * sin2phi[idx]
             weighted_cos_sq[pixel] += noise_weights[idx] * cos2phi[idx] * cos2phi[idx]
             weighted_sincos[pixel] += noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
 
     one_over_determinant = (weighted_cos_sq * weighted_sin_sq) - (
         weighted_sincos * weighted_sincos
@@ -84,6 +94,7 @@ def computeweights_pol_IQU(
     noise_weights: np.ndarray,
     pol_angles: np.ndarray,
     dtype_float,
+    comm,
 ):
     weighted_counts = np.zeros(npix, dtype=dtype_float)
     weighted_sin_sq = np.zeros(npix, dtype=dtype_float)
@@ -106,6 +117,13 @@ def computeweights_pol_IQU(
             weighted_sincos[pixel] += noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
             weighted_sin[pixel] += noise_weights[idx] * sin2phi[idx]
             weighted_cos[pixel] += noise_weights[idx] * cos2phi[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+    comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
 
     one_over_determinant = (
         weighted_counts

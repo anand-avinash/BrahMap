@@ -1,5 +1,6 @@
 import os
 from setuptools import Extension, setup
+import mpi4py
 
 # g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 --includes) example9.cpp -o example9$(python3-config --extension-suffix)
 
@@ -10,6 +11,7 @@ ext1 = Extension(
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
+        os.path.join(mpi4py.get_include()),
     ],
     define_macros=None,
     extra_compile_args=[
@@ -20,7 +22,6 @@ ext1 = Extension(
         "-std=c++20",
         "-fPIC",
         "-fvisibility=hidden",
-        "-lm",
     ],
 )
 

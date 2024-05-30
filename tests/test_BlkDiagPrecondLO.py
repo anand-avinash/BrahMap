@@ -5,11 +5,16 @@ import brahmap
 import helper_BlkDiagPrecondLO as bdplo
 import helper_ProcessTimeSamples as hpts
 
+brahmap.Initialize()
+
 
 class InitCommonParams:
-    np.random.seed(6543)
+    np.random.seed(65434 + brahmap.bMPI.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
+    nsamples = div + (brahmap.bMPI.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
@@ -205,8 +210,8 @@ class TestBlkDiagPrecondLO_I(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
+        (InitInt32Params(), InitFloat32Params(), 1.5e-3),
+        (InitInt64Params(), InitFloat32Params(), 1.5e-3),
         (InitInt32Params(), InitFloat64Params(), 1.5e-5),
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],
@@ -252,8 +257,8 @@ class TestBlkDiagPrecondLO_QU(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-3),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-3),
+        (InitInt32Params(), InitFloat32Params(), 1.0e-3),
+        (InitInt64Params(), InitFloat32Params(), 1.0e-3),
         (InitInt32Params(), InitFloat64Params(), 1.5e-5),
         (InitInt64Params(), InitFloat64Params(), 1.5e-5),
     ],

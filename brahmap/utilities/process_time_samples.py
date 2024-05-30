@@ -2,11 +2,16 @@ from enum import IntEnum
 import numpy as np
 import warnings
 
+import brahmap
+
 from brahmap.utilities.tools import TypeChangeWarning
 from brahmap.utilities import bash_colors
 
 from brahmap._extensions import compute_weights
 from brahmap._extensions import repixelize
+
+
+from mpi4py import MPI
 
 
 class SolverType(IntEnum):
@@ -28,6 +33,9 @@ class ProcessTimeSamples(object):
         dtype_float=None,
         update_pointings_inplace: bool = True,
     ):
+        if brahmap.bMPI is None:
+            brahmap.Initialize()
+
         self.npix = npix
         self.nsamples = len(pointings)
 
@@ -42,18 +50,20 @@ class ProcessTimeSamples(object):
         if self.pointings_flag is None:
             self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
-        if len(self.pointings_flag) != self.nsamples:
-            raise AssertionError(
-                f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(pointings_flag)}\nlen(pointings) = {self.nsamples}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(self.pointings_flag) != self.nsamples),
+            exception=AssertionError,
+            message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(pointings_flag)}\nlen(pointings) = {self.nsamples}",
+        )
 
         self.threshold = threshold
         self.solver_type = solver_type
 
-        if self.solver_type not in [1, 2, 3]:
-            raise ValueError(
-                "Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3)."
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(self.solver_type not in [1, 2, 3]),
+            exception=ValueError,
+            message="Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3).",
+        )
 
         # setting the dtype for the `float` arrays: if one or both of `noise_weights` and `pol_angles` are supplied, the `dtype_float` will be inferred from them. Otherwise, the it will be set to `np.float64`
         if dtype_float is not None:
@@ -71,29 +81,33 @@ class ProcessTimeSamples(object):
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
 
-        if len(noise_weights) != self.nsamples:
-            raise AssertionError(
-                f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(noise_weights) != self.nsamples),
+            exception=AssertionError,
+            message=f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}",
+        )
 
         if noise_weights.dtype != self.dtype_float:
-            warnings.warn(
-                f"dtype of `noise_weights` will be changed to {self.dtype_float}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `noise_weights` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
             noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            if len(pol_angles) != self.nsamples:
-                raise AssertionError(
-                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
-                )
+            brahmap.MPI_RAISE_EXCEPTION(
+                condition=(len(pol_angles) != self.nsamples),
+                exception=AssertionError,
+                message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
+            )
 
             if pol_angles.dtype != self.dtype_float:
-                warnings.warn(
-                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
+                if brahmap.bMPI.rank == 0:
+                    warnings.warn(
+                        f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                        TypeChangeWarning,
+                    )
                 pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
 
         self._compute_weights(
@@ -104,28 +118,35 @@ class ProcessTimeSamples(object):
         self._repixelization()
         self._flag_bad_pixel_samples()
 
-        bc = bash_colors()
-        print(bc.header(f"{bc.bold(' ProcessTimeSamples Summary '):-^60}"))
-        print(
-            bc.blue(bc.bold(f"Read {self.nsamples} time samples for npix={self.npix}"))
-        )
-        print(
-            bc.blue(bc.bold(f"Found {self.npix - self.new_npix} pathological pixels"))
-        )
-        print(
-            bc.blue(
-                bc.bold(
-                    f"Map-maker will take into account only {self.new_npix} pixels."
+        if brahmap.bMPI.rank == 0:
+            bc = bash_colors()
+            print(bc.header(f"{bc.bold(' ProcessTimeSamples Summary '):-^60}"))
+            print(
+                bc.blue(
+                    bc.bold(f"Read {self.nsamples} time samples for npix={self.npix}")
                 )
             )
-        )
-        print(bc.header("---" * 20))
+            print(
+                bc.blue(
+                    bc.bold(f"Found {self.npix - self.new_npix} pathological pixels")
+                )
+            )
+            print(
+                bc.blue(
+                    bc.bold(
+                        f"Map-maker will take into account only {self.new_npix} pixels."
+                    )
+                )
+            )
+            print(bc.header("---" * 20))
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
         hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
         for idx in range(self.nsamples):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
+
+        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
 
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix),
@@ -163,6 +184,7 @@ class ProcessTimeSamples(object):
                 observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
                 pixel_flag=self.pixel_flag,
+                comm=brahmap.bMPI.comm,
             )
 
         else:
@@ -190,6 +212,7 @@ class ProcessTimeSamples(object):
                     weighted_cos_sq=self.weighted_cos_sq,
                     weighted_sincos=self.weighted_sincos,
                     one_over_determinant=self.one_over_determinant,
+                    comm=brahmap.bMPI.comm,
                 )
 
             elif self.solver_type == SolverType.IQU:
@@ -212,6 +235,7 @@ class ProcessTimeSamples(object):
                     weighted_sin=self.weighted_sin,
                     weighted_cos=self.weighted_cos,
                     one_over_determinant=self.one_over_determinant,
+                    comm=brahmap.bMPI.comm,
                 )
 
             self.new_npix = compute_weights.get_pixel_mask_pol(

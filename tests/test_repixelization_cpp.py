@@ -1,5 +1,7 @@
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import repixelize
 
 import helper_ComputeWeights as cw
@@ -7,9 +9,12 @@ import helper_Repixelization as rp
 
 
 class InitCommonParams:
-    np.random.seed(1234)
+    np.random.seed(1234 + brahmap.bMPI.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
+    nsamples = div + (brahmap.bMPI.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
@@ -80,6 +85,7 @@ class TestRepixelization(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             initfloat.dtype,
+            comm=brahmap.bMPI.comm,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -111,6 +117,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.bMPI.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -187,6 +194,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.bMPI.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -286,6 +294,7 @@ class TestFlagBadPixelSamples(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.bMPI.comm,
         )
 
         __, __, old2new_pixel, pixel_flag = cw.get_pix_mask_pol(

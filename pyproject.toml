@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm"]
+requires = [
+    "setuptools",
+    "setuptools_scm",
+    "mpi4py",         # `mpi4py` is needed to use `mpi4py.get_include()` in `setup.py`
+]
+
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,6 +22,7 @@ dependencies = [
     "numpy",
     "scipy",
     "healpy",
+    "mpi4py",
     "ruff",
     "pre-commit",
     "pytest",

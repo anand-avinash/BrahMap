@@ -7,9 +7,12 @@ import helper_ProcessTimeSamples as hpts
 
 
 class InitCommonParams:
-    np.random.seed(54321)
+    np.random.seed(54321 + brahmap.bMPI.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
+    nsamples = div + (brahmap.bMPI.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=npix)

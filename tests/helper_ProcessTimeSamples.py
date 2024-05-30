@@ -5,7 +5,10 @@ import warnings
 import helper_ComputeWeights as cw
 import helper_Repixelization as rp
 
+import brahmap
 from brahmap.utilities import TypeChangeWarning
+
+from mpi4py import MPI
 
 
 class SolverType(IntEnum):
@@ -27,6 +30,9 @@ class ProcessTimeSamples(object):
         dtype_float=None,
         update_pointings_inplace: bool = True,
     ):
+        if brahmap.bMPI is None:
+            brahmap.Initialize()
+
         self.npix = npix
         self.nsamples = len(pointings)
 
@@ -87,6 +93,8 @@ class ProcessTimeSamples(object):
         for idx in range(self.nsamples):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
 
+        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
+
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix, dtype=int),
             mask=np.logical_not(self.pixel_flag),
@@ -120,6 +128,7 @@ class ProcessTimeSamples(object):
                 pointings_flag=self.pointings_flag,
                 noise_weights=noise_weights,
                 dtype_float=self.dtype_float,
+                comm=brahmap.bMPI.comm,
             )
 
         else:
@@ -140,6 +149,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
+                    comm=brahmap.bMPI.comm,
                 )
 
             elif self.solver_type == SolverType.IQU:
@@ -161,6 +171,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
+                    comm=brahmap.bMPI.comm,
                 )
 
             (

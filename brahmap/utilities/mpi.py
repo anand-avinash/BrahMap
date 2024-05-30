@@ -1,15 +1,7 @@
 import os
 import brahmap
 
-import mpi4py
-
-mpi4py.rc.initialize = False
-mpi4py.rc.finalize = False
-
-from mpi4py import MPI  # noqa: E402
-
-if MPI.Is_initialized() is False:
-    MPI.Init_thread(required=MPI.THREAD_FUNNELED)
+from mpi4py import MPI
 
 
 def Initialize(communicator=None, raise_exception_per_process: bool = True):
@@ -40,7 +32,7 @@ def MPI_RAISE_EXCEPTION(
     exception,
     message,
 ):
-    """Will raise `exception` with `message` if the `condition` is false.
+    """Will raise `exception` with `message` if the `condition` is `True`.
 
     Args:
         condition (_type_): The condition to be evaluated
@@ -53,12 +45,12 @@ def MPI_RAISE_EXCEPTION(
     """
 
     if brahmap.bMPI.raise_exception_per_process:
-        if condition is False:
+        if condition is True:
             error_str = f"Exception raised by MPI rank {brahmap.bMPI.rank}\n"
             raise exception(error_str + message)
     else:
         exception_count = brahmap.bMPI.comm.reduce(condition, MPI.SUM, 0)
 
         if brahmap.bMPI.rank == 0:
-            error_str = f"Exception raised by {brahmap.bMPI.comm.size - exception_count} MPI process(es)\n"
+            error_str = f"Exception raised by {exception_count} MPI process(es)\n"
             raise exception(error_str + message)
