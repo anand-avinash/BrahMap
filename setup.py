@@ -50,6 +50,7 @@ ext3 = Extension(
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
+        os.path.join(mpi4py.get_include()),
     ],
     define_macros=None,
     extra_compile_args=[

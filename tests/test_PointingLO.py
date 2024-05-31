@@ -5,6 +5,10 @@ import brahmap
 import helper_PointingLO as hplo
 import helper_ProcessTimeSamples as hpts
 
+from mpi4py import MPI
+
+brahmap.Initialize()
+
 
 class InitCommonParams:
     np.random.seed(54321 + brahmap.bMPI.rank)
@@ -221,6 +225,8 @@ class TestPointingLO_I(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
+        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
+
         np.testing.assert_allclose(PTS.weighted_counts, weights)
 
         # Test for P * <vector>
@@ -267,6 +273,8 @@ class TestPointingLO_QU(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
+        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
+
         weighted_sin = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_cos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
 
@@ -275,6 +283,9 @@ class TestPointingLO_QU(InitCommonParams):
                 pixel = PTS.pointings[idx]
                 weighted_sin[pixel] += PTS.sin2phi[idx] * initfloat.noise_weights[idx]
                 weighted_cos[pixel] += PTS.cos2phi[idx] * initfloat.noise_weights[idx]
+
+        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
+        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
 
         np.testing.assert_allclose(weighted_sin, weights[1::2])
         np.testing.assert_allclose(weighted_cos, weights[0::2])
@@ -325,6 +336,8 @@ class TestPointingLO_IQU(InitCommonParams):
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
+
+        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
 
         np.testing.assert_allclose(PTS.weighted_counts, weights[0::3])
         np.testing.assert_allclose(PTS.weighted_cos, weights[1::3])

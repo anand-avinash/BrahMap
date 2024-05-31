@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 from dataclasses import dataclass
 
+import brahmap
 from brahmap.linop import DiagonalOperator
 from brahmap.utilities import ProcessTimeSamples, SolverType
 from brahmap.interfaces import (
@@ -50,10 +51,11 @@ def compute_GLS_maps(
     update_pointings_inplace: bool = True,
     GLSParameters: GLSParameters = GLSParameters(),
 ) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
-    if len(pointings) != len(time_ordered_data):
-        raise ValueError(
-            f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {len(pointings)}\nlen(time_ordered_data) = {len(time_ordered_data)}"
-        )
+    brahmap.MPI_RAISE_EXCEPTION(
+        condition=(len(pointings) != len(time_ordered_data)),
+        exception=ValueError,
+        message=f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {len(pointings)}\nlen(time_ordered_data) = {len(time_ordered_data)}",
+    )
 
     if dtype_float is None:
         if pol_angles is not None:
@@ -66,10 +68,11 @@ def compute_GLS_maps(
             diag=np.ones(len(pointings)), dtype=dtype_float
         )
     else:
-        if inv_noise_cov_operator.shape[0] != len(time_ordered_data):
-            raise ValueError(
-                f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = {inv_noise_cov_operator.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(inv_noise_cov_operator.shape[0] != len(time_ordered_data)),
+            exception=ValueError,
+            message=f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = {inv_noise_cov_operator.shape}",
+        )
 
     processed_samples = ProcessTimeSamples(
         npix=npix,

@@ -1,5 +1,7 @@
 import numpy as np
 import warnings
+
+import brahmap
 from brahmap.linop import linop as lp
 from brahmap.linop import blkop as blk
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
@@ -33,6 +35,7 @@ class PointingLO(lp.LinearOperator):
     ):
         self.solver_type = processed_samples.solver_type
 
+        self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
         self.nrows = processed_samples.nsamples
 
@@ -81,16 +84,18 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -111,26 +116,30 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_I(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
             vec=vec,
             prod=prod,
+            comm=brahmap.bMPI.comm,
         )
 
         return prod
@@ -144,16 +153,18 @@ class PointingLO(lp.LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -175,21 +186,24 @@ class PointingLO(lp.LinearOperator):
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_QU(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -197,6 +211,7 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
+            comm=brahmap.bMPI.comm,
         )
 
         return prod
@@ -217,16 +232,18 @@ class PointingLO(lp.LinearOperator):
             :math:`\phi_t`.
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -251,21 +268,24 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_IQU(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -273,6 +293,7 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
+            comm=brahmap.bMPI.comm,
         )
 
         return prod
@@ -352,9 +373,11 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
             dtype = np.float64
             self.diag = np.asarray(diag, dtype=dtype)
 
-        if self.diag.ndim != 1:
-            msg = "diag array must be 1-d"
-            raise ValueError(msg)
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(self.diag.ndim != 1),
+            exception=ValueError,
+            message="The `diag` array must be a 1-d vector",
+        )
 
         super(InvNoiseCovLO_Uncorrelated, self).__init__(
             nargin=self.diag.shape[0],
@@ -366,16 +389,18 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
         )
 
     def _mult(self, vec: np.ndarray):
-        if len(vec) != self.diag.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.diag.shape[0]),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.diag.shape[0], dtype=self.dtype)
@@ -539,16 +564,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = vec / self.weighted_counts
@@ -561,16 +588,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
@@ -593,16 +622,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        brahmap.MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if brahmap.bMPI.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)

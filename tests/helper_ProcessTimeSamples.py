@@ -67,16 +67,18 @@ class ProcessTimeSamples(object):
         noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            if len(pol_angles) != self.nsamples:
-                raise AssertionError(
-                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
-                )
+            brahmap.MPI_RAISE_EXCEPTION(
+                condition=(len(pol_angles) != self.nsamples),
+                exception=AssertionError,
+                message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
+            )
 
             if pol_angles.dtype != self.dtype_float:
-                warnings.warn(
-                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
+                if brahmap.bMPI.rank == 0:
+                    warnings.warn(
+                        f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                        TypeChangeWarning,
+                    )
                 pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
 
         self._compute_weights(

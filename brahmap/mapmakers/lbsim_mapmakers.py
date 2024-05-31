@@ -4,6 +4,7 @@ import healpy as hp
 import litebird_sim as lbs
 from typing import List
 
+import brahmap
 from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
 from brahmap.linop import DiagonalOperator
 from brahmap.interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
@@ -89,10 +90,15 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
                 if detector not in noise_dict_keys:
                     idx = det_list.index(detector)
                     noise_variance[detector] = np.ones(tod_len[idx])
-                if len(noise_variance[detector]) != tod_len[det_list.index(detector)]:
-                    raise ValueError(
-                        f"Incorrect length of noise variance for detector {detector}"
-                    )
+
+                brahmap.MPI_RAISE_EXCEPTION(
+                    condition=(
+                        len(noise_variance[detector])
+                        != tod_len[det_list.index(detector)]
+                    ),
+                    exception=ValueError,
+                    message=f"Incorrect length of noise variance for detector {detector}",
+                )
 
             diagonal = np.empty(diag_len, dtype=dtype)
             for obs_idx, obs in enumerate(obs_list):

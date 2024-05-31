@@ -1,5 +1,7 @@
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import PointingLO_tools
 
 import helper_ProcessTimeSamples as hpts
@@ -115,11 +117,13 @@ class TestPointingLOTools_I(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_I(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
             rvec,
             cpp_rmult_prod,
+            brahmap.bMPI.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_I(
             nrows,
@@ -127,6 +131,7 @@ class TestPointingLOTools_I(InitCommonParams):
             PTS.pointings,
             PTS.pointings_flag,
             rvec,
+            brahmap.bMPI.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
@@ -185,6 +190,7 @@ class TestPointingLOTools_QU(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_QU(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -192,6 +198,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             PTS.cos2phi,
             rvec,
             cpp_rmult_prod,
+            brahmap.bMPI.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
@@ -201,6 +208,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             PTS.sin2phi,
             PTS.cos2phi,
             rvec,
+            brahmap.bMPI.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
@@ -259,6 +267,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_QU(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -266,6 +275,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             PTS.cos2phi,
             rvec,
             cpp_rmult_prod,
+            brahmap.bMPI.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
@@ -275,6 +285,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             PTS.sin2phi,
             PTS.cos2phi,
             rvec,
+            brahmap.bMPI.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
