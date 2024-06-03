@@ -39,5 +39,5 @@ jobs:
       - name: Test BrahMap with pytest
         run: |
           for nprocs in 1 2 5 7 ; do
-            mpiexec -n $nprocs python3 -m mpi4py -m pytest
+            mpiexec -n $nprocs pytest
           done
