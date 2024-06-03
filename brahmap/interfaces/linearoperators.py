@@ -1,14 +1,18 @@
 import numpy as np
 import warnings
 
-import brahmap
+
 from brahmap.linop import linop as lp
 from brahmap.linop import blkop as blk
+
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
 from brahmap._extensions import PointingLO_tools
 from brahmap._extensions import BlkDiagPrecondLO_tools
 from brahmap._extensions import InvNoiseCov_tools
+
+from brahmap import MPI_RAISE_EXCEPTION
+import brahmap
 
 
 class PointingLO(lp.LinearOperator):
@@ -84,7 +88,7 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.ncols),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -116,7 +120,7 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.nrows),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -153,7 +157,7 @@ class PointingLO(lp.LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.ncols),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -186,7 +190,7 @@ class PointingLO(lp.LinearOperator):
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.nrows),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -232,7 +236,7 @@ class PointingLO(lp.LinearOperator):
             :math:`\phi_t`.
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.ncols),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -268,7 +272,7 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.nrows),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -373,7 +377,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
             dtype = np.float64
             self.diag = np.asarray(diag, dtype=dtype)
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(self.diag.ndim != 1),
             exception=ValueError,
             message="The `diag` array must be a 1-d vector",
@@ -389,7 +393,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
         )
 
     def _mult(self, vec: np.ndarray):
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.diag.shape[0]),
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -564,7 +568,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.size),
             exception=ValueError,
             message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -588,7 +592,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.size),
             exception=ValueError,
             message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
@@ -622,7 +626,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.size),
             exception=ValueError,
             message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",

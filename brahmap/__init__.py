@@ -7,18 +7,19 @@ from mpi4py import MPI  # noqa: E402
 if MPI.Is_initialized() is False:
     MPI.Init_thread(required=MPI.THREAD_FUNNELED)
 
-from . import interfaces, utilities, linop, mapmakers, _extensions  # noqa: E402
-
-from .utilities import Initialize, MPI_RAISE_EXCEPTION  # noqa: E402
-
 bMPI = None
 
+from .mpi import Initialize, MPI_RAISE_EXCEPTION  # noqa: E402
+
+from . import linop, _extensions, interfaces, utilities, mapmakers  # noqa: E402
+
 __all__ = [
-    "interfaces",
-    "utilities",
-    "linop",
-    "mapmakers",
-    "_extensions",
+    "bMPI",
     "Initialize",
     "MPI_RAISE_EXCEPTION",
+    "linop",
+    "_extensions",
+    "interfaces",
+    "utilities",
+    "mapmakers",
 ]

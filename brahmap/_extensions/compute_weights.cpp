@@ -3,8 +3,6 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
-#include <omp.h>
-
 #include "mpi_utils.hpp"
 
 namespace py = pybind11;

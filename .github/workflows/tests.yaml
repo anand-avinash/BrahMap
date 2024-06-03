@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Set up MPI ${{ matrix.mpi }}
+      - name: Install MPI ${{ matrix.mpi }}
         uses: mpi4py/setup-mpi@v1
         with:
           mpi: ${{ matrix.mpi }}

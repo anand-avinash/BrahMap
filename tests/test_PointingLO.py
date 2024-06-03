@@ -225,8 +225,6 @@ class TestPointingLO_I(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
-        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
-
         np.testing.assert_allclose(PTS.weighted_counts, weights)
 
         # Test for P * <vector>
@@ -272,8 +270,6 @@ class TestPointingLO_QU(InitCommonParams):
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
-
-        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
 
         weighted_sin = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_cos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -336,8 +332,6 @@ class TestPointingLO_IQU(InitCommonParams):
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
-
-        # brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weights, MPI.SUM)
 
         np.testing.assert_allclose(PTS.weighted_counts, weights[0::3])
         np.testing.assert_allclose(PTS.weighted_cos, weights[1::3])

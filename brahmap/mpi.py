@@ -1,7 +1,7 @@
 import os
-import brahmap
-
 from mpi4py import MPI
+
+import brahmap
 
 
 def Initialize(communicator=None, raise_exception_per_process: bool = True):

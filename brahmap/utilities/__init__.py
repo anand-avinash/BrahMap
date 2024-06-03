@@ -22,7 +22,6 @@ from .tools import TypeChangeWarning
 
 from .process_time_samples import ProcessTimeSamples, SolverType
 
-from .mpi import Initialize, MPI_RAISE_EXCEPTION
 
 __all__ = [
     "is_sorted",
@@ -40,6 +39,4 @@ __all__ = [
     "ProcessTimeSamples",
     "SolverType",
     "TypeChangeWarning",
-    "Initialize",
-    "MPI_RAISE_EXCEPTION",
 ]

@@ -4,10 +4,14 @@ import healpy as hp
 import litebird_sim as lbs
 from typing import List
 
-import brahmap
-from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
+from brahmap import MPI_RAISE_EXCEPTION
+
 from brahmap.linop import DiagonalOperator
+
+from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
+
 from brahmap.interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
+
 from brahmap.utilities import ProcessTimeSamples
 
 
@@ -91,7 +95,7 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
                     idx = det_list.index(detector)
                     noise_variance[detector] = np.ones(tod_len[idx])
 
-                brahmap.MPI_RAISE_EXCEPTION(
+                MPI_RAISE_EXCEPTION(
                     condition=(
                         len(noise_variance[detector])
                         != tod_len[det_list.index(detector)]

@@ -1,8 +1,8 @@
 from enum import IntEnum
 import numpy as np
 import warnings
+from mpi4py import MPI
 
-import brahmap
 
 from brahmap.utilities.tools import TypeChangeWarning
 from brahmap.utilities import bash_colors
@@ -10,8 +10,8 @@ from brahmap.utilities import bash_colors
 from brahmap._extensions import compute_weights
 from brahmap._extensions import repixelize
 
-
-from mpi4py import MPI
+from brahmap import Initialize, MPI_RAISE_EXCEPTION
+import brahmap
 
 
 class SolverType(IntEnum):
@@ -34,7 +34,7 @@ class ProcessTimeSamples(object):
         update_pointings_inplace: bool = True,
     ):
         if brahmap.bMPI is None:
-            brahmap.Initialize()
+            Initialize()
 
         self.npix = npix
         self.nsamples = len(pointings)
@@ -50,7 +50,7 @@ class ProcessTimeSamples(object):
         if self.pointings_flag is None:
             self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(self.pointings_flag) != self.nsamples),
             exception=AssertionError,
             message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(pointings_flag)}\nlen(pointings) = {self.nsamples}",
@@ -59,7 +59,7 @@ class ProcessTimeSamples(object):
         self.threshold = threshold
         self.solver_type = solver_type
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(self.solver_type not in [1, 2, 3]),
             exception=ValueError,
             message="Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3).",
@@ -81,7 +81,7 @@ class ProcessTimeSamples(object):
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
 
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(len(noise_weights) != self.nsamples),
             exception=AssertionError,
             message=f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}",
@@ -96,7 +96,7 @@ class ProcessTimeSamples(object):
             noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            brahmap.MPI_RAISE_EXCEPTION(
+            MPI_RAISE_EXCEPTION(
                 condition=(len(pol_angles) != self.nsamples),
                 exception=AssertionError,
                 message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",

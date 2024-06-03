@@ -2,9 +2,12 @@ import numpy as np
 import scipy
 from dataclasses import dataclass
 
-import brahmap
+from brahmap import MPI_RAISE_EXCEPTION
+
 from brahmap.linop import DiagonalOperator
+
 from brahmap.utilities import ProcessTimeSamples, SolverType
+
 from brahmap.interfaces import (
     PointingLO,
     ToeplitzLO,
@@ -51,7 +54,7 @@ def compute_GLS_maps(
     update_pointings_inplace: bool = True,
     GLSParameters: GLSParameters = GLSParameters(),
 ) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
-    brahmap.MPI_RAISE_EXCEPTION(
+    MPI_RAISE_EXCEPTION(
         condition=(len(pointings) != len(time_ordered_data)),
         exception=ValueError,
         message=f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {len(pointings)}\nlen(time_ordered_data) = {len(time_ordered_data)}",
@@ -68,7 +71,7 @@ def compute_GLS_maps(
             diag=np.ones(len(pointings)), dtype=dtype_float
         )
     else:
-        brahmap.MPI_RAISE_EXCEPTION(
+        MPI_RAISE_EXCEPTION(
             condition=(inv_noise_cov_operator.shape[0] != len(time_ordered_data)),
             exception=ValueError,
             message=f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = {inv_noise_cov_operator.shape}",

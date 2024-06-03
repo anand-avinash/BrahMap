@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-import brahmap
 
+import brahmap
 import helper_BlkDiagPrecondLO as bdplo
 import helper_ProcessTimeSamples as hpts
 
