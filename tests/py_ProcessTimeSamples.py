@@ -2,8 +2,8 @@ from enum import IntEnum
 import numpy as np
 import warnings
 
-import helper_ComputeWeights as cw
-import helper_Repixelization as rp
+import py_ComputeWeights as cw
+import py_Repixelization as rp
 
 import brahmap
 from brahmap.utilities import TypeChangeWarning

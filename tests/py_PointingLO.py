@@ -5,7 +5,7 @@ import brahmap
 import brahmap.linop as lp
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import helper_PointingLO_tools as hplo_tools
+import py_PointingLO_tools as hplo_tools
 
 
 class PointingLO(lp.LinearOperator):

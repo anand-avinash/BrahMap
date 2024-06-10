@@ -1,11 +1,31 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the extension module `repixelize`. All
+# the tests defined here simply test if the computations defined in the cpp
+# functions produce the same result as their python analog.
+#
+# - class `TestRepixelization`:
+#
+#   -   `test_repixelize_pol_{I,QU,IQU}`: tests the computations of
+#       `repixelize.repixelize_pol_{I,QU,IQU}()` functions
+#
+# - class `TestFlagBadPixelSamples`:
+#
+#   -   `test_flag_bad_pixel_samples()`: tests the computations of
+# `repixelize.flag_bad_pixel_samples()` function
+#
+###########################################################################
+
 import pytest
 import numpy as np
 
 import brahmap
 from brahmap._extensions import repixelize
 
-import helper_ComputeWeights as cw
-import helper_Repixelization as rp
+import py_ComputeWeights as cw
+import py_Repixelization as rp
+
+brahmap.Initialize()
 
 
 class InitCommonParams:

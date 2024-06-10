@@ -1,11 +1,27 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `BlkDiagPrecondLO_tools`. All the tests defined here simply test if the
+# computations defined the cpp functions produce the same results as their
+# python analog.
+#
+# - class `TestBlkDiagPrecondLOToolsCpp`:
+#
+#   -   `test_I_Cpp`: tests the computations of
+# `BlkDiagPrecondLO_tools.BDPLO_mult_I()`
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
 
 import brahmap
 from brahmap._extensions import BlkDiagPrecondLO_tools
 
-import helper_ProcessTimeSamples as hpts
-import helper_BlkDiagPrecondLO_tools as bdplo_tools
+import py_BlkDiagPrecondLO_tools as bdplo_tools
+
 
 brahmap.Initialize()
 
@@ -80,9 +96,9 @@ class InitFloat64Params(InitCommonParams):
 )
 class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
     def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.I
+        solver_type = brahmap.utilities.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -106,9 +122,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.QU
+        solver_type = brahmap.utilities.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -147,9 +163,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.IQU
+        solver_type = brahmap.utilities.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,

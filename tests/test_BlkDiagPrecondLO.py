@@ -1,9 +1,35 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `BlockDiagonalPreconditionerLO` of BrahMap.
+# Analogous to this class, in the test suite, we have defined another version of `BlockDiagonalPreconditionerLO` based on only the python routines.
+#
+# - class `TestBlkDiagPrecondLO_I_Cpp`:
+#
+#   -   `test_I_cpp`: tests whether `mult` and `rmult` method overloads of
+# the two versions of `BlkDiagPrecondLO_tools.BDPLO_mult_I()` produce the
+# same result
+#
+# - Same as above, but for QU and IQU
+#
+# - class `TestBlkDiagPrecondLO_I`:
+#
+#   -   `test_I`: The matrix view of the operator
+# `brahmap.interfaces.BlockDiagonalPreconditionerLO` is a block matrix.
+# In this test, we first compute the matrix view of the operator and then
+# compare the elements of each block (corresponding to a given pixel) with
+# their explicit computations
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
 
 import brahmap
-import helper_BlkDiagPrecondLO as bdplo
-import helper_ProcessTimeSamples as hpts
+
+import py_BlkDiagPrecondLO as bdplo
+import py_ProcessTimeSamples as hpts
 
 brahmap.Initialize()
 

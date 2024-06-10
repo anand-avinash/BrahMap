@@ -1,10 +1,27 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `compute_weights`
+#
+# - class `TestComputeWeights`: This test class implements the tests
+#   for all the functions defined in the extension module `compute_weights`.
+#   It simply tests if the computations defined in cpp functions produce
+#   the same result as their python analog.
+#
+#   -   `test_compute_weights_pol_{I,QU,IQU}()`: test the computations of
+#       `compute_weights.compute_weights_pol_{I,QU,IQU}` functions
+#   -   `test_get_pix_mask_pol_{QU,IQU}`: test the computations of
+#       `compute_weights.get_pixel_mask_pol()` function for both QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
 
 import brahmap
 from brahmap._extensions import compute_weights
 
-import helper_ComputeWeights as cw
+import py_ComputeWeights as cw
 
 brahmap.Initialize()
 

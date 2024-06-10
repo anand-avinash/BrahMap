@@ -1,9 +1,36 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `PointingLO` class of BrahMap.
+# Analogous to this class, in the test suite, we have defined another version
+# of `PointingLO` based on only the python routines.
+#
+# - class `TestPointingLO_I_Cpp`:
+#
+#   -   `test_I_Cpp`: tests whether the `mult` and `rmult` method overloads
+# of the the two versions of `PointingLO` produce the same results.
+#
+# - Same as above, but for QU and IQU
+#
+# - class `TestPointingLO_I`:
+#
+#   -   `test_I`: tests the `mult` and `rmult` method overloads of
+# `brahmap.interfaces.PointingLO` against their explicit computations.
+#
+# - Same as above, but for QU and IQU
+#
+# Note: For I case `P.T * noise_vector` must be equal to the
+# `weighted_counts` vector. For QU case, the resulting vector must have
+# `weighted_cos` and `weighted_sin` at alternating position. And for IQU
+# case, the resulting vector must have `weighted_counts`, `weighted_cos`
+# and `weighted_sin` at alternating positions.
+#
+###########################################################################
+
 import pytest
 import numpy as np
 import brahmap
 
-import helper_PointingLO as hplo
-import helper_ProcessTimeSamples as hpts
+import py_PointingLO as hplo
 
 from mpi4py import MPI
 
@@ -86,9 +113,9 @@ class InitFloat64Params(InitCommonParams):
 )
 class TestPointingLO_I_Cpp(InitCommonParams):
     def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.I
+        solver_type = brahmap.utilities.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -126,9 +153,9 @@ class TestPointingLO_I_Cpp(InitCommonParams):
 )
 class TestPointingLO_QU_Cpp(InitCommonParams):
     def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.QU
+        solver_type = brahmap.utilities.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -167,9 +194,9 @@ class TestPointingLO_QU_Cpp(InitCommonParams):
 )
 class TestPointingLO_IQU_Cpp(InitCommonParams):
     def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.IQU
+        solver_type = brahmap.utilities.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -208,9 +235,9 @@ class TestPointingLO_IQU_Cpp(InitCommonParams):
 )
 class TestPointingLO_I(InitCommonParams):
     def test_I(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.I
+        solver_type = brahmap.utilities.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -253,9 +280,9 @@ class TestPointingLO_I(InitCommonParams):
 )
 class TestPointingLO_QU(InitCommonParams):
     def test_QU(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.QU
+        solver_type = brahmap.utilities.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -315,9 +342,9 @@ class TestPointingLO_QU(InitCommonParams):
 )
 class TestPointingLO_IQU(InitCommonParams):
     def test_IQU(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.IQU
+        solver_type = brahmap.utilities.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,

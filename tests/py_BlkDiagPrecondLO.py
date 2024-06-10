@@ -5,7 +5,7 @@ import brahmap
 import brahmap.linop as lp
 from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import helper_BlkDiagPrecondLO_tools as bdplo_tools
+import py_BlkDiagPrecondLO_tools as bdplo_tools
 
 
 class BlockDiagonalPreconditionerLO(lp.LinearOperator):

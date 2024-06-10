@@ -38,6 +38,11 @@ jobs:
 
       - name: Test BrahMap with pytest
         run: |
+          if [ "${{ matrix.mpi }}" = "mpich" ]; then
+            preload=`mpichversion | sed -n 's/.*--libdir=\([^ ]*\).*/\1/p'`/libmpi.so
+          elif [ "${{ matrix.mpi }}" = "openmpi" ]; then
+            preload=`mpicxx --showme:libdirs`/libmpi_cxx.so
+          fi
           for nprocs in 1 2 5 7 ; do
-            mpiexec -n $nprocs pytest
+            LD_PRELOAD=$preload mpiexec -n $nprocs pytest
           done

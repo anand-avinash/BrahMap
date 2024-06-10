@@ -1,10 +1,30 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `ProcessTimeSamples` class of
+# BrahMap. Analogous to this class, in the test suite, we have defined
+# another version of `ProcessTimeSamples` based on only the python routines.
+#
+# - class `TestProcessTimeSamplesCpp`:
+#
+#   -   `test_ProcessTimeSamples_{I,QU,IQU}_Cpp`: Here we are testing if
+# the class attributes of the two versions of `ProcessTimeSamples` matches
+# with each other.
+
+# - class `TestProcessTimeSamples`:
+#
+#   -   `test_ProcessTimeSamples_{I,QU,IQU}`: Here we are testing the
+# class attributes of `brahmap.utilities.ProcessTimeSamples` against their
+# explicit computations.
+#
+###########################################################################
+
+
 import pytest
 import numpy as np
 
 import brahmap
-import brahmap.utilities as bmutils
 
-import helper_ProcessTimeSamples as hpts
+import py_ProcessTimeSamples as hpts
 
 from mpi4py import MPI
 
@@ -12,7 +32,7 @@ brahmap.Initialize()
 
 
 class InitCommonParams:
-    np.random.seed(12345 + brahmap.bMPI.rank)
+    np.random.seed(1234 + brahmap.bMPI.rank)
     npix = 128
     nsamples_global = npix * 6
 
@@ -83,7 +103,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -116,7 +136,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -165,7 +185,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -227,7 +247,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_I(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -251,7 +271,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -306,7 +326,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,

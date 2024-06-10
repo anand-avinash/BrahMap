@@ -1,17 +1,38 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `PointingLO_tools`. All the tests defined here simply test if the
+# computations defined the cpp functions produce the same results as their
+# python analog.
+#
+# - class `TestPointingLOTools_I`:
+#
+#   -   `test_I`: tests the computations of `PointingLO_tools.PLO_mult_I()`
+# and `PointingLO_tools.PLO_rmult_I()`
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
 
 import brahmap
 from brahmap._extensions import PointingLO_tools
 
-import helper_ProcessTimeSamples as hpts
-import helper_PointingLO_tools as hplo_tools
+import py_ProcessTimeSamples as hpts
+import py_PointingLO_tools as hplo_tools
+
+brahmap.Initialize()
 
 
 class InitCommonParams:
-    np.random.seed(54321)
+    np.random.seed(54321 + brahmap.bMPI.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
+    nsamples = div + (brahmap.bMPI.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=npix)

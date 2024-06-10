@@ -1,13 +1,38 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `InvNoiseCovLO_Uncorrelated` class of BrahMap.
+#
+# - class `TestInvNoiseCov_tools`:
+#
+#   -   `test_mult`: Here we are testing the computation of `mult()`
+# routine defined in the extension module `InvNoiseCov_tools`
+
+# - class `TestInvNoiseCovLO_Uncorrelated`:
+#
+#   -   `test_InvNoiseCovLO_Uncorrelated`: Here we are testing the
+# `mult` method overload of `TestInvNoiseCovLO_Uncorrelated` against its
+# explicit computation.
+#
+###########################################################################
+
+
 import pytest
 import numpy as np
 
 from brahmap._extensions import InvNoiseCov_tools
 from brahmap.interfaces import InvNoiseCovLO_Uncorrelated
 
+import brahmap
+
+brahmap.Initialize()
+
 
 class InitCommonParams:
-    np.random.seed(12343)
-    nsamples = 1280
+    np.random.seed(12343 + brahmap.bMPI.rank)
+    nsamples_global = 1280
+
+    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
+    nsamples = div + (brahmap.bMPI.rank < rem)
 
 
 class InitFloat32Params(InitCommonParams):
