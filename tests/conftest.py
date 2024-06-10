@@ -1,6 +1,8 @@
 import pytest
 import warnings
 import brahmap
+from mpi4py import MPI
+import atexit
 
 # Dictionaries to keep track of the results and parameter counts of parametrized test cases
 test_results_status = {}
@@ -83,3 +85,15 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # Clear the dictionaries
     test_results_status.clear()
     test_param_counts.clear()
+
+
+def finalize_mpi():
+    """A function to be called when the tests are over. Once registered with `atexit`, it will be called automatically at the end."""
+    try:
+        MPI.Finalize()
+    except Exception as e:
+        print(f"Caught an exception during MPI finalization: {e}")
+
+
+# Registering the `finalize_mpi`` function to be called at exit
+atexit.register(finalize_mpi)
