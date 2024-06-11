@@ -32,7 +32,7 @@ def computeweights_pol_I(
     for idx in range(npix):
         if idx in observed_pixels:
             new_idx = np.where(observed_pixels == idx)[0]
-            old2new_pixel[idx] = new_idx
+            old2new_pixel[idx] = new_idx[0]
             pixel_flag[idx] = True
 
     return new_npix, weighted_counts, observed_pixels, old2new_pixel, pixel_flag
@@ -166,7 +166,7 @@ def get_pix_mask_pol(
     for idx in range(npix):
         if idx in observed_pixels:
             new_idx = np.where(observed_pixels == idx)[0]
-            old2new_pixel[idx] = new_idx
+            old2new_pixel[idx] = new_idx[0]
             pixel_flag[idx] = True
 
     return new_npix, observed_pixels, old2new_pixel, pixel_flag
