@@ -2,7 +2,7 @@ import numpy as np
 from dataclasses import dataclass, asdict
 import healpy as hp
 import litebird_sim as lbs
-from typing import List
+from typing import List, Union
 
 from brahmap import MPI_RAISE_EXCEPTION
 
@@ -70,8 +70,8 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
 
     def __init__(
         self,
-        obs: lbs.Observation | List[lbs.Observation],
-        noise_variance: dict | None = None,
+        obs: Union[lbs.Observation, List[lbs.Observation]],
+        noise_variance: Union[dict, None] = None,
         dtype=None,
     ):
         if isinstance(obs, lbs.Observation):
@@ -124,16 +124,16 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
 
 def LBSim_compute_GLS_maps_from_obs(
     nside: int,
-    obs: lbs.Observation | List[lbs.Observation],
-    pointings_flag: np.ndarray | List[np.ndarray] = None,
-    inv_noise_cov_diagonal: (
-        LBSim_InvNoiseCovLO_UnCorr | InvNoiseCovLO_Uncorrelated | None
-    ) = None,
+    obs: Union[lbs.Observation, List[lbs.Observation]],
+    pointings_flag: Union[np.ndarray, List[np.ndarray], None] = None,
+    inv_noise_cov_diagonal: Union[
+        LBSim_InvNoiseCovLO_UnCorr, InvNoiseCovLO_Uncorrelated, None
+    ] = None,
     threshold: float = 1.0e-5,
     dtype_float=None,
     LBSimGLSParameters: LBSimGLSParameters = LBSimGLSParameters(),
     component: str = "tod",
-) -> LBSimGLSResult | tuple[ProcessTimeSamples, LBSimGLSResult]:
+) -> Union[LBSimGLSResult, tuple[ProcessTimeSamples, LBSimGLSResult]]:
     if isinstance(obs, lbs.Observation):
         obs_list = [obs]
     else:
@@ -167,14 +167,14 @@ def LBSim_compute_GLS_maps(
     tod: np.ndarray,
     pointings_flag: np.ndarray = None,
     pol_angles: np.ndarray = None,
-    inv_noise_cov_operator: (
-        ToeplitzLO | BlockLO | DiagonalOperator | InvNoiseCovLO_Uncorrelated
-    ) = None,
+    inv_noise_cov_operator: Union[
+        ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
+    ] = None,
     threshold: float = 1.0e-5,
     dtype_float=None,
     update_pointings_inplace: bool = True,
     LBSimGLSParameters: LBSimGLSParameters = LBSimGLSParameters(),
-) -> LBSimGLSResult | tuple[ProcessTimeSamples, LBSimGLSResult]:
+) -> Union[LBSimGLSResult, tuple[ProcessTimeSamples, LBSimGLSResult]]:
     npix = hp.nside2npix(nside)
 
     if LBSimGLSParameters.output_coordinate_system == lbs.CoordinateSystem.Galactic:

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from dataclasses import dataclass
+from typing import Union
 
 from brahmap import MPI_RAISE_EXCEPTION
 
@@ -46,14 +47,14 @@ def compute_GLS_maps(
     time_ordered_data: np.ndarray,
     pointings_flag: np.ndarray = None,
     pol_angles: np.ndarray = None,
-    inv_noise_cov_operator: (
-        ToeplitzLO | BlockLO | DiagonalOperator | InvNoiseCovLO_Uncorrelated
-    ) = None,
+    inv_noise_cov_operator: Union[
+        ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
+    ] = None,
     threshold: float = 1.0e-5,
     dtype_float=None,
     update_pointings_inplace: bool = True,
     GLSParameters: GLSParameters = GLSParameters(),
-) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
+) -> Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]:
     MPI_RAISE_EXCEPTION(
         condition=(len(pointings) != len(time_ordered_data)),
         exception=ValueError,
