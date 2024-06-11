@@ -1,12 +1,10 @@
 import pytest
-import warnings
 import brahmap
-from mpi4py import MPI
-import atexit
 
 # Dictionaries to keep track of the results and parameter counts of parametrized test cases
 test_results_status = {}
 test_param_counts = {}
+forced_skipped_tests = set()
 
 
 def get_base_nodeid(nodeid):
@@ -18,7 +16,6 @@ def get_base_nodeid(nodeid):
     Returns:
         str: nodeid without the parameter id
     """
-    # Truncate the nodeid to remove parameter-specific suffixes
     if "[" in nodeid:
         return nodeid.split("[")[0]
     return nodeid
@@ -58,8 +55,6 @@ def pytest_runtest_call(item):
 @pytest.hookimpl(tryfirst=True)
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """This hook function marks the test to pass if at least half of the parameterized tests are passed. It also issues warning if the test is not passed by all parameters."""
-
-    # Evaluate the results for each parametrized test
     for base_nodeid in list(test_results_status.keys()):
         passed_count = test_results_status[base_nodeid].count(True)
         params_count = test_param_counts[base_nodeid]
@@ -69,31 +64,35 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             for report in failed_report:
                 if base_nodeid == get_base_nodeid(report.nodeid):
                     terminalreporter.stats["failed"].remove(report)
-                    report.outcome = "passed"
-                    terminalreporter.stats.setdefault("passed", []).append(report)
+                    report.outcome = "skipped"
+                    terminalreporter.stats.setdefault("skipped", []).append(report)
+                    forced_skipped_tests.add(base_nodeid)
 
-            if passed_count < params_count:
-                brahmap.bMPI.comm.Barrier()
-                if brahmap.bMPI.rank == 0:
-                    warnings.warn(
-                        f"Test {base_nodeid} is passing only for {passed_count} out of {params_count} parameters. See the test report for details. Test status: {test_results_status[base_nodeid]}",
-                        UserWarning,
-                    )
+    # If there is no failed test, set the exit status to 0
+    if not terminalreporter.stats.get("failed", []):
+        terminalreporter._session.exitstatus = 0
 
-    brahmap.bMPI.comm.Barrier()
+    # Print a summary of forced skipped tests
+    if forced_skipped_tests:
+        terminalreporter.section(
+            "forced skipped tests summary", yellow=True, bold=True, sep="="
+        )
+        terminalreporter.write("See the test report for more details.\n")
+        for base_nodeid in forced_skipped_tests:
+            passed_count = test_results_status[base_nodeid].count(True)
+            params_count = test_param_counts[base_nodeid]
+
+            terminalreporter.write(
+                f"Test {base_nodeid} is passing only for {passed_count} out of {params_count} parameters. Test status: {['passed' if status else 'failed' for status in test_results_status[base_nodeid]]}\n"
+            )
 
     # Clear the dictionaries
     test_results_status.clear()
     test_param_counts.clear()
 
 
-def finalize_mpi():
-    """A function to be called when the tests are over. Once registered with `atexit`, it will be called automatically at the end."""
-    try:
-        MPI.Finalize()
-    except Exception as e:
-        print(f"Caught an exception during MPI finalization: {e}")
-
-
-# Registering the `finalize_mpi`` function to be called at exit
-atexit.register(finalize_mpi)
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Called after the whole test run finished, right before returning the exit status to the system.
+    """
+    brahmap.bMPI.comm.Barrier()

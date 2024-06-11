@@ -11,6 +11,15 @@ def Initialize(communicator=None, raise_exception_per_process: bool = True):
         )
 
 
+def Finalize():
+    """A function to be called at the end of execution. Once registered with `atexit`, it will be called automatically at the end. The user doesn't need to call this function explicitly."""
+    try:
+        MPI.Finalize()
+    except Exception as e:
+        if brahmap.bMPI.rank == 0:
+            print(f"Caught an exception during MPI finalization: {e}")
+
+
 class _MPI(object):
     def __init__(self, comm, raise_exception_per_process: bool) -> None:
         if comm is None:

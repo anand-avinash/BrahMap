@@ -120,7 +120,12 @@ class ProcessTimeSamples(object):
 
         if brahmap.bMPI.rank == 0:
             bc = bash_colors()
-            print(bc.header(f"{bc.bold(' ProcessTimeSamples Summary '):-^60}"))
+            print(
+                bc.header(
+                    f"{'--' * 30} {bc.bold('ProcessTimeSamples Summary')} {'--' * 30}"
+                )
+            )
+
             print(
                 bc.blue(
                     bc.bold(f"Read {self.nsamples} time samples for npix={self.npix}")
@@ -138,7 +143,7 @@ class ProcessTimeSamples(object):
                     )
                 )
             )
-            print(bc.header("---" * 20))
+            print(bc.header(f"{'--' * 40}"))
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
