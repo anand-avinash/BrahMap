@@ -95,13 +95,20 @@ class InitFloat64Params(InitCommonParams):
         self.rvec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_I(InitCommonParams):
@@ -166,10 +173,10 @@ class TestPointingLOTools_I(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_QU(InitCommonParams):
@@ -243,10 +250,10 @@ class TestPointingLOTools_QU(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_IQU(InitCommonParams):

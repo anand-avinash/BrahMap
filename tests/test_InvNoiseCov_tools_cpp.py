@@ -53,11 +53,16 @@ class InitFloat64Params(InitCommonParams):
         self.vec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initfloat, rtol",
     [
-        (InitFloat32Params(), 1.5e-4),
-        (InitFloat64Params(), 1.5e-5),
+        (initfloat32, 1.5e-4),
+        (initfloat64, 1.5e-5),
     ],
 )
 class TestInvNoiseCov_tools(InitCommonParams):
@@ -79,8 +84,8 @@ class TestInvNoiseCov_tools(InitCommonParams):
 @pytest.mark.parametrize(
     "initfloat, rtol",
     [
-        (InitFloat32Params(), 1.5e-4),
-        (InitFloat64Params(), 1.5e-5),
+        (initfloat32, 1.5e-4),
+        (initfloat64, 1.5e-5),
     ],
 )
 class TestInvNoiseCovLO_Uncorrelated(InitCommonParams):

@@ -89,13 +89,20 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-3),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-3),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-3),
+        (initint64, initfloat32, 1.5e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestComputeWeights(InitCommonParams):
