@@ -39,6 +39,8 @@ class ProcessTimeSamples(object):
         self.npix = npix
         self.nsamples = len(pointings)
 
+        self.nsamples_global = brahmap.bMPI.comm.allreduce(self.nsamples, MPI.SUM)
+
         if update_pointings_inplace:
             self.pointings = pointings
             self.pointings_flag = pointings_flag
@@ -53,7 +55,7 @@ class ProcessTimeSamples(object):
         MPI_RAISE_EXCEPTION(
             condition=(len(self.pointings_flag) != self.nsamples),
             exception=AssertionError,
-            message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(pointings_flag)}\nlen(pointings) = {self.nsamples}",
+            message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(self.pointings_flag)}\nlen(pointings) = {self.nsamples}",
         )
 
         self.threshold = threshold
@@ -121,25 +123,27 @@ class ProcessTimeSamples(object):
         if brahmap.bMPI.rank == 0:
             bc = bash_colors()
             print(
-                bc.header(
-                    f"{'--' * 30} {bc.bold('ProcessTimeSamples Summary')} {'--' * 30}"
-                )
+                f"\n{bc.header('--' * 13)} {bc.header(bc.bold('ProcessTimeSamples Summary'))} {bc.header('--' * 13)}"
             )
 
             print(
                 bc.blue(
-                    bc.bold(f"Read {self.nsamples} time samples for npix={self.npix}")
-                )
-            )
-            print(
-                bc.blue(
-                    bc.bold(f"Found {self.npix - self.new_npix} pathological pixels")
+                    bc.bold(
+                        f"Processed {self.nsamples_global} time samples for npix={self.npix}"
+                    )
                 )
             )
             print(
                 bc.blue(
                     bc.bold(
-                        f"Map-maker will take into account only {self.new_npix} pixels."
+                        f"Found {self.npix - self.new_npix} pathological pixels on the map"
+                    )
+                )
+            )
+            print(
+                bc.blue(
+                    bc.bold(
+                        f"Map-maker will take into account only {self.new_npix} pixels"
                     )
                 )
             )

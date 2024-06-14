@@ -39,8 +39,12 @@ class InitCommonParams:
     div, rem = divmod(nsamples_global, brahmap.bMPI.size)
     nsamples = div + (brahmap.bMPI.rank < rem)
 
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
+    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-
+from typing import Union, List
 
 from brahmap.linop import linop as lp
 from brahmap.linop import blkop as blk
@@ -367,7 +367,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
 
     """
 
-    def __init__(self, diag: np.ndarray, dtype=None):
+    def __init__(self, diag: Union[np.ndarray, List], dtype=None):
         if dtype is not None:
             self.diag = np.asarray(diag, dtype=dtype)
         elif isinstance(diag, np.ndarray):

@@ -75,7 +75,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # Print a summary of forced skipped tests
     if forced_skipped_tests:
         terminalreporter.section(
-            "forced skipped tests summary", yellow=True, bold=True, sep="="
+            "forced skipped tests summary", cyan=True, blink=True, bold=True, sep="="
         )
         terminalreporter.write("See the test report for more details.\n")
         for base_nodeid in forced_skipped_tests:

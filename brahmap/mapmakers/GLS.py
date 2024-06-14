@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Callable
 
 from brahmap import MPI_RAISE_EXCEPTION
 
@@ -22,9 +22,9 @@ from brahmap.interfaces import (
 class GLSParameters:
     solver_type: SolverType = SolverType.IQU
     use_preconditioner: bool = True
-    preconditioner_threshold: float = 1.0e-7
+    preconditioner_threshold: float = 1.0e-5
     preconditioner_max_iterations: int = 100
-    callback_function = None
+    callback_function: Callable = None
     return_processed_samples: bool = True
     return_hit_map: bool = False
 
@@ -64,8 +64,8 @@ def compute_GLS_maps(
     if dtype_float is None:
         if pol_angles is not None:
             dtype_float = pol_angles.dtype
-    else:
-        dtype_float = np.float64
+        else:
+            dtype_float = np.float64
 
     if inv_noise_cov_operator is None:
         inv_noise_cov_operator = InvNoiseCovLO_Uncorrelated(
@@ -129,7 +129,7 @@ def compute_GLS_maps(
     )
 
     output_maps = np.ma.MaskedArray(
-        data=np.empty(processed_samples.npix),
+        data=np.empty(processed_samples.npix, dtype=dtype_float),
         mask=~processed_samples.pixel_flag,
         fill_value=-1.6375e30,
     )
