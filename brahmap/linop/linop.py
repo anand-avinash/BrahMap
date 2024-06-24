@@ -42,7 +42,6 @@ null_log.addHandler(logging.NullHandler())
 
 
 class BaseLinearOperator(object):
-
     """
     Base class defining the common interface shared by all linear operators.
 
@@ -58,12 +57,14 @@ class BaseLinearOperator(object):
 
     """
 
-    def __init__(self, nargin, nargout, symmetric=False, **kwargs):
+    def __init__(
+        self, nargin, nargout, symmetric: bool = False, dtype=np.float64, **kwargs
+    ):
         self.__nargin = nargin
         self.__nargout = nargout
         self.__symmetric = symmetric
         self.__shape = (nargout, nargin)
-        self.__dtype = kwargs.get("dtype", np.float64)
+        self.dtype = dtype
         self._nMatvec = 0
 
         # Log activity.
@@ -82,7 +83,7 @@ class BaseLinearOperator(object):
         return self.__nargout
 
     @property
-    def symmetric(self):
+    def symmetric(self) -> bool:
         """Indicate whether the operator is symmetric or not."""
         return self.__symmetric
 
@@ -95,6 +96,10 @@ class BaseLinearOperator(object):
     def dtype(self):
         """The data type of the operator."""
         return self.__dtype
+
+    @dtype.setter
+    def dtype(self, dtype):
+        self.__dtype = dtype
 
     @property
     def nMatvec(self):
@@ -128,7 +133,6 @@ class BaseLinearOperator(object):
 
 
 class LinearOperator(BaseLinearOperator):
-
     """
     Generic linear operator class.
 
@@ -216,11 +220,11 @@ class LinearOperator(BaseLinearOperator):
 
         return y
 
-    def to_array(self):
+    def to_array(self, dtype=np.float64):
         n, m = self.shape
-        H = np.empty((n, m))
+        H = np.empty((n, m), dtype=dtype)
         for j in range(m):
-            ej = np.zeros(m)
+            ej = np.zeros(m, dtype=dtype)
             ej[j] = 1.0
             H[:, j] = self * ej
         return H
@@ -361,7 +365,6 @@ class LinearOperator(BaseLinearOperator):
 
 
 class IdentityOperator(LinearOperator):
-
     """Class representing the identity operator of size `nargin`."""
 
     def __init__(self, nargin, **kwargs):
@@ -376,7 +379,6 @@ class IdentityOperator(LinearOperator):
 
 
 class DiagonalOperator(LinearOperator):
-
     """
     Class representing a diagonal operator.
 
@@ -394,23 +396,22 @@ class DiagonalOperator(LinearOperator):
         if "dtype" in kwargs:
             kwargs.pop("dtype")
 
-        diag = np.asarray(diag)
-        if diag.ndim != 1:
+        self.diag = np.asarray(diag)
+        if self.diag.ndim != 1:
             msg = "diag array must be 1-d"
             raise ValueError(msg)
 
         super(DiagonalOperator, self).__init__(
-            diag.shape[0],
-            diag.shape[0],
+            self.diag.shape[0],
+            self.diag.shape[0],
             symmetric=True,
-            matvec=lambda x: diag * x,
-            dtype=diag.dtype,
+            matvec=lambda x: self.diag * x,
+            dtype=self.diag.dtype,
             **kwargs,
         )
 
 
 class MatrixLinearOperator(LinearOperator):
-
     """
     Class representing a matrix operator.
 
@@ -463,7 +464,6 @@ class MatrixLinearOperator(LinearOperator):
 
 
 class ZeroOperator(LinearOperator):
-
     """Class representing the zero operator of shape `nargout`-by-`nargin`."""
 
     def __init__(self, nargin, nargout, **kwargs):
@@ -550,7 +550,6 @@ def SymmetricallyReducedLinearOperator(op, indices):
 
 
 class ShapeError(Exception):
-
     """
     Exception class for handling shape mismatch errors.
 
