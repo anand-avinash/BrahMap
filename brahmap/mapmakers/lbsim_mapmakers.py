@@ -17,6 +17,7 @@ from brahmap.utilities import ProcessTimeSamples
 
 @dataclass
 class LBSimGLSParameters(GLSParameters):
+    return_processed_samples: bool = False
     output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic
 
 
@@ -35,10 +36,12 @@ def sample_counts(obs_list):
     Returns:
         np.ndarray: sample count array
     """
-    count_arr = np.zeros((len(obs_list), obs_list[0].n_detectors), dtype=int)
+    ndet_global = obs_list[0]._n_detectors_global
+    count_arr = np.zeros((len(obs_list), ndet_global), dtype=int)
     for obs_idx, obs in enumerate(obs_list):
-        for det_idx in obs.det_idx:
-            count_arr[obs_idx, det_idx] = obs.tod[det_idx].shape[0]
+        for idx in range(ndet_global):
+            # Assuming that the length of tod for each detector is same
+            count_arr[obs_idx, idx] = obs.tod[0].shape[0]
     return count_arr
 
 
@@ -158,7 +161,11 @@ def LBSim_compute_GLS_maps_from_obs(
         LBSimGLSParameters=LBSimGLSParameters,
     )
 
-    return lbsim_gls_result
+    if LBSimGLSParameters.return_processed_samples is True:
+        processed_samples, lbsim_gls_result = lbsim_gls_result
+        return processed_samples, lbsim_gls_result
+    else:
+        return lbsim_gls_result
 
 
 def LBSim_compute_GLS_maps(
