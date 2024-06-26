@@ -1,6 +1,7 @@
 from enum import IntEnum
 import numpy as np
 import warnings
+from typing import Union
 from mpi4py import MPI
 
 
@@ -25,10 +26,10 @@ class ProcessTimeSamples(object):
         self,
         npix: int,
         pointings: np.ndarray,
-        pointings_flag: np.ndarray = None,
+        pointings_flag: Union[np.ndarray, None] = None,
         solver_type: SolverType = SolverType.IQU,
-        pol_angles: np.ndarray = None,
-        noise_weights: np.ndarray = None,
+        pol_angles: Union[np.ndarray, None] = None,
+        noise_weights: Union[np.ndarray, None] = None,
         threshold: float = 1.0e-5,
         dtype_float=None,
         update_pointings_inplace: bool = True,

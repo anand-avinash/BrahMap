@@ -20,7 +20,7 @@ jobs:
         exclude:
           - os: ubuntu-latest
             mpi: mpich
-            python: "3.9"
+            python-version: "3.9"
 
     steps:
       - uses: actions/checkout@v4.1.5

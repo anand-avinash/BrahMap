@@ -264,6 +264,50 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol)
 
 
+@pytest.mark.parametrize(
+    "lbsim_obj",
+    [
+        (sim_float32),
+        (sim_float64),
+    ],
+)
+class TestLBSim_InvNoiseCovLO_UnCorr:
+    def test_LBSim_InvNoiseCov_UnCorr(self, lbsim_obj):
+        # Assigning the key values same as their `det_idx`
+        inv_noise_variance = {
+            "001_002_030_00A_195_B": 0,
+            # "001_002_029_45B_195_B", # the operator should set it to 1.0 by default
+            "001_002_015_15A_195_T": 2,
+            "001_002_047_00A_195_B": 3,
+        }
+
+        inv_noise_variance_op = brahmap.mapmakers.LBSim_InvNoiseCovLO_UnCorr(
+            obs=lbsim_obj.sim.observations,
+            inverse_noise_variance=inv_noise_variance,
+            dtype=lbsim_obj.dtype_float,
+        )
+
+        vec_length = np.sum([obs.tod.size for obs in lbsim_obj.sim.observations])
+        vec = np.ones(vec_length, dtype=lbsim_obj.dtype_float)
+
+        prod = inv_noise_variance_op * vec
+
+        # filling the `test_tod` for each detector with its `det_idx`. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
+        for obs in lbsim_obj.sim.observations:
+            obs.test_tod = np.empty_like(obs.tod)
+            for idx, det_idx in enumerate(obs.det_idx):
+                obs.test_tod[idx].fill(det_idx)
+
+        np.testing.assert_allclose(prod, inv_noise_variance_op.diag)
+
+        np.testing.assert_allclose(
+            inv_noise_variance_op.diag,
+            np.concatenate(
+                [obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
+            ),
+        )
+
+
 if __name__ == "__main__":
     pytest.main(
         [f"{__file__}::TestLBSimGLS::test_LBSim_compute_GLS_maps_I", "-v", "-s"]
@@ -273,4 +317,12 @@ if __name__ == "__main__":
     )
     pytest.main(
         [f"{__file__}::TestLBSimGLS::test_LBSim_compute_GLS_maps_IQU", "-v", "-s"]
+    )
+
+    pytest.main(
+        [
+            f"{__file__}::TestLBSim_InvNoiseCovLO_UnCorr::test_LBSim_InvNoiseCov_UnCorr",
+            "-v",
+            "-s",
+        ]
     )

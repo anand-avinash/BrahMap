@@ -45,8 +45,8 @@ def compute_GLS_maps(
     npix: int,
     pointings: np.ndarray,
     time_ordered_data: np.ndarray,
-    pointings_flag: np.ndarray = None,
-    pol_angles: np.ndarray = None,
+    pointings_flag: Union[np.ndarray, None] = None,
+    pol_angles: Union[np.ndarray, None] = None,
     inv_noise_cov_operator: Union[
         ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
     ] = None,

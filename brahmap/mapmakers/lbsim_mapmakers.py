@@ -4,8 +4,6 @@ import healpy as hp
 import litebird_sim as lbs
 from typing import List, Union
 
-from brahmap import MPI_RAISE_EXCEPTION
-
 from brahmap.linop import DiagonalOperator
 
 from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
@@ -27,54 +25,13 @@ class LBSimGLSResult(GLSResult):
     coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic
 
 
-def sample_counts(obs_list):
-    """Returns an array of size `n_obs x n_dets` containing the size of TOD for each detector in each observation.
-
-    Args:
-        obs_list (_type_): List of observation
-
-    Returns:
-        np.ndarray: sample count array
-    """
-    ndet_global = obs_list[0]._n_detectors_global
-    count_arr = np.zeros((len(obs_list), ndet_global), dtype=int)
-    for obs_idx, obs in enumerate(obs_list):
-        for idx in range(ndet_global):
-            # Assuming that the length of tod for each detector is same
-            count_arr[obs_idx, idx] = obs.tod[0].shape[0]
-    return count_arr
-
-
-def start_idx(arr, obs_idx, det_idx):
-    """Returns the starting index of TOD of detector `det_idx` in observation `obs_idx` in flattened array of TODs concatenated over observations. That is, the starting index of TOD of given det and obs index in a flat array given by `np.concatenate([getattr(obs, component) for obs in obs_list], axis=None)`. `arr` must be the output of `sample_count()` function."""
-    idx = 0
-    for i in range(obs_idx):
-        idx += sum(arr[i][:])
-    idx += sum(arr[obs_idx][:det_idx])
-    return idx
-
-
-def end_idx(arr, obs_idx, det_idx):
-    """Similar to `start_idx()` function, but this one returns the ending index"""
-    idx = start_idx(arr, obs_idx, det_idx)
-    idx += arr[obs_idx, det_idx]
-    return idx
-
-
-def det_sample_count_idx(arr, obs_idx, det_idx):
-    """
-    This function returns the starting index of the TOD of a given detector for a given `obs_idx`
-    """
-    return sum(arr[:, det_idx][:obs_idx])
-
-
 class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
-    """Here the `noise_variance` must be a dictionary of noise variance associated with detector names. This operator will arrange the blocks of noise variance in the same way as tods in the obs_list are distributed."""
+    """This operator class accepts `inverse_noise_variance` as a dictionary of the inverse of noise variance associated with detector names. It will then arrange the blocks of inverse noise variance in the same way as tods in the `obs_list` are distributed"""
 
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        noise_variance: Union[dict, None] = None,
+        inverse_noise_variance: Union[dict, None] = None,
         dtype=None,
     ):
         if isinstance(obs, lbs.Observation):
@@ -82,45 +39,50 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
         else:
             obs_list = obs
 
-        tod_counts = sample_counts(obs_list)
-        diag_len = tod_counts.sum()
-        tod_len = tod_counts.sum(axis=0)
-        det_list = list(obs_list[0].name)
+        if dtype is None:
+            dtype = np.float64
 
-        if noise_variance is None:
-            diagonal = np.ones(diag_len, dtype=(np.float64 if dtype is None else dtype))
-        else:
-            noise_dict_keys = list(noise_variance.keys())
-            if dtype is None:
-                dtype = noise_variance[noise_dict_keys[0]].dtype
-            for detector in det_list:
-                if detector not in noise_dict_keys:
-                    idx = det_list.index(detector)
-                    noise_variance[detector] = np.ones(tod_len[idx])
+        # number of observations
+        n_obs = len(obs_list)
 
-                MPI_RAISE_EXCEPTION(
-                    condition=(
-                        len(noise_variance[detector])
-                        != tod_len[det_list.index(detector)]
-                    ),
-                    exception=ValueError,
-                    message=f"Incorrect length of noise variance for detector {detector}",
-                )
+        # number of detectors per observation
+        n_dets_per_obs = len(
+            obs_list[0].det_idx
+        )  # assuming all obs on a proc are associated to same set of detectors
 
-            diagonal = np.empty(diag_len, dtype=dtype)
-            for obs_idx, obs in enumerate(obs_list):
-                for det_idx in obs.det_idx:
-                    stdiagidx = start_idx(tod_counts, obs_idx, det_idx)
-                    endiagidx = end_idx(tod_counts, obs_idx, det_idx)
-                    sttodidx = det_sample_count_idx(tod_counts, obs_idx, det_idx)
-                    entodidx = (
-                        det_sample_count_idx(tod_counts, obs_idx, det_idx)
-                        + tod_counts[obs_idx, det_idx]
-                    )
+        # local length of tod for a given detector in a given observation
+        tod_size = np.zeros([n_dets_per_obs, n_obs], dtype=int)
 
-                    diagonal[stdiagidx:endiagidx] = noise_variance[det_list[det_idx]][
-                        sttodidx:entodidx
-                    ]
+        # populating tod_size
+        for obs_idx, obs in enumerate(obs_list):
+            _, _, tod_size[:, obs_idx] = obs._get_local_start_time_start_and_n_samples()
+
+        # length of local diagonal operator
+        diagonal_len = tod_size.sum()
+
+        # diagonal array of the local diagonal operator
+        diagonal = np.ones(diagonal_len, dtype=dtype)
+
+        if inverse_noise_variance is not None:
+            noise_dict_keys = list(inverse_noise_variance.keys())
+
+            # list of the name of the detectors available on the current rank
+            det_list = list(obs_list[0].name)
+
+            # setting the `inverse_noise_variance`` to 1 for the detectors whose inverse noise variance is not provided in the dictionary
+            det_no_variance = np.setdiff1d(det_list, noise_dict_keys)
+            for detector in det_no_variance:
+                inverse_noise_variance[detector] = 1.0
+
+            # populating the diagonal array of the local diagonal operator
+            start_idx = 0
+            for obs_idx in range(n_obs):
+                for det_list_idx, detector in enumerate(det_list):
+                    end_idx = start_idx + tod_size[det_list_idx, obs_idx]
+
+                    # filling a range of the diagonal array with the inverse noise variance value
+                    diagonal[start_idx:end_idx].fill(inverse_noise_variance[detector])
+                    start_idx = end_idx
 
         super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(diag=diagonal, dtype=dtype)
 
