@@ -10,13 +10,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "brahmap"
 version = "0.2.0"
-description = "An scalable map-making package for CMB experiments"
+description = "A scalable and modular map-making framework for the future CMB experiments"
 authors = [
     { name = "Avinash Anand", email = "avinash.anand@roma2.infn.it" },
     { name = "Giuseppe Puglisi" },
 ]
-keywords = ["brahmap", "cmb", "sky map", "map-maker", "map-making"]
+keywords = [
+    "brahmap",
+    "cmb",
+    "sky map",
+    "map-maker",
+    "map-making",
+    "GLS",
+    "destriper",
+]
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy",
@@ -30,6 +39,21 @@ dependencies = [
     "mkdocstrings",
     "mkdocstrings-python",
     "mkdocs-material",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
 
 [project.urls]
