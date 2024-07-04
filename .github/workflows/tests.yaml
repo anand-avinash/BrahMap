@@ -40,7 +40,7 @@ jobs:
       - name: Install BrahMap
         run: |
           python -m pip install --upgrade pip
-          CC=mpic++ python3 -m pip install .
+          CC=mpic++ python3 -m pip install -vvv .
 
       - name: Test BrahMap with pytest
         run: |
@@ -49,6 +49,8 @@ jobs:
           elif [ "${{ matrix.mpi }}" = "openmpi" ]; then
             preload=`mpicxx --showme:libdirs`/libmpi_cxx.so
           fi
+          echo $preload
+          ld --verbose | grep SEARCH_DIR | tr -s ' ;' \\012
           for nprocs in 1 2 5 6 ; do
             LD_PRELOAD=$preload mpiexec -n $nprocs pytest
           done

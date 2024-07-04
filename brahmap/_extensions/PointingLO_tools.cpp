@@ -1,4 +1,5 @@
 #include <functional>
+#include <omp.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
@@ -7,14 +8,15 @@
 namespace py = pybind11;
 
 template <typename dint, typename dfloat>
-void PLO_mult_I(                //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *vec,          //
-    dfloat *prod                //
+void PLO_mult_I(                           //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod                //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
@@ -28,22 +30,26 @@ void PLO_mult_I(                //
 } // PLO_mult_I()
 
 template <typename dint, typename dfloat>
-void PLO_rmult_I(               //
-    const ssize_t new_npix,     //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *vec,          //
-    dfloat *prod,               //
-    const MPI_Comm comm         //
+void PLO_rmult_I(                          //
+    const ssize_t new_npix,                //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod,               //
+    const MPI_Comm comm                    //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
     bool pointflag = pointings_flag[idx];
 
-    prod[pixel] += pointflag * vec[idx];
+    dfloat product = pointflag * vec[idx];
+
+#pragma omp atomic update
+    prod[pixel] += product;
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, prod, new_npix, mpi_get_type<dfloat>(), MPI_SUM,
@@ -54,16 +60,17 @@ void PLO_rmult_I(               //
 } // PLO_rmult_I()
 
 template <typename dint, typename dfloat>
-void PLO_mult_QU(               //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *sin2phi,      //
-    const dfloat *cos2phi,      //
-    const dfloat *vec,          //
-    dfloat *prod                //
+void PLO_mult_QU(                          //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict sin2phi,      //
+    const dfloat *__restrict cos2phi,      //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod                //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
@@ -77,25 +84,32 @@ void PLO_mult_QU(               //
 } // PLO_mult_QU()
 
 template <typename dint, typename dfloat>
-void PLO_rmult_QU(              //
-    const ssize_t new_npix,     //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *sin2phi,      //
-    const dfloat *cos2phi,      //
-    const dfloat *vec,          //
-    dfloat *prod,               //
-    const MPI_Comm comm         //
+void PLO_rmult_QU(                         //
+    const ssize_t new_npix,                //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict sin2phi,      //
+    const dfloat *__restrict cos2phi,      //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod,               //
+    const MPI_Comm comm                    //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
     bool pointflag = pointings_flag[idx];
 
-    prod[2 * pixel] += pointflag * vec[idx] * cos2phi[idx];
-    prod[2 * pixel + 1] += pointflag * vec[idx] * sin2phi[idx];
+    dfloat product_1 = pointflag * vec[idx] * cos2phi[idx];
+    dfloat product_2 = pointflag * vec[idx] * sin2phi[idx];
+
+#pragma omp atomic update
+    prod[2 * pixel] += product_1;
+#pragma omp atomic update
+    prod[2 * pixel + 1] += product_2;
+
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, prod, 2 * new_npix, mpi_get_type<dfloat>(),
@@ -105,16 +119,17 @@ void PLO_rmult_QU(              //
 } // PLO_rmult_QU()
 
 template <typename dint, typename dfloat>
-void PLO_mult_IQU(              //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *sin2phi,      //
-    const dfloat *cos2phi,      //
-    const dfloat *vec,          //
-    dfloat *prod                //
+void PLO_mult_IQU(                         //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict sin2phi,      //
+    const dfloat *__restrict cos2phi,      //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod                //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
@@ -129,26 +144,34 @@ void PLO_mult_IQU(              //
 } // PLO_mult_IQU()
 
 template <typename dint, typename dfloat>
-void PLO_rmult_IQU(             //
-    const ssize_t new_npix,     //
-    const ssize_t nsamples,     //
-    const dint *pointings,      //
-    const bool *pointings_flag, //
-    const dfloat *sin2phi,      //
-    const dfloat *cos2phi,      //
-    const dfloat *vec,          //
-    dfloat *prod,               //
-    const MPI_Comm comm         //
+void PLO_rmult_IQU(                        //
+    const ssize_t new_npix,                //
+    const ssize_t nsamples,                //
+    const dint *__restrict pointings,      //
+    const bool *__restrict pointings_flag, //
+    const dfloat *__restrict sin2phi,      //
+    const dfloat *__restrict cos2phi,      //
+    const dfloat *__restrict vec,          //
+    dfloat *__restrict prod,               //
+    const MPI_Comm comm                    //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
 
     dint pixel = pointings[idx];
     bool pointflag = pointings_flag[idx];
 
-    prod[3 * pixel] += pointflag * vec[idx];
-    prod[3 * pixel + 1] += pointflag * vec[idx] * cos2phi[idx];
-    prod[3 * pixel + 2] += pointflag * vec[idx] * sin2phi[idx];
+    dfloat product_1 = pointflag * vec[idx];
+    dfloat product_2 = pointflag * vec[idx] * cos2phi[idx];
+    dfloat product_3 = pointflag * vec[idx] * sin2phi[idx];
+
+#pragma omp atomic update
+    prod[3 * pixel] += product_1;
+#pragma omp atomic update
+    prod[3 * pixel + 1] += product_2;
+#pragma omp atomic update
+    prod[3 * pixel + 2] += product_3;
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, prod, 3 * new_npix, mpi_get_type<dfloat>(),

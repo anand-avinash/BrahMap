@@ -1,4 +1,5 @@
 #include <functional>
+#include <omp.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <vector>
@@ -6,16 +7,17 @@
 namespace py = pybind11;
 
 template <typename dfloat>
-void BDPLO_mult_QU(                     //
-    const ssize_t new_npix,             //
-    const dfloat *weighted_sin_sq,      //
-    const dfloat *weighted_cos_sq,      //
-    const dfloat *weighted_sincos,      //
-    const dfloat *one_over_determinant, //
-    const dfloat *vec,                  //
-    dfloat *prod                        //
+void BDPLO_mult_QU(                                //
+    const ssize_t new_npix,                        //
+    const dfloat *__restrict weighted_sin_sq,      //
+    const dfloat *__restrict weighted_cos_sq,      //
+    const dfloat *__restrict weighted_sincos,      //
+    const dfloat *__restrict one_over_determinant, //
+    const dfloat *__restrict vec,                  //
+    dfloat *__restrict prod                        //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     prod[2 * idx] =
         one_over_determinant[idx] * (weighted_sin_sq[idx] * vec[2 * idx] -
@@ -29,19 +31,20 @@ void BDPLO_mult_QU(                     //
 } // BDPLO_mult_QU()
 
 template <typename dfloat>
-void BDPLO_mult_IQU(                    //
-    const ssize_t new_npix,             //
-    const dfloat *weighted_counts,      //
-    const dfloat *weighted_sin_sq,      //
-    const dfloat *weighted_cos_sq,      //
-    const dfloat *weighted_sincos,      //
-    const dfloat *weighted_sin,         //
-    const dfloat *weighted_cos,         //
-    const dfloat *one_over_determinant, //
-    const dfloat *vec,                  //
-    dfloat *prod                        //
+void BDPLO_mult_IQU(                               //
+    const ssize_t new_npix,                        //
+    const dfloat *__restrict weighted_counts,      //
+    const dfloat *__restrict weighted_sin_sq,      //
+    const dfloat *__restrict weighted_cos_sq,      //
+    const dfloat *__restrict weighted_sincos,      //
+    const dfloat *__restrict weighted_sin,         //
+    const dfloat *__restrict weighted_cos,         //
+    const dfloat *__restrict one_over_determinant, //
+    const dfloat *__restrict vec,                  //
+    dfloat *__restrict prod                        //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
 
     prod[3 * idx] = one_over_determinant[idx] *

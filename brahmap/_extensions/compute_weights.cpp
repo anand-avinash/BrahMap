@@ -1,5 +1,6 @@
 #include <cmath>
 #include <functional>
+#include <omp.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
@@ -8,24 +9,27 @@
 namespace py = pybind11;
 
 template <typename dint, typename dfloat>
-dint compute_weights_pol_I(      //
-    const ssize_t npix,          //
-    const ssize_t nsamples,      //
-    const dint *pointings,       //
-    const bool *pointings_flag,  //
-    const dfloat *noise_weights, //
-    dfloat *weighted_counts,     //
-    dint *observed_pixels,       //
-    dint *__old2new_pixel,       //
-    bool *pixel_flag,            //
-    const MPI_Comm comm          //
+dint compute_weights_pol_I(                 //
+    const ssize_t npix,                     //
+    const ssize_t nsamples,                 //
+    const dint *__restrict pointings,       //
+    const bool *__restrict pointings_flag,  //
+    const dfloat *__restrict noise_weights, //
+    dfloat *__restrict weighted_counts,     //
+    dint *__restrict observed_pixels,       //
+    dint *__restrict __old2new_pixel,       //
+    bool *__restrict pixel_flag,            //
+    const MPI_Comm comm                     //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     ssize_t pixel = pointings[idx];
     dfloat weight = pointings_flag[idx] * noise_weights[idx];
 
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
+
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
@@ -46,37 +50,48 @@ dint compute_weights_pol_I(      //
 } // compute_weights_pol_I()
 
 template <typename dint, typename dfloat>
-void compute_weights_pol_QU(      //
-    const ssize_t npix,           //
-    const ssize_t nsamples,       //
-    const dint *pointings,        //
-    const bool *pointings_flag,   //
-    const dfloat *noise_weights,  //
-    const dfloat *pol_angles,     //
-    dfloat *weighted_counts,      //
-    dfloat *sin2phi,              //
-    dfloat *cos2phi,              //
-    dfloat *weighted_sin_sq,      //
-    dfloat *weighted_cos_sq,      //
-    dfloat *weighted_sincos,      //
-    dfloat *one_over_determinant, //
-    const MPI_Comm comm           //
+void compute_weights_pol_QU(                 //
+    const ssize_t npix,                      //
+    const ssize_t nsamples,                  //
+    const dint *__restrict pointings,        //
+    const bool *__restrict pointings_flag,   //
+    const dfloat *__restrict noise_weights,  //
+    const dfloat *__restrict pol_angles,     //
+    dfloat *__restrict weighted_counts,      //
+    dfloat *__restrict sin2phi,              //
+    dfloat *__restrict cos2phi,              //
+    dfloat *__restrict weighted_sin_sq,      //
+    dfloat *__restrict weighted_cos_sq,      //
+    dfloat *__restrict weighted_sincos,      //
+    dfloat *__restrict one_over_determinant, //
+    const MPI_Comm comm                      //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     dfloat angle = pol_angles[idx];
     sin2phi[idx] = std::sin(2.0 * angle);
     cos2phi[idx] = std::cos(2.0 * angle);
   } // for
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     ssize_t pixel = pointings[idx];
     dfloat weight = pointings_flag[idx] * noise_weights[idx];
 
+    dfloat wsin_sq = weight * sin2phi[idx] * sin2phi[idx];
+    dfloat wcos_sq = weight * cos2phi[idx] * cos2phi[idx];
+    dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
+
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
-    weighted_sin_sq[pixel] += weight * sin2phi[idx] * sin2phi[idx];
-    weighted_cos_sq[pixel] += weight * cos2phi[idx] * cos2phi[idx];
-    weighted_sincos[pixel] += weight * sin2phi[idx] * cos2phi[idx];
+#pragma omp atomic update
+    weighted_sin_sq[pixel] += wsin_sq;
+#pragma omp atomic update
+    weighted_cos_sq[pixel] += wcos_sq;
+#pragma omp atomic update
+    weighted_sincos[pixel] += wsincos;
+
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
@@ -88,6 +103,7 @@ void compute_weights_pol_QU(      //
   MPI_Allreduce(MPI_IN_PLACE, weighted_sincos, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < npix; ++idx) {
     dfloat determinant = weighted_sin_sq[idx] * weighted_cos_sq[idx] -
                          weighted_sincos[idx] * weighted_sincos[idx];
@@ -100,41 +116,56 @@ void compute_weights_pol_QU(      //
 } // compute_weights_pol_QU()
 
 template <typename dint, typename dfloat>
-void compute_weights_pol_IQU(     //
-    const ssize_t npix,           //
-    const ssize_t nsamples,       //
-    const dint *pointings,        //
-    const bool *pointings_flag,   //
-    const dfloat *noise_weights,  //
-    const dfloat *pol_angles,     //
-    dfloat *weighted_counts,      //
-    dfloat *sin2phi,              //
-    dfloat *cos2phi,              //
-    dfloat *weighted_sin_sq,      //
-    dfloat *weighted_cos_sq,      //
-    dfloat *weighted_sincos,      //
-    dfloat *weighted_sin,         //
-    dfloat *weighted_cos,         //
-    dfloat *one_over_determinant, //
-    const MPI_Comm comm           //
+void compute_weights_pol_IQU(                //
+    const ssize_t npix,                      //
+    const ssize_t nsamples,                  //
+    const dint *__restrict pointings,        //
+    const bool *__restrict pointings_flag,   //
+    const dfloat *__restrict noise_weights,  //
+    const dfloat *__restrict pol_angles,     //
+    dfloat *__restrict weighted_counts,      //
+    dfloat *__restrict sin2phi,              //
+    dfloat *__restrict cos2phi,              //
+    dfloat *__restrict weighted_sin_sq,      //
+    dfloat *__restrict weighted_cos_sq,      //
+    dfloat *__restrict weighted_sincos,      //
+    dfloat *__restrict weighted_sin,         //
+    dfloat *__restrict weighted_cos,         //
+    dfloat *__restrict one_over_determinant, //
+    const MPI_Comm comm                      //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     dfloat angle = pol_angles[idx];
     sin2phi[idx] = std::sin(2.0 * angle);
     cos2phi[idx] = std::cos(2.0 * angle);
   } // for
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     ssize_t pixel = pointings[idx];
     dfloat weight = pointings_flag[idx] * noise_weights[idx];
 
+    dfloat wsin = weight * sin2phi[idx];
+    dfloat wsin_sq = weight * sin2phi[idx] * sin2phi[idx];
+    dfloat wcos = weight * cos2phi[idx];
+    dfloat wcos_sq = weight * cos2phi[idx] * cos2phi[idx];
+    dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
+
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
-    weighted_sin[pixel] += weight * sin2phi[idx];
-    weighted_sin_sq[pixel] += weight * sin2phi[idx] * sin2phi[idx];
-    weighted_cos[pixel] += weight * cos2phi[idx];
-    weighted_cos_sq[pixel] += weight * cos2phi[idx] * cos2phi[idx];
-    weighted_sincos[pixel] += weight * sin2phi[idx] * cos2phi[idx];
+#pragma omp atomic update
+    weighted_sin[pixel] += wsin;
+#pragma omp atomic update
+    weighted_sin_sq[pixel] += wsin_sq;
+#pragma omp atomic update
+    weighted_cos[pixel] += wcos;
+#pragma omp atomic update
+    weighted_cos_sq[pixel] += wcos_sq;
+#pragma omp atomic update
+    weighted_sincos[pixel] += wsincos;
+
   } // for
 
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
@@ -150,6 +181,7 @@ void compute_weights_pol_IQU(     //
   MPI_Allreduce(MPI_IN_PLACE, weighted_sincos, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < npix; ++idx) {
     dfloat determinant =
         weighted_counts[idx] * weighted_cos_sq[idx] * weighted_sin_sq[idx] +
@@ -166,15 +198,15 @@ void compute_weights_pol_IQU(     //
 } // compute_weights_pol_IQU()
 
 template <typename dint, typename dfloat>
-dint get_pixel_mask_pol(                //
-    const int solver_type,              //
-    const ssize_t npix,                 //
-    const dfloat threshold,             //
-    const dfloat *weighted_counts,      //
-    const dfloat *one_over_determinant, //
-    dint *observed_pixels,              //
-    dint *__old2new_pixel,              //
-    bool *pixel_flag                    //
+dint get_pixel_mask_pol(                           //
+    const int solver_type,                         //
+    const ssize_t npix,                            //
+    const dfloat threshold,                        //
+    const dfloat *__restrict weighted_counts,      //
+    const dfloat *__restrict one_over_determinant, //
+    dint *__restrict observed_pixels,              //
+    dint *__restrict __old2new_pixel,              //
+    bool *__restrict pixel_flag                    //
 ) {
 
   dfloat weight_threshold = (dfloat)(solver_type - 1);

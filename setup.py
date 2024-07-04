@@ -11,6 +11,7 @@ compiler_args = [
     "-std=c++20",
     "-fPIC",
     "-fvisibility=hidden",
+    "-fopenmp",
 ]
 
 
