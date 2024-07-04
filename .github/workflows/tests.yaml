@@ -40,14 +40,14 @@ jobs:
       - name: Install BrahMap
         run: |
           python -m pip install --upgrade pip
-          CC=mpic++ python3 -m pip install -vvv .
+          CC=mpic++ python3 -m pip install .
 
       - name: Test BrahMap with pytest
         run: |
           if [ "${{ matrix.mpi }}" = "mpich" ]; then
-            preload=`mpichversion | sed -n 's/.*--libdir=\([^ ]*\).*/\1/p'`/libmpi.so
+            preload=`mpichversion | sed -n 's/.*--libdir=\([^ ]*\).*/\1/p'`/libmpi.so:/usr/lib64/libgomp.so.1
           elif [ "${{ matrix.mpi }}" = "openmpi" ]; then
-            preload=`mpicxx --showme:libdirs`/libmpi_cxx.so
+            preload=`mpicxx --showme:libdirs`/libmpi_cxx.so:/usr/lib64/libgomp.so.1
           fi
           echo $preload
           ld --verbose | grep SEARCH_DIR | tr -s ' ;' \\012
