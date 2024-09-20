@@ -95,4 +95,5 @@ def pytest_sessionfinish(session, exitstatus):
     """
     Called after the whole test run finished, right before returning the exit status to the system.
     """
+    brahmap.Initialize()
     brahmap.bMPI.comm.Barrier()

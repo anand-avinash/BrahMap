@@ -70,17 +70,17 @@ class brahmap_build_ext(build_ext):
             result = subprocess.run([CXX, "--version"], capture_output=True, text=True)
             output_txt = result.stdout.lower()
 
-            if "nvidia" in output_txt:
-                pass
+            if "gcc" in output_txt:
+                compiler_flags = gcc_compile_args
+                linker_flags = gcc_link_args
+            # elif "nvidia" in output_txt:
+            #     pass
             elif "intel" in output_txt:
                 compiler_flags = intel_compile_args
                 linker_flags = intel_link_args
             elif "clang" in output_txt:
                 compiler_flags = clang_compile_args
                 linker_flags = clang_link_args
-            elif "gcc" in output_txt:
-                compiler_flags = gcc_compile_args
-                linker_flags = gcc_link_args
             else:
                 warnings.warn(
                     "Compiler not identified. Will proceed with default flags",
@@ -98,8 +98,9 @@ class brahmap_build_ext(build_ext):
         CXXFLAGS2, linker_flag = self.get_compiler_specific_flags(CXX)
 
         self.compiler.set_executable(
-            "compiler_so", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_args
+            "compiler_so", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_so_args
         )
+        self.compiler.set_executable("compiler_so_cxx", self.compiler.compiler_so)
         # The following is meant for C compilation, but keeping it for the sake of completeness
         self.compiler.set_executable(
             "compiler", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_args

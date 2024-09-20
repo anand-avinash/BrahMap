@@ -41,7 +41,7 @@ class lbsim_simulation:
 
         ### Simulation params
         imo_version = "vPTEP"
-        imo = lbs.Imo()
+        imo = lbs.Imo(flatfile_location=lbs.PTEP_IMO_LOCATION)
         sim_seed = 5132
         map_seed = 4664
         self.nside = nside

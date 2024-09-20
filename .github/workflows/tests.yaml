@@ -27,6 +27,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Environment variable for macos
+        if: runner.os == 'macOS'
+        run: |
+          echo "$(brew --prefix llvm@15)/bin" >> $GITHUB_PATH
+
       - name: Install MPI ${{ matrix.mpi }}
         uses: mpi4py/setup-mpi@v1
         with:
@@ -39,6 +44,7 @@ jobs:
 
       - name: Install BrahMap
         run: |
+          mpicxx --version
           python -m pip install --upgrade pip
           python3 -m pip install -v .
 

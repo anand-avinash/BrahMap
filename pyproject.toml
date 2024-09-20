@@ -70,7 +70,7 @@ namespaces = false
 [tool.pytest.ini_options]
 norecursedirs = ["extern"]
 # addopts = "-ra -q" # options for pytest
-# testpaths = ["brahmap/tests"] # directory to look for the test functions and modules
+testpaths = ["tests"] # directory to look for the test functions and modules
 
 [tool.setuptools_scm]
 # Keeping this enables setuptools_scm to keep all the files tracked by git under the package being installed (see `[tool.setuptools]`), to be included in the package. To include or exclude any other file, use MANIFEST.in

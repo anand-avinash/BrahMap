@@ -2,10 +2,10 @@
 #define _MPI_UTILS
 
 #include <mpi.h>
-#include <mpi4py/mpi4py.MPI.h>
+#include <mpi4py/mpi4py.h>
 
 // The following function is taken from
-// <https://gist.github.com/2b-t/50d85115db8b12ed263f8231abf07fa2
+// <https://gist.github.com/2b-t/50d85115db8b12ed263f8231abf07fa2>
 template <typename T>
 [[nodiscard]] constexpr MPI_Datatype mpi_get_type() noexcept {
 
