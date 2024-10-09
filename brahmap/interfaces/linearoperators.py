@@ -42,7 +42,7 @@ class PointingLO(lp.LinearOperator):
             self.solver_type = processed_samples.solver_type
         else:
             MPI_RAISE_EXCEPTION(
-                condition=(processed_samples.solver_type < solver_type),
+                condition=(int(processed_samples.solver_type) < int(solver_type)),
                 exception=ValueError,
                 message="`solver_type` must be lower than or equal to the"
                 "`solver_type` of `processed_samples` object",
@@ -531,13 +531,15 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
     """
 
     def __init__(
-        self, processed_samples: ProcessTimeSamples, solver_type=Union[None, SolverType]
+        self,
+        processed_samples: ProcessTimeSamples,
+        solver_type: Union[None, SolverType] = None,
     ):
         if solver_type is None:
             self.solver_type = processed_samples.solver_type
         else:
             MPI_RAISE_EXCEPTION(
-                condition=(processed_samples.solver_type < solver_type),
+                condition=(int(processed_samples.solver_type) < int(solver_type)),
                 exception=ValueError,
                 message="`solver_type` must be lower than or equal to the"
                 "`solver_type` of `processed_samples` object",

@@ -86,6 +86,8 @@ class brahmap_build_ext(build_ext):
                     "Compiler not identified. Will proceed with default flags",
                     RuntimeWarning,
                 )
+                compiler_flags = gcc_compile_args
+                linker_flags = gcc_link_args
         except Exception as e:
             print(
                 f"{e}: Unable to detect compiler type. Will proceed with the default configurations"
