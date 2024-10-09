@@ -5,7 +5,7 @@ from typing import Union, List
 from brahmap.linop import linop as lp
 from brahmap.linop import blkop as blk
 
-from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
+from brahmap.utilities import SolverType, ProcessTimeSamples, TypeChangeWarning
 
 from brahmap._extensions import PointingLO_tools
 from brahmap._extensions import BlkDiagPrecondLO_tools
@@ -36,8 +36,18 @@ class PointingLO(lp.LinearOperator):
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
+        solver_type: Union[None, SolverType] = None,
     ):
-        self.solver_type = processed_samples.solver_type
+        if solver_type is None:
+            self.solver_type = processed_samples.solver_type
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=(processed_samples.solver_type < solver_type),
+                exception=ValueError,
+                message="`solver_type` must be lower than or equal to the"
+                "`solver_type` of `processed_samples` object",
+            )
+            self.solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
@@ -520,8 +530,20 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         the size of each block of the matrix.
     """
 
-    def __init__(self, processed_samples: ProcessTimeSamples):
-        self.solver_type = processed_samples.solver_type
+    def __init__(
+        self, processed_samples: ProcessTimeSamples, solver_type=Union[None, SolverType]
+    ):
+        if solver_type is None:
+            self.solver_type = processed_samples.solver_type
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=(processed_samples.solver_type < solver_type),
+                exception=ValueError,
+                message="`solver_type` must be lower than or equal to the"
+                "`solver_type` of `processed_samples` object",
+            )
+            self.solver_type = solver_type
+
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
 

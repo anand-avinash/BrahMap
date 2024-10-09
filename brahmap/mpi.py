@@ -60,6 +60,6 @@ def MPI_RAISE_EXCEPTION(
     else:
         exception_count = brahmap.bMPI.comm.reduce(condition, MPI.SUM, 0)
 
-        if brahmap.bMPI.rank == 0:
-            error_str = f"Exception raised by {exception_count} MPI process(es)\n"
+        if exception_count > 0 and brahmap.bMPI.rank == 0:
+            error_str = f"Exception raised by {int(exception_count)} MPI process(es)\n"
             raise exception(error_str + message)

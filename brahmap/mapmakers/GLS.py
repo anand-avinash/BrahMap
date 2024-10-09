@@ -122,11 +122,19 @@ def compute_GLS_maps(
         pcg_status = 0
         map_vector = blockdiagprecond_operator * b
 
-    map_vector = np.reshape(
-        a=map_vector,
-        newshape=(processed_samples.solver_type, processed_samples.new_npix),
-        order="F",
-    )
+    try:
+        map_vector = np.reshape(
+            map_vector,
+            shape=(processed_samples.solver_type, processed_samples.new_npix),
+            order="F",
+        )
+    except TypeError:
+        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should be removed once the support is dropped for lower version
+        map_vector = np.reshape(
+            map_vector,
+            newshape=(processed_samples.solver_type, processed_samples.new_npix),
+            order="F",
+        )
 
     output_maps = np.ma.MaskedArray(
         data=np.empty(processed_samples.npix, dtype=dtype_float),
