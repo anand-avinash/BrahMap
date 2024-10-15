@@ -5,11 +5,12 @@ import mpi4py
 import warnings
 import subprocess
 
-# g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 --includes) example9.cpp -o example9$(python3-config --extension-suffix)
+# g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 \
+# --includes) example9.cpp -o example9$(python3-config --extension-suffix)
 
-#############################
-### compiler independent args
-#############################
+#################################
+### compiler independent args ###
+#################################
 compiler_args = [
     "-pthread",
     "-O3",
@@ -20,28 +21,31 @@ compiler_args = [
     "-std=c++20",
 ]
 
-# These options are common with `compiler_so_args`. And since I supplying these options to `extra_link_args` of `Extension`, it will appear twice in the executable.
+# These options are common with `compiler_so_args`. And since I am supplying
+# these options to `extra_link_args` of `Extension`, it will appear twice in
+# the executable.
 linker_so_args = ["-pthread", "-shared"]
 
 
-##################################
-### args that depends on compilers
-##################################
+######################################
+### args that depends on compilers ###
+######################################
 
 # Intel compilers
 intel_compile_args = ["-qopenmp", "-march=core-avx2"]
-intel_link_args = ["-qopenmp"]
+intel_link_args = []
 
 # GCC compilers
 gcc_compile_args = ["-fopenmp", "-march=native"]
-gcc_link_args = ["-fopenmp"]
+gcc_link_args = []
 
 # CLANG compilers
 clang_compile_args = ["-fopenmp"]
-clang_link_args = ["-fopenmp"]
+clang_link_args = []
 
 
-### `compiler_so_args` is meant to be used in `compiler_so` for the linking phase. As of now, it is no different from the one used in `compiler_cxx`
+# `compiler_so_args` is meant to be used in `compiler_so` for the linking
+# phase. As of now, it is no different from the one used in `compiler_cxx`
 compiler_so_args = compiler_args
 linker_exe_args = linker_so_args
 
@@ -61,7 +65,11 @@ class brahmap_build_ext(build_ext):
         if "CPPFLAGS" in os.environ:
             cppflags.append(os.environ["CPPFLAGS"])
 
-        return CXX, cxxflags, cppflags
+        ldflags = []
+        if "LDFLAGS" in os.environ:
+            ldflags.append(os.environ["LDFLAGS"])
+
+        return CXX, cxxflags, cppflags, ldflags
 
     def get_compiler_specific_flags(self, CXX):
         compiler_flags = []
@@ -90,27 +98,42 @@ class brahmap_build_ext(build_ext):
                 linker_flags = gcc_link_args
         except Exception as e:
             print(
-                f"{e}: Unable to detect compiler type. Will proceed with the default configurations"
+                f"{e}: Unable to detect compiler type. Will proceed with "
+                "the default configurations"
             )
 
         return compiler_flags, linker_flags
 
     def build_extensions(self) -> None:
-        CXX, CXXFLAGS1, CPPFLAGS = self.get_environ_vars()
-        CXXFLAGS2, linker_flag = self.get_compiler_specific_flags(CXX)
+        CXX, CXXFLAGS1, CPPFLAGS, LDFLAGS = self.get_environ_vars()
+        CXXFLAGS2, linker_flags = self.get_compiler_specific_flags(CXX)
 
+        # Producing the shared objects
         self.compiler.set_executable(
-            "compiler_so", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_so_args
+            "compiler_so",
+            [CXX]
+            + CPPFLAGS
+            + CXXFLAGS1
+            + CXXFLAGS2
+            + compiler_so_args
+            + linker_flags
+            + LDFLAGS,
         )
         self.compiler.set_executable("compiler_so_cxx", self.compiler.compiler_so)
-        # The following is meant for C compilation, but keeping it for the sake of completeness
+
+        # The following is meant for C compilation, but keeping it for the
+        # sake of completeness
         self.compiler.set_executable(
             "compiler", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_args
         )
+
+        # Compilation
         self.compiler.set_executable("compiler_cxx", self.compiler.compiler)
-        # don't think the following two are being used, but will keep them for the sake of completeness
-        self.compiler.set_executable("linker_so", [CXX] + linker_flag)
-        self.compiler.set_executable("linker_exe", [CXX] + linker_flag)
+
+        # I don't think the following two are being used, but will keep them
+        # for the sake of completeness
+        self.compiler.set_executable("linker_so", [CXX] + linker_flags + LDFLAGS)
+        self.compiler.set_executable("linker_exe", [CXX] + linker_flags + LDFLAGS)
 
         super().build_extensions()
 
