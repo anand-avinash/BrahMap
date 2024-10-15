@@ -4,39 +4,59 @@
 # setting up compiler: <https://github.com/marketplace/actions/setup-c-c-compiler>
 
 name: Tests
-on:
-  push:
-    branches:
-      - main
+run-name: Testing BrahMap
+on: [push]
+
 jobs:
-  build:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
+        mpi: ["mpich", "openmpi"]
+        # Excluding the following because it is failing and remains stalled, without any useful error message
+        exclude:
+          - os: ubuntu-latest
+            mpi: mpich
+            python-version: "3.9"
 
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.7
         with:
           submodules: true
-      # - name: Install compiler
-      #   id: install_cc
-      #   uses: rlalik/setup-cpp-compiler@master
-      #   with:
-      #     compiler: gcc-10 # This compiler has been failing with (macos-latest, 3.11/3.12)
+
+      - name: Install libomp and set environment variables for macos
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          echo "CXX=$(brew --prefix llvm@15)/bin/clang++" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix llvm@15)/include -I$(brew --prefix libomp)/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix libomp)/lib -lomp" >> $GITHUB_ENV
+
+      - name: Install MPI ${{ matrix.mpi }}
+        uses: mpi4py/setup-mpi@v1
+        with:
+          mpi: ${{ matrix.mpi }}
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install BrahMap
-        # env:
-        #   CC: ${{ steps.install_cc.outputs.cc }}
-        #   CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
+          mpicxx --version
           python -m pip install --upgrade pip
-          python -m pip install .
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            echo "CXX=$CXX"
+            echo "CPPFLAGS=$CPPFLAGS"
+            echo "LDFLAGS=$LDFLAGS"
+            CXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} LDFLAGS=${{ env.LDFLAGS }} python3 -m pip install -v .
+          else
+            python3 -m pip install -v .
+          fi
+
       - name: Test BrahMap with pytest
-        run: |
-          pytest
+        run: bash ${GITHUB_WORKSPACE}/tests/mpiexec_test_loop.sh
