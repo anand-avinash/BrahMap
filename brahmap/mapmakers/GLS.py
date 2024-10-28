@@ -90,8 +90,6 @@ def compute_GLS_maps(
         update_pointings_inplace=update_pointings_inplace,
     )
 
-    inv_noise_cov_operator.pointings_flag = processed_samples.pointings_flag
-
     pointing_operator = PointingLO(processed_samples=processed_samples)
 
     blockdiagprecond_operator = BlockDiagonalPreconditionerLO(

@@ -90,7 +90,6 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
 def LBSim_compute_GLS_maps_from_obs(
     nside: int,
     obs: Union[lbs.Observation, List[lbs.Observation]],
-    pointings_flag: Union[np.ndarray, List[np.ndarray], None] = None,
     inv_noise_cov_diagonal: Union[
         LBSim_InvNoiseCovLO_UnCorr, InvNoiseCovLO_Uncorrelated, None
     ] = None,
@@ -104,11 +103,17 @@ def LBSim_compute_GLS_maps_from_obs(
     else:
         obs_list = obs
 
-    pointings = np.concatenate([ob.pointings for ob in obs_list]).reshape((-1, 2))
+    pointings = np.concatenate([obs.pointings for obs in obs_list]).reshape((-1, 2))
     pol_angles = np.concatenate(
-        [ob.psi for ob in obs_list], axis=None
+        [obs.psi for obs in obs_list], axis=None
     )  # `axis=None` returns flattened arrays
     tod = np.concatenate([getattr(obs, component) for obs in obs_list], axis=None)
+    if hasattr(obs_list[0], "pointings_flag"):
+        pointings_flag = np.concatenate(
+            [getattr(obs, "pointings_flag") for obs in obs_list], axis=None
+        )
+    else:
+        pointings_flag = None
 
     lbsim_gls_result = LBSim_compute_GLS_maps(
         nside=nside,

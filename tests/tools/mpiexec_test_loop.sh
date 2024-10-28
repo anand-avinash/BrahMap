@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Primary purpose of this script is to run the test using pytest on the BrahMap
+# pakage. It runs the test for multiple number of MPI processes in a bash loop.
+# In a simple case, the loop will terminate with an error if the test fails for
+# an iteration. In this test instead, the loop will simply continue despite 
+# catching an error while recording the passing status of each iteration.
+# Once the loop is over, the script will throw an error if any of the loop iteration
+# fail. Otherwise, the script will terminate normally.
+
+
 # Color formats
 bbred='\033[1;91m'   # bold bright red
 bbgreen='\033[1;92m' # bold bright green
@@ -39,14 +48,14 @@ for nprocs in 1 2 5 6; do
 done
 
 if [ ${#error_nprocs[@]} -ne 0 ]; then
-  # exit 0, when some tests fail
+  # exit 1, when some tests fail
   formatted_print \
   "$(printf "${bbred}Test failed for nproc(s): ${error_nprocs[*]}${nc}")"\
   "$error_nprocs"
 
   exit 1
 else
-  # when all tests are passing
+  # exit 0, when all tests are passing
   formatted_print "$(printf "${bbgreen}Test passed for all nprocs${nc}")"
 
   exit 0

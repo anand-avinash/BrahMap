@@ -360,9 +360,13 @@ class ToeplitzLO(lp.LinearOperator):
 
         return y
 
-    def __init__(self, a, size):
+    def __init__(self, a, size, dtype=None):
+        if dtype is None:
+            dtype = np.float64
+        else:
+            dtype = dtype
         super(ToeplitzLO, self).__init__(
-            nargin=size, nargout=size, matvec=self.mult, symmetric=True
+            nargin=size, nargout=size, matvec=self.mult, symmetric=True, dtype=dtype
         )
         self.array = a
 
