@@ -1,6 +1,8 @@
 import numpy as np
 from mpi4py import MPI
 
+from brahmap import math
+
 
 def computeweights_pol_I(
     npix: int,
@@ -54,8 +56,10 @@ def computeweights_pol_QU(
     weighted_sincos = np.zeros(npix, dtype=dtype_float)
     one_over_determinant = np.zeros(npix, dtype=dtype_float)
 
-    sin2phi = np.sin(2.0 * pol_angles)
-    cos2phi = np.cos(2.0 * pol_angles)
+    sin2phi = np.empty(nsamples, dtype=dtype_float)
+    cos2phi = np.empty(nsamples, dtype=dtype_float)
+    math.sin(nsamples, 2.0 * pol_angles, sin2phi)
+    math.cos(nsamples, 2.0 * pol_angles, cos2phi)
 
     for idx in range(nsamples):
         pixel = pointings[idx]
@@ -104,8 +108,10 @@ def computeweights_pol_IQU(
     weighted_cos = np.zeros(npix, dtype=dtype_float)
     one_over_determinant = np.zeros(npix, dtype=dtype_float)
 
-    sin2phi = np.sin(2.0 * pol_angles)
-    cos2phi = np.cos(2.0 * pol_angles)
+    sin2phi = np.empty(nsamples, dtype=dtype_float)
+    cos2phi = np.empty(nsamples, dtype=dtype_float)
+    math.sin(nsamples, 2.0 * pol_angles, sin2phi)
+    math.cos(nsamples, 2.0 * pol_angles, cos2phi)
 
     for idx in range(nsamples):
         pixel = pointings[idx]

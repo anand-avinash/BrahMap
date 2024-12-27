@@ -12,7 +12,7 @@ bMPI = None
 
 from .mpi import Initialize, Finalize, MPI_RAISE_EXCEPTION  # noqa: E402
 
-from . import linop, _extensions, interfaces, utilities, mapmakers  # noqa: E402
+from . import linop, _extensions, interfaces, utilities, mapmakers, math  # noqa: E402
 
 from .utilities import SolverType  # noqa: E402
 
@@ -26,6 +26,7 @@ __all__ = [
     "interfaces",
     "utilities",
     "mapmakers",
+    "math",
     "SolverType",
 ]
 

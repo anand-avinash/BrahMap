@@ -140,7 +140,6 @@ class brahmap_build_ext(build_ext):
 
 ext1 = Extension(
     "brahmap._extensions.compute_weights",
-    language="c++",
     sources=[os.path.join("brahmap", "_extensions", "compute_weights.cpp")],
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
@@ -196,8 +195,18 @@ ext5 = Extension(
     extra_link_args=linker_so_args,
 )
 
+ext6 = Extension(
+    "brahmap.math.unary_functions",
+    sources=[os.path.join("brahmap", "math", "unary_functions.cpp")],
+    include_dirs=[
+        os.path.join("extern", "pybind11", "include"),
+    ],
+    define_macros=None,
+    extra_link_args=linker_so_args,
+)
+
 setup(
-    ext_modules=[ext1, ext2, ext3, ext4, ext5],
+    ext_modules=[ext1, ext2, ext3, ext4, ext5, ext6],
     cmdclass={"build_ext": brahmap_build_ext},
     # include_package_data=True,
 )

@@ -27,7 +27,7 @@ brahmap.Initialize()
 
 
 class InitCommonParams:
-    np.random.seed(987 + brahmap.bMPI.rank)
+    np.random.seed([987, brahmap.bMPI.rank])
     npix = 128
     nsamples_global = npix * 6
 

@@ -16,6 +16,7 @@
 
 
 import pytest
+import time
 import numpy as np
 
 import brahmap
@@ -24,7 +25,7 @@ brahmap.Initialize()
 
 
 class InitCommonParams:
-    rng = np.random.default_rng(seed=123345 + brahmap.bMPI.rank)
+    rng = np.random.default_rng(seed=[123345, brahmap.bMPI.rank])
 
     # random seed to generate common random map on all the processes
     rand_map_seed = 6454
@@ -48,9 +49,9 @@ class InitIntegerParams(InitCommonParams):
     def __init__(self, dtype_int) -> None:
         super().__init__()
 
-        self.rng = np.random.default_rng(seed=1234345 + brahmap.bMPI.rank)
+        self.int_rng = np.random.default_rng(seed=[1234345, brahmap.bMPI.rank])
         self.dtype = dtype_int
-        self.pointings = self.rng.integers(
+        self.pointings = self.int_rng.integers(
             low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
         )
 
@@ -59,13 +60,13 @@ class InitFloatParams(InitCommonParams):
     def __init__(self, dtype_float) -> None:
         super().__init__()
 
-        self.rng = np.random.default_rng(seed=1237345 + brahmap.bMPI.rank)
+        self.float_rng = np.random.default_rng(seed=[1237345, brahmap.bMPI.rank])
 
         self.dtype = dtype_float
-        self.pol_angles = self.rng.uniform(
+        self.pol_angles = self.float_rng.uniform(
             low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
         ).astype(dtype=self.dtype)
-        self.noise_weights = self.rng.random(size=self.nsamples, dtype=self.dtype)
+        self.noise_weights = self.float_rng.random(size=self.nsamples, dtype=self.dtype)
 
         # constant maps
         self.const_I_map = np.ones(self.npix, dtype=self.dtype) * 7.0
@@ -86,16 +87,17 @@ class InitFloatParams(InitCommonParams):
 
 
 # Initializing the parameter classes
+
 initint32 = InitIntegerParams(dtype_int=np.int32)
 initint64 = InitIntegerParams(dtype_int=np.int64)
 initfloat32 = InitFloatParams(dtype_float=np.float32)
 initfloat64 = InitFloatParams(dtype_float=np.float64)
 
 
-@pytest.mark.skip(
-    reason="Unlike other tests, this one is producing"
-    "different result on each execution. Under investigation!"
-)
+# @pytest.mark.skip(
+#     reason="Unlike other tests, this one is producing"
+#     "different result on each execution. Under investigation!"
+# )
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
@@ -107,6 +109,7 @@ initfloat64 = InitFloatParams(dtype_float=np.float64)
 )
 class TestGLSMapMakers_const_maps(InitCommonParams):
     def test_GLSMapMakers_I_const_map(self, initint, initfloat, rtol):
+        time.sleep(1)
         solver_type = brahmap.SolverType.I
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
@@ -148,18 +151,20 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
         )
 
     def test_GLSMapMakers_QU_const_map(self, initint, initfloat, rtol):
+        time.sleep(1)
         solver_type = brahmap.SolverType.QU
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+
         # scan the sky
         for idx, pointings in enumerate(initint.pointings):
-            tod[idx] += initfloat.const_Q_map[pointings] * np.cos(
-                2.0 * initfloat.pol_angles[idx]
-            )
-            tod[idx] += initfloat.const_U_map[pointings] * np.sin(
-                2.0 * initfloat.pol_angles[idx]
-            )
+            tod[idx] += initfloat.const_Q_map[pointings] * cos2phi[idx]
+            tod[idx] += initfloat.const_U_map[pointings] * sin2phi[idx]
 
         GLSparams = brahmap.mapmakers.GLSParameters(
             solver_type=solver_type,
@@ -206,19 +211,21 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
         )
 
     def test_GLSMapMakers_IQU_const_map(self, initint, initfloat, rtol):
+        time.sleep(1)
         solver_type = brahmap.SolverType.IQU
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+
         # scan the sky
         for idx, pointings in enumerate(initint.pointings):
             tod[idx] += initfloat.const_I_map[pointings]
-            tod[idx] += initfloat.const_Q_map[pointings] * np.cos(
-                2.0 * initfloat.pol_angles[idx]
-            )
-            tod[idx] += initfloat.const_U_map[pointings] * np.sin(
-                2.0 * initfloat.pol_angles[idx]
-            )
+            tod[idx] += initfloat.const_Q_map[pointings] * cos2phi[idx]
+            tod[idx] += initfloat.const_U_map[pointings] * sin2phi[idx]
 
         GLSparams = brahmap.mapmakers.GLSParameters(
             solver_type=solver_type,
@@ -336,14 +343,15 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+
         # scan the sky
         for idx, pointings in enumerate(initint.pointings):
-            tod[idx] += initfloat.rand_Q_map[pointings] * np.cos(
-                2.0 * initfloat.pol_angles[idx]
-            )
-            tod[idx] += initfloat.rand_U_map[pointings] * np.sin(
-                2.0 * initfloat.pol_angles[idx]
-            )
+            tod[idx] += initfloat.rand_Q_map[pointings] * cos2phi[idx]
+            tod[idx] += initfloat.rand_U_map[pointings] * sin2phi[idx]
 
         GLSparams = brahmap.mapmakers.GLSParameters(
             solver_type=solver_type,
@@ -394,15 +402,16 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+
         # scan the sky
         for idx, pointings in enumerate(initint.pointings):
             tod[idx] += initfloat.rand_I_map[pointings]
-            tod[idx] += initfloat.rand_Q_map[pointings] * np.cos(
-                2.0 * initfloat.pol_angles[idx]
-            )
-            tod[idx] += initfloat.rand_U_map[pointings] * np.sin(
-                2.0 * initfloat.pol_angles[idx]
-            )
+            tod[idx] += initfloat.rand_Q_map[pointings] * cos2phi[idx]
+            tod[idx] += initfloat.rand_U_map[pointings] * sin2phi[idx]
 
         GLSparams = brahmap.mapmakers.GLSParameters(
             solver_type=solver_type,

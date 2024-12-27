@@ -24,6 +24,7 @@ import numpy as np
 
 import brahmap
 
+import sincos_wrapper as sc
 import py_ProcessTimeSamples as hpts
 
 from mpi4py import MPI
@@ -293,8 +294,10 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.sin(2.0 * initfloat.pol_angles)
-        cos2phi = np.cos(2.0 * initfloat.pol_angles)
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        sc.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        sc.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -348,8 +351,10 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.sin(2.0 * initfloat.pol_angles)
-        cos2phi = np.cos(2.0 * initfloat.pol_angles)
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        sc.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        sc.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
