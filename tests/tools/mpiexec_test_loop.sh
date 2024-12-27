@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Primary purpose of this script is to run the test using pytest on the BrahMap
-# pakage. It runs the test for multiple number of MPI processes in a bash loop.
+# package. It runs the test for multiple number of MPI processes in a bash loop.
 # In a simple case, the loop will terminate with an error if the test fails for
 # an iteration. In this test instead, the loop will simply continue despite 
 # catching an error while recording the passing status of each iteration.
 # Once the loop is over, the script will throw an error if any of the loop iteration
-# fail. Otherwise, the script will terminate normally.
+# fails. Otherwise, the script will terminate normally.
 
 
 # Color formats

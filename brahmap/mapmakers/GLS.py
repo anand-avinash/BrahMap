@@ -7,7 +7,7 @@ from brahmap import MPI_RAISE_EXCEPTION
 
 from brahmap.linop import DiagonalOperator
 
-from brahmap.utilities import ProcessTimeSamples, SolverType
+from brahmap.utilities import ProcessTimeSamples, SolverType, modify_numpy_context
 
 from brahmap.interfaces import (
     PointingLO,
@@ -108,14 +108,15 @@ def compute_GLS_maps(
                 GLSParameters.callback_function(x)
 
         A = pointing_operator.T * inv_noise_cov_operator * pointing_operator
-        map_vector, pcg_status = scipy.sparse.linalg.cg(
-            A=A,
-            b=b,
-            rtol=GLSParameters.preconditioner_threshold,
-            maxiter=GLSParameters.preconditioner_max_iterations,
-            M=blockdiagprecond_operator,
-            callback=callback_function,
-        )
+        with modify_numpy_context():
+            map_vector, pcg_status = scipy.sparse.linalg.cg(
+                A=A,
+                b=b,
+                rtol=GLSParameters.preconditioner_threshold,
+                maxiter=GLSParameters.preconditioner_max_iterations,
+                M=blockdiagprecond_operator,
+                callback=callback_function,
+            )
     else:
         pcg_status = 0
         map_vector = blockdiagprecond_operator * b

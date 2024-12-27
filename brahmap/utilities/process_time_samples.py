@@ -22,6 +22,78 @@ class SolverType(IntEnum):
 
 
 class ProcessTimeSamples(object):
+    """
+    A class to store the pre-processed and pre-computed arrays that can be used later.
+
+    Parameters
+    ----------
+        npix : int
+            Number of pixels on which the map-making has to be done
+        pointings : np.ndarray
+            A 1-d array of pointing indices
+        pointings_flag : np.ndarray
+            A 1-d array of pointing flags. `True` means good pointing, `False` means bad pointing.
+        solver_type : SolverType
+            Map-making level: I or QU or IQU
+        pol_angles : np.ndarray | None
+            A 1-d array containing the orientation angles of the detectors
+        noise_weights : np.ndarray | None
+            A 1-d array of noise weights, or the diagonal elements of the inverse of noise covariance matrix
+        threshold : float
+            The threshold to be used to flag pixels in the sky
+        dtype_float : boh
+            `dtype` of the floating point arrays
+        update_pointings_inplace : bool
+            The class does some operations on the pointings array. Do you want to make it in-place? It saves memory
+
+
+    Attributes
+    ----------
+        npix : int
+            Number of pixels on which the map-making has to be done
+        pointings : np.ndarray
+            A 1-d array of pointing indices
+        pointings_flag : np.ndarray
+            A 1-d array of pointing flags
+        nsamples : int
+            Number of samples on present MPI rank
+        nsamples_global : int
+            Global number of samples
+        solver_type : SolverType
+            Level of map-making: I, QU, or IQU
+        pol_angles : np.ndarray
+            A 1-d array containing the orientation angles of detectors
+        threshold : float
+            Threshold to be used to flag the pixels in the sky
+        dtype_float : boh
+            `dtype` of the floating point arrays
+        observed_pixels : np.ndarray
+            pixel indices that are considered for map-making
+        pixel_flag : np.ndarray
+            A 1-d array of size `npix`. `True` indicates that the corresponding pixel index will be dropped in map-making
+        weighted_counts : np.ndarray
+            weighted counts
+        sin2phi : np.ndarray
+            A 1-d array of `sin(2\phi)`
+        cos2phi : np.ndarray
+            A 1-d array of `cos(2\phi)`
+        weighted_sin : np.ndarray
+            Weighted `sin`
+        weighted_cos : np.ndarray
+            Weighted `cos`
+        weighted_sin_sq : np.ndarray
+            Weighted `sin^2`
+        weighted_cos_sq : np.ndarray
+            Weighted `cos^2`
+        weighted_sincos : np.ndarray
+            Weighted `sin.cos`
+        one_over_determinant : np.ndarray
+            inverse of determinant for each valid pixels
+        new_npix : int
+            The number of pixels actually being used in map-making. Equal to `len(observed_pixels)`
+
+    """
+
     def __init__(
         self,
         npix: int,
@@ -59,8 +131,8 @@ class ProcessTimeSamples(object):
             message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(self.pointings_flag)}\nlen(pointings) = {self.nsamples}",
         )
 
-        self.threshold = threshold
         self.solver_type = solver_type
+        self.threshold = threshold
 
         MPI_RAISE_EXCEPTION(
             condition=(self.solver_type not in [1, 2, 3]),
