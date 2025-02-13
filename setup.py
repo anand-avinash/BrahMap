@@ -1,9 +1,15 @@
 import os
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+from setuptools._distutils.ccompiler import new_compiler
 import mpi4py
-import warnings
-import subprocess
+import threading
+from typing import Any, Iterator
+import tempfile
+import shutil
+from pathlib import Path
+import contextlib
+
 
 # g++ -O3 -march=native -Wall -shared -std=c++14 -fPIC $(python3 -m pybind11 \
 # --includes) example9.cpp -o example9$(python3-config --extension-suffix)
@@ -31,18 +37,16 @@ linker_so_args = ["-pthread", "-shared"]
 ### args that depends on compilers ###
 ######################################
 
-# Intel compilers
-intel_compile_args = ["-qopenmp", "-march=core-avx2"]
-intel_link_args = []
+# OpenMP compilation flags
+openmp_flags = ["-qopenmp", "-fopenmp", "-Xpreprocessor -fopenmp"]
 
-# GCC compilers
-gcc_compile_args = ["-fopenmp", "-march=native"]
-gcc_link_args = []
+# Performance tuning flags
+performance_flags = ["-march=native", "-mtune=native", "-mcpu=native", ""]
 
-# CLANG compilers
-clang_compile_args = ["-fopenmp"]
-clang_link_args = []
 
+##################
+### other args ###
+##################
 
 # `compiler_so_args` is meant to be used in `compiler_so` for the linking
 # phase. As of now, it is no different from the one used in `compiler_cxx`
@@ -50,12 +54,64 @@ compiler_so_args = compiler_args
 linker_exe_args = linker_so_args
 
 
+##########################################################
+### framework to check if a compiler flag is supported ###
+##########################################################
+
+# Adopted from
+# <https://github.com/pybind/pybind11/blob/
+# d2e7e8c68711d1ebfb02e2f20bd1cb3bfc5647c0/
+# pybind11/setup_helpers.py#L89>
+
+
+tmp_chdir_lock = threading.Lock()
+
+
+@contextlib.contextmanager
+def tmp_chdir() -> Iterator[str]:
+    "Prepare and enter a temporary directory, cleanup when done"
+    # Threadsafe
+    with tmp_chdir_lock:
+        olddir = os.getcwd()
+        try:
+            tmpdir = tempfile.mkdtemp()
+            os.chdir(tmpdir)
+            yield tmpdir
+        finally:
+            os.chdir(olddir)
+            shutil.rmtree(tmpdir)
+
+
+# cf http://bugs.python.org/issue26689
+def check_flag(compiler: Any, flag: str) -> bool:
+    """
+    Return the flag if a flag name is supported on the
+    specified compiler, otherwise None (can be used as a boolean).
+    If multiple flags are passed, return the first that matches.
+    """
+    with tmp_chdir():
+        fname = Path("flagcheck.cpp")
+        # Don't trigger -Wunused-parameter.
+        fname.write_text("int main (int, char **) { return 0; }", encoding="utf-8")
+
+        try:
+            compiler.compile([str(fname)], extra_postargs=[flag])
+            return flag
+        except Exception:
+            return None
+
+
+##############################################
+### defining the dedicated build extension ###
+##############################################
+
+
 class brahmap_build_ext(build_ext):
     def get_environ_vars(self):
-        if "CXX" in os.environ:
-            CXX = os.environ["CXX"]
+        if "MPICXX" in os.environ:
+            MPICXX = os.environ["MPICXX"]
         else:
-            CXX = "mpicxx"
+            MPICXX = "mpicxx"
 
         cxxflags = []
         if "CXXFLAGS" in os.environ:
@@ -69,49 +125,36 @@ class brahmap_build_ext(build_ext):
         if "LDFLAGS" in os.environ:
             ldflags.append(os.environ["LDFLAGS"])
 
-        return CXX, cxxflags, cppflags, ldflags
+        return MPICXX, cxxflags, cppflags, ldflags
 
-    def get_compiler_specific_flags(self, CXX):
+    def get_compiler_specific_flags(self, MPICXX):
         compiler_flags = []
         linker_flags = []
-        try:
-            result = subprocess.run([CXX, "--version"], capture_output=True, text=True)
-            output_txt = result.stdout.lower()
 
-            if "gcc" in output_txt:
-                compiler_flags = gcc_compile_args
-                linker_flags = gcc_link_args
-            # elif "nvidia" in output_txt:
-            #     pass
-            elif "intel" in output_txt:
-                compiler_flags = intel_compile_args
-                linker_flags = intel_link_args
-            elif "clang" in output_txt:
-                compiler_flags = clang_compile_args
-                linker_flags = clang_link_args
-            else:
-                warnings.warn(
-                    "Compiler not identified. Will proceed with default flags",
-                    RuntimeWarning,
-                )
-                compiler_flags = gcc_compile_args
-                linker_flags = gcc_link_args
-        except Exception as e:
-            print(
-                f"{e}: Unable to detect compiler type. Will proceed with "
-                "the default configurations"
-            )
+        custom_compiler = new_compiler()
+        custom_compiler.compiler = [MPICXX]
+        custom_compiler.compiler_cxx = [MPICXX]
+
+        for item in openmp_flags:
+            if check_flag(custom_compiler, item) is not None:
+                compiler_flags += [item]
+                break
+
+        for item in performance_flags:
+            if check_flag(custom_compiler, item) is not None:
+                compiler_flags += [item]
+                break
 
         return compiler_flags, linker_flags
 
     def build_extensions(self) -> None:
-        CXX, CXXFLAGS1, CPPFLAGS, LDFLAGS = self.get_environ_vars()
-        CXXFLAGS2, linker_flags = self.get_compiler_specific_flags(CXX)
+        MPICXX, CXXFLAGS1, CPPFLAGS, LDFLAGS = self.get_environ_vars()
+        CXXFLAGS2, linker_flags = self.get_compiler_specific_flags(MPICXX)
 
         # Producing the shared objects
         self.compiler.set_executable(
             "compiler_so",
-            [CXX]
+            [MPICXX]
             + CPPFLAGS
             + CXXFLAGS1
             + CXXFLAGS2
@@ -124,7 +167,7 @@ class brahmap_build_ext(build_ext):
         # The following is meant for C compilation, but keeping it for the
         # sake of completeness
         self.compiler.set_executable(
-            "compiler", [CXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_args
+            "compiler", [MPICXX] + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2 + compiler_args
         )
 
         # Compilation
@@ -132,8 +175,8 @@ class brahmap_build_ext(build_ext):
 
         # I don't think the following two are being used, but will keep them
         # for the sake of completeness
-        self.compiler.set_executable("linker_so", [CXX] + linker_flags + LDFLAGS)
-        self.compiler.set_executable("linker_exe", [CXX] + linker_flags + LDFLAGS)
+        self.compiler.set_executable("linker_so", [MPICXX] + linker_flags + LDFLAGS)
+        self.compiler.set_executable("linker_exe", [MPICXX] + linker_flags + LDFLAGS)
 
         super().build_extensions()
 

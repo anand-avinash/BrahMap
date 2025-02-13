@@ -122,6 +122,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -130,7 +131,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             time_ordered_data=tod,
             pointings_flag=self.pointings_flag,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 
@@ -170,6 +171,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -179,7 +181,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             pointings_flag=self.pointings_flag,
             pol_angles=initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 
@@ -231,6 +233,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -240,7 +243,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             pointings_flag=self.pointings_flag,
             pol_angles=initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 
@@ -283,10 +286,10 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
         )
 
 
-@pytest.mark.skip(
-    reason="Unlike other tests, this one is producing"
-    "different result on each execution. Under investigation!"
-)
+# @pytest.mark.skip(
+#     reason="Unlike other tests, this one is producing"
+#     "different result on each execution. Under investigation!"
+# )
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
@@ -310,6 +313,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -318,7 +322,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             time_ordered_data=tod,
             pointings_flag=self.pointings_flag,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 
@@ -357,6 +361,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -366,7 +371,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             pointings_flag=self.pointings_flag,
             pol_angles=initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 
@@ -417,6 +422,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             solver_type=solver_type,
             preconditioner_max_iterations=5,
             return_hit_map=False,
+            return_processed_samples=True,
         )
 
         PTS, GLSresults = brahmap.mapmakers.compute_GLS_maps(
@@ -426,7 +432,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             pointings_flag=self.pointings_flag,
             pol_angles=initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            GLSParameters=GLSparams,
+            gls_parameters=GLSparams,
             update_pointings_inplace=False,
         )
 

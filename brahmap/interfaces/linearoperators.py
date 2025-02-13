@@ -39,7 +39,7 @@ class PointingLO(lp.LinearOperator):
         solver_type: Union[None, SolverType] = None,
     ):
         if solver_type is None:
-            self.solver_type = processed_samples.solver_type
+            self.__solver_type = processed_samples.solver_type
         else:
             MPI_RAISE_EXCEPTION(
                 condition=(int(processed_samples.solver_type) < int(solver_type)),
@@ -47,7 +47,7 @@ class PointingLO(lp.LinearOperator):
                 message="`solver_type` must be lower than or equal to the"
                 "`solver_type` of `processed_samples` object",
             )
-            self.solver_type = solver_type
+            self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
@@ -312,16 +312,9 @@ class PointingLO(lp.LinearOperator):
 
         return prod
 
-    def solver_string(self):
-        """
-        Return a string depending on the map you are processing
-        """
-        if self.solver_type == 1:
-            return "I"
-        elif self.solver_type == 2:
-            return "QU"
-        else:
-            return "IQU"
+    @property
+    def solver_type(self):
+        return self.__solver_type
 
 
 class ToeplitzLO(lp.LinearOperator):
@@ -365,8 +358,15 @@ class ToeplitzLO(lp.LinearOperator):
             dtype = np.float64
         else:
             dtype = dtype
+
+        self.__size = size
+
         super(ToeplitzLO, self).__init__(
-            nargin=size, nargout=size, matvec=self.mult, symmetric=True, dtype=dtype
+            nargin=self.__size,
+            nargout=self.__size,
+            matvec=self.mult,
+            symmetric=True,
+            dtype=dtype,
         )
         self.array = a
 
@@ -540,7 +540,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         solver_type: Union[None, SolverType] = None,
     ):
         if solver_type is None:
-            self.solver_type = processed_samples.solver_type
+            self.__solver_type = processed_samples.solver_type
         else:
             MPI_RAISE_EXCEPTION(
                 condition=(int(processed_samples.solver_type) < int(solver_type)),
@@ -548,7 +548,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
                 message="`solver_type` must be lower than or equal to the"
                 "`solver_type` of `processed_samples` object",
             )
-            self.solver_type = solver_type
+            self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
@@ -685,16 +685,9 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
         return prod
 
-    def solver_string(self):
-        """
-        Return a string depending on the map you are processing
-        """
-        if self.solver_type == 1:
-            return "I"
-        elif self.solver_type == 2:
-            return "QU"
-        else:
-            return "IQU"
+    @property
+    def solver_type(self):
+        return self.__solver_type
 
 
 class InverseLO(lp.LinearOperator):

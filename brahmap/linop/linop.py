@@ -278,7 +278,7 @@ class LinearOperator(BaseLinearOperator):
         """Product between a linear operator and a vector."""
         self._nMatvec += 1
         result_type = np.result_type(self.dtype, x.dtype)
-        return self.matvec(x).astype(result_type)
+        return self.matvec(x).astype(result_type, copy=False)
 
     def __mul__(self, x):
         if np.isscalar(x):

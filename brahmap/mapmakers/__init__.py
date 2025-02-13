@@ -1,4 +1,4 @@
-from .GLS import GLSParameters, GLSResult, compute_GLS_maps
+from .GLS import GLSParameters, GLSResult, compute_GLS_maps_from_PTS, compute_GLS_maps
 
 from importlib.util import find_spec
 
@@ -8,7 +8,7 @@ if find_spec("litebird_sim") is not None:
         LBSimGLSParameters,
         LBSimGLSResult,
         LBSim_InvNoiseCovLO_UnCorr,
-        LBSim_compute_GLS_maps_from_obs,
+        LBSimProcessTimeSamples,
         LBSim_compute_GLS_maps,
     )
 
@@ -16,10 +16,15 @@ if find_spec("litebird_sim") is not None:
         "LBSimGLSParameters",
         "LBSimGLSResult",
         "LBSim_InvNoiseCovLO_UnCorr",
-        "LBSim_compute_GLS_maps_from_obs",
+        "LBSimProcessTimeSamples",
         "LBSim_compute_GLS_maps",
     ]
 else:
     __all__ = []
 
-__all__ = __all__ + ["GLSParameters", "GLSResult", "compute_GLS_maps"]
+__all__ = __all__ + [
+    "GLSParameters",
+    "GLSResult",
+    "compute_GLS_maps_from_PTS",
+    "compute_GLS_maps",
+]

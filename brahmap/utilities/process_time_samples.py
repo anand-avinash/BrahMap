@@ -1,11 +1,9 @@
 from enum import IntEnum
 import numpy as np
-import warnings
 from typing import Union
 from mpi4py import MPI
 
 
-from brahmap.utilities.tools import TypeChangeWarning
 from brahmap.utilities import bash_colors
 
 from brahmap._extensions import compute_weights
@@ -109,10 +107,10 @@ class ProcessTimeSamples(object):
         if brahmap.bMPI is None:
             Initialize()
 
-        self.npix = npix
-        self.nsamples = len(pointings)
+        self.__npix = npix
+        self.__nsamples = len(pointings)
 
-        self.nsamples_global = brahmap.bMPI.comm.allreduce(self.nsamples, MPI.SUM)
+        self.__nsamples_global = brahmap.bMPI.comm.allreduce(self.nsamples, MPI.SUM)
 
         if update_pointings_inplace:
             self.pointings = pointings
@@ -122,7 +120,7 @@ class ProcessTimeSamples(object):
             if pointings_flag is not None:
                 self.pointings_flag = pointings_flag.copy()
 
-        if self.pointings_flag is None:
+        if pointings_flag is None:
             self.pointings_flag = np.ones(self.nsamples, dtype=bool)
 
         MPI_RAISE_EXCEPTION(
@@ -131,8 +129,8 @@ class ProcessTimeSamples(object):
             message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(self.pointings_flag)}\nlen(pointings) = {self.nsamples}",
         )
 
-        self.solver_type = solver_type
-        self.threshold = threshold
+        self.__solver_type = solver_type
+        self.__threshold = threshold
 
         MPI_RAISE_EXCEPTION(
             condition=(self.solver_type not in [1, 2, 3]),
@@ -142,16 +140,16 @@ class ProcessTimeSamples(object):
 
         # setting the dtype for the `float` arrays: if one or both of `noise_weights` and `pol_angles` are supplied, the `dtype_float` will be inferred from them. Otherwise, the it will be set to `np.float64`
         if dtype_float is not None:
-            self.dtype_float = dtype_float
+            self.__dtype_float = dtype_float
         elif noise_weights is not None and pol_angles is not None:
             # if both `noise_weights` and `pol_angles` are given, `dtype_float` will be assigned the higher `dtype`
-            self.dtype_float = np.promote_types(noise_weights.dtype, pol_angles.dtype)
+            self.__dtype_float = np.promote_types(noise_weights.dtype, pol_angles.dtype)
         elif noise_weights is not None:
-            self.dtype_float = noise_weights.dtype
+            self.__dtype_float = noise_weights.dtype
         elif pol_angles is not None:
-            self.dtype_float = pol_angles.dtype
+            self.__dtype_float = pol_angles.dtype
         else:
-            self.dtype_float = np.float64
+            self.__dtype_float = np.float64
 
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
@@ -162,13 +160,14 @@ class ProcessTimeSamples(object):
             message=f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}",
         )
 
-        if noise_weights.dtype != self.dtype_float:
-            if brahmap.bMPI.rank == 0:
-                warnings.warn(
-                    f"dtype of `noise_weights` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
+        try:
+            noise_weights = noise_weights.astype(
+                dtype=self.dtype_float, casting="safe", copy=False
+            )
+        except TypeError:
+            raise TypeError(
+                f"The `noise_weights` array has higher dtype than `self.dtype_float={self.dtype_float}`. Please called `ProcessTimeSamples` again with `dtype_float={noise_weights.dtype}`"
+            )
 
         if self.solver_type != 1:
             MPI_RAISE_EXCEPTION(
@@ -177,13 +176,14 @@ class ProcessTimeSamples(object):
                 message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
             )
 
-            if pol_angles.dtype != self.dtype_float:
-                if brahmap.bMPI.rank == 0:
-                    warnings.warn(
-                        f"dtype of `pol_angles` will be changed to {self.dtype_float}",
-                        TypeChangeWarning,
-                    )
-                pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
+            try:
+                pol_angles = pol_angles.astype(
+                    dtype=self.dtype_float, casting="safe", copy=False
+                )
+            except TypeError:
+                raise TypeError(
+                    f"The `pol_angles` array has higher dtype than `self.dtype_float={self.dtype_float}`. Please called `ProcessTimeSamples` again with `dtype_float={pol_angles.dtype}`"
+                )
 
         self._compute_weights(
             pol_angles,
@@ -222,6 +222,40 @@ class ProcessTimeSamples(object):
             )
             print(bc.header(f"{'--' * 40}"))
 
+    @property
+    def npix(self):
+        return self.__npix
+
+    @property
+    def nsamples(self):
+        return self.__nsamples
+
+    @property
+    def nsamples_global(self):
+        return self.__nsamples_global
+
+    @property
+    def solver_type(self):
+        return self.__solver_type
+
+    @property
+    def threshold(self):
+        return self.__threshold
+
+    @property
+    def dtype_float(self):
+        return self.__dtype_float
+
+    @property
+    def old2new_pixel(self):
+        old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
+        for idx, flag in enumerate(self.pixel_flag):
+            if flag:
+                old2new_pixel[idx] = self.__old2new_pixel[idx]
+            else:
+                old2new_pixel[idx] = -1
+        return old2new_pixel
+
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
         hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
@@ -238,16 +272,6 @@ class ProcessTimeSamples(object):
 
         hit_counts[~hit_counts.mask] = hit_counts_newidx
         return hit_counts
-
-    @property
-    def old2new_pixel(self):
-        old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
-        for idx, flag in enumerate(self.pixel_flag):
-            if flag:
-                old2new_pixel[idx] = self.__old2new_pixel[idx]
-            else:
-                old2new_pixel[idx] = -1
-        return old2new_pixel
 
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)

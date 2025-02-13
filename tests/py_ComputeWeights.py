@@ -27,7 +27,7 @@ def computeweights_pol_I(
 
     new_npix = len(observed_pixels)
 
-    observed_pixels = observed_pixels.astype(dtype=pointings.dtype)
+    observed_pixels = observed_pixels.astype(dtype=pointings.dtype, copy=False)
     old2new_pixel = np.zeros(npix, dtype=pointings.dtype)
     pixel_flag = np.zeros(npix, dtype=bool)
 
@@ -165,7 +165,7 @@ def get_pix_mask_pol(
     observed_pixels = np.intersect1d(count_mask, determinant_mask)
     new_npix = len(observed_pixels)
 
-    observed_pixels = observed_pixels.astype(dtype=dtype_int)
+    observed_pixels = observed_pixels.astype(dtype=dtype_int, copy=False)
     old2new_pixel = np.zeros(npix, dtype=dtype_int)
     pixel_flag = np.zeros(npix, dtype=bool)
 

@@ -10,7 +10,7 @@ brahmap.Initialize()
 
 litebird_sim = pytest.importorskip(
     modname="litebird_sim",
-    # minversion="0.12.0",
+    minversion="0.13.0",
     reason="Couldn't import `litebird_sim` module",
 )
 import litebird_sim as lbs  # noqa: E402
@@ -107,7 +107,7 @@ class lbsim_simulation:
             n_blocks_det=n_block_det,
             n_blocks_time=n_block_time,
             split_list_over_processes=False,
-            dtype_tod=self.dtype_float,
+            tod_dtype=self.dtype_float,
         )
 
         ### Ideal half-wave plate
@@ -118,7 +118,8 @@ class lbsim_simulation:
         )
 
         ### Compute pointings
-        self.sim.compute_pointings()
+        self.sim.prepare_pointings()
+        self.sim.precompute_pointings(pointings_dtype=self.dtype_float)
 
         ### Random maps
         np.random.seed(map_seed)
@@ -146,7 +147,7 @@ class TestLBSimGLS:
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
-            obs.tod = np.zeros_like(obs.tod)
+            obs.tod = np.zeros(obs.tod.shape, dtype=lbsim_obj.dtype_float)
 
         ### Scanning the sky
         lbs.scan_map_in_observations(
@@ -168,18 +169,21 @@ class TestLBSimGLS:
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps_from_obs(
+        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
-            obs=lbsim_obj.sim.observations,
+            observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
-            LBSimGLSParameters=GLSparams,
+            LBSim_gls_parameters=GLSparams,
         )
 
         np.testing.assert_equal(GLSresults.convergence_status, True)
         np.testing.assert_equal(GLSresults.num_iterations, 1)
 
         input_map = np.ma.masked_array(
-            lbsim_obj.input_map[0], GLSresults.GLS_maps.mask, fill_value=hp.UNSEEN
+            lbsim_obj.input_map[0],
+            GLSresults.GLS_maps.mask,
+            fill_value=hp.UNSEEN,
+            dtype=lbsim_obj.dtype_float,
         )
 
         np.testing.assert_allclose(GLSresults.GLS_maps[0], input_map, rtol)
@@ -189,7 +193,7 @@ class TestLBSimGLS:
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
-            obs.tod = np.zeros_like(obs.tod)
+            obs.tod = np.zeros(obs.tod.shape, lbsim_obj.dtype_float)
 
         ### Scanning the sky
         lbs.scan_map_in_observations(
@@ -211,11 +215,11 @@ class TestLBSimGLS:
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps_from_obs(
+        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
-            obs=lbsim_obj.sim.observations,
+            observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
-            LBSimGLSParameters=GLSparams,
+            LBSim_gls_parameters=GLSparams,
         )
 
         np.testing.assert_equal(GLSresults.convergence_status, True)
@@ -232,7 +236,7 @@ class TestLBSimGLS:
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
-            obs.tod = np.zeros_like(obs.tod)
+            obs.tod = np.zeros(obs.tod.shape, lbsim_obj.dtype_float)
 
         ### Scanning the sky
         lbs.scan_map_in_observations(
@@ -247,11 +251,11 @@ class TestLBSimGLS:
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps_from_obs(
+        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
-            obs=lbsim_obj.sim.observations,
+            observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
-            LBSimGLSParameters=GLSparams,
+            LBSim_gls_parameters=GLSparams,
         )
 
         np.testing.assert_equal(GLSresults.convergence_status, True)

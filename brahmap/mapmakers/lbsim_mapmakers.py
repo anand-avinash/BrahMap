@@ -1,16 +1,25 @@
 import numpy as np
+import warnings
 from dataclasses import dataclass, asdict
 import healpy as hp
 import litebird_sim as lbs
 from typing import List, Union
 
+from brahmap.utilities import LowerTypeCastWarning
+
 from brahmap.linop import DiagonalOperator
 
-from brahmap.mapmakers import GLSParameters, GLSResult, compute_GLS_maps
+from brahmap.mapmakers import (
+    GLSParameters,
+    GLSResult,
+    compute_GLS_maps_from_PTS,
+)
 
 from brahmap.interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
 
-from brahmap.utilities import ProcessTimeSamples
+from brahmap.utilities import ProcessTimeSamples, SolverType
+
+import brahmap
 
 
 @dataclass
@@ -22,7 +31,7 @@ class LBSimGLSParameters(GLSParameters):
 @dataclass
 class LBSimGLSResult(GLSResult):
     nside: int
-    coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic
+    coordinate_system: lbs.CoordinateSystem
 
 
 class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
@@ -87,102 +96,169 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
         super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(diag=diagonal, dtype=dtype)
 
 
-def LBSim_compute_GLS_maps_from_obs(
-    nside: int,
-    obs: Union[lbs.Observation, List[lbs.Observation]],
-    inv_noise_cov_diagonal: Union[
-        LBSim_InvNoiseCovLO_UnCorr, InvNoiseCovLO_Uncorrelated, None
-    ] = None,
-    threshold: float = 1.0e-5,
-    dtype_float=None,
-    LBSimGLSParameters: LBSimGLSParameters = LBSimGLSParameters(),
-    component: str = "tod",
-) -> Union[LBSimGLSResult, tuple[ProcessTimeSamples, LBSimGLSResult]]:
-    if isinstance(obs, lbs.Observation):
-        obs_list = [obs]
-    else:
-        obs_list = obs
+class LBSimProcessTimeSamples(ProcessTimeSamples):
+    def __init__(
+        self,
+        nside: int,
+        observations: Union[lbs.Observation, List[lbs.Observation]],
+        pointings_flag: Union[np.ndarray, None] = None,
+        solver_type: SolverType = SolverType.IQU,
+        noise_weights: Union[np.ndarray, None] = None,
+        output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
+        threshold: float = 1.0e-5,
+        dtype_float=np.float64,
+    ):
+        if brahmap.bMPI is None:
+            brahmap.Initialize()
 
-    pointings = np.concatenate([obs.pointings for obs in obs_list]).reshape((-1, 2))
-    pol_angles = np.concatenate(
-        [obs.psi for obs in obs_list], axis=None
-    )  # `axis=None` returns flattened arrays
-    tod = np.concatenate([getattr(obs, component) for obs in obs_list], axis=None)
-    if hasattr(obs_list[0], "pointings_flag"):
-        pointings_flag = np.concatenate(
-            [getattr(obs, "pointings_flag") for obs in obs_list], axis=None
+        self.__nside = nside
+        npix = hp.nside2npix(self.nside)
+
+        if isinstance(observations, lbs.Observation):
+            self.__obs_list = [observations]
+        else:
+            self.__obs_list = observations
+
+        pix_indices = np.empty(
+            (
+                len(self.obs_list),
+                self.obs_list[0].n_detectors * self.obs_list[0].n_samples,
+            ),
+            dtype=int,
         )
-    else:
-        pointings_flag = None
+        pol_angles = np.empty(
+            (
+                len(self.obs_list),
+                self.obs_list[0].n_detectors * self.obs_list[0].n_samples,
+            ),
+            dtype=dtype_float,
+        )
 
-    lbsim_gls_result = LBSim_compute_GLS_maps(
-        nside=nside,
-        pointings=pointings,
-        tod=tod,
-        pointings_flag=pointings_flag,
-        pol_angles=pol_angles,
-        inv_noise_cov_operator=inv_noise_cov_diagonal,
-        threshold=threshold,
-        dtype_float=dtype_float,
-        update_pointings_inplace=True,
-        LBSimGLSParameters=LBSimGLSParameters,
-    )
+        for obs_idx, obs in enumerate(self.obs_list):
+            if hasattr(obs, "pointing_matrix"):
+                cur_pointings = obs.pointing_matrix
+                hwp_angle = getattr(obs, "hwp_angle", None)
 
-    if LBSimGLSParameters.return_processed_samples is True:
-        processed_samples, lbsim_gls_result = lbsim_gls_result
-        return processed_samples, lbsim_gls_result
-    else:
-        return lbsim_gls_result
+                if not np.can_cast(obs.pointing_matrix.dtype, dtype_float):
+                    warnings.warn(
+                        f"`obs.pointing_matrix` has been casted from higher dtype to lower one. You might want to call `LBSimProcessTimeSamples` with `dtype_float={obs.pointing_matrix.dtype}`",
+                        LowerTypeCastWarning,
+                    )
+
+                if hwp_angle is not None and not np.can_cast(
+                    hwp_angle.dtype, dtype_float
+                ):
+                    warnings.warn(
+                        f"`obs.hwp_angle` has been casted from higher dtype to lower one. You might want to call `LBSimProcessTimeSamples` with `dtype_float={hwp_angle.dtype}`",
+                        LowerTypeCastWarning,
+                    )
+
+            else:
+                cur_pointings, hwp_angle = obs.get_pointings(
+                    pointings_dtype=dtype_float
+                )
+
+            # cur_pointings.shape = (-1, 3)
+
+            if hwp_angle is None:
+                hwp_angle_buf = 0.0
+            else:
+                hwp_angle_buf = np.broadcast_to(
+                    2.0 * hwp_angle, (obs.n_detectors, hwp_angle.shape[0])
+                )
+
+            self.__coordinate_system = output_coordinate_system
+            if self.coordinate_system == lbs.CoordinateSystem.Galactic:
+                cur_pointings = lbs.coordinates.rotate_coordinates_e2g(
+                    cur_pointings.reshape((-1, 3))
+                )
+
+            pol_angles[obs_idx] = cur_pointings[:, 2] + hwp_angle_buf.reshape(-1)
+            pix_indices[obs_idx] = hp.ang2pix(
+                nside, cur_pointings[:, 0], cur_pointings[:, 1]
+            )
+
+        del cur_pointings, hwp_angle
+
+        pix_indices = np.concatenate(pix_indices, axis=None)
+        pol_angles = np.concatenate(pol_angles, axis=None)
+
+        super().__init__(
+            npix=npix,
+            pointings=pix_indices,
+            pointings_flag=pointings_flag,
+            solver_type=solver_type,
+            pol_angles=pol_angles,
+            noise_weights=noise_weights,
+            threshold=threshold,
+            dtype_float=dtype_float,
+            update_pointings_inplace=True,
+        )
+
+    @property
+    def obs_list(self):
+        return self.__obs_list
+
+    @property
+    def nside(self):
+        return self.__nside
+
+    @property
+    def coordinate_system(self):
+        return self.__coordinate_system
 
 
 def LBSim_compute_GLS_maps(
     nside: int,
-    pointings: np.ndarray,
-    tod: np.ndarray,
-    pointings_flag: np.ndarray = None,
-    pol_angles: np.ndarray = None,
+    observations: Union[lbs.Observation, List[lbs.Observation]],
+    component: str = "tod",
+    pointings_flag: Union[np.ndarray, None] = None,
     inv_noise_cov_operator: Union[
-        ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
+        ToeplitzLO,
+        BlockLO,
+        DiagonalOperator,
+        LBSim_InvNoiseCovLO_UnCorr,
+        InvNoiseCovLO_Uncorrelated,
+        None,
     ] = None,
     threshold: float = 1.0e-5,
     dtype_float=None,
-    update_pointings_inplace: bool = True,
-    LBSimGLSParameters: LBSimGLSParameters = LBSimGLSParameters(),
-) -> Union[LBSimGLSResult, tuple[ProcessTimeSamples, LBSimGLSResult]]:
-    npix = hp.nside2npix(nside)
+    LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
+) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:
+    if inv_noise_cov_operator is None:
+        noise_weights = None
+    else:
+        noise_weights = inv_noise_cov_operator.diag
 
-    if LBSimGLSParameters.output_coordinate_system == lbs.CoordinateSystem.Galactic:
-        pointings, pol_angles = lbs.coordinates.rotate_coordinates_e2g(
-            pointings_ecl=pointings, pol_angle_ecl=pol_angles
-        )
-
-    pointings = hp.ang2pix(nside, pointings[:, 0], pointings[:, 1])
-
-    temp_result = compute_GLS_maps(
-        npix=npix,
-        pointings=pointings,
-        time_ordered_data=tod,
+    processed_samples = LBSimProcessTimeSamples(
+        nside=nside,
+        observations=observations,
         pointings_flag=pointings_flag,
-        pol_angles=pol_angles,
-        inv_noise_cov_operator=inv_noise_cov_operator,
+        solver_type=LBSim_gls_parameters.solver_type,
+        noise_weights=noise_weights,
+        output_coordinate_system=LBSim_gls_parameters.output_coordinate_system,
         threshold=threshold,
         dtype_float=dtype_float,
-        update_pointings_inplace=update_pointings_inplace,
-        GLSParameters=LBSimGLSParameters,
     )
 
-    if LBSimGLSParameters.return_processed_samples is True:
-        processed_samples, gls_result = temp_result
-    else:
-        gls_result = temp_result
+    time_ordered_data = np.concatenate(
+        [getattr(obs, component) for obs in observations], axis=None
+    )
 
-    lbsim_gls_result = LBSimGLSResult(
+    gls_result = compute_GLS_maps_from_PTS(
+        processed_samples=processed_samples,
+        time_ordered_data=time_ordered_data,
+        inv_noise_cov_operator=inv_noise_cov_operator,
+        gls_parameters=LBSim_gls_parameters,
+    )
+
+    gls_result = LBSimGLSResult(
         nside=nside,
-        coordinate_system=LBSimGLSParameters.output_coordinate_system,
+        coordinate_system=LBSim_gls_parameters.output_coordinate_system,
         **asdict(gls_result),
     )
 
-    if LBSimGLSParameters.return_processed_samples is True:
-        return processed_samples, lbsim_gls_result
+    if LBSim_gls_parameters.return_processed_samples is True:
+        return processed_samples, gls_result
     else:
-        return lbsim_gls_result
+        return gls_result
