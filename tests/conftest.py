@@ -1,5 +1,4 @@
 import pytest
-import brahmap
 
 # Dictionaries to keep track of the results and parameter counts of parametrized test cases
 test_results_status = {}
@@ -95,5 +94,4 @@ def pytest_sessionfinish(session, exitstatus):
     """
     Called after the whole test run finished, right before returning the exit status to the system.
     """
-    brahmap.Initialize()
-    brahmap.bMPI.comm.Barrier()
+    pass

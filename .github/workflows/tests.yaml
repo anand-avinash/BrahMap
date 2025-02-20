@@ -31,7 +31,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install libomp
-          echo "CXX=$(brew --prefix llvm@15)/bin/clang++" >> $GITHUB_ENV
+          echo "CXX=gcc-14" >> $GITHUB_ENV
           echo "CPPFLAGS=\"-I$(brew --prefix llvm@15)/include -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
           echo "LDFLAGS=\"-L$(brew --prefix libomp)/lib -lomp\"" >> $GITHUB_ENV
 

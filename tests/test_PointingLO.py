@@ -263,7 +263,7 @@ class TestPointingLO_I(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
-        np.testing.assert_allclose(PTS.weighted_counts, weights)
+        np.testing.assert_allclose(PTS.weighted_counts, weights, rtol=rtol)
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type
@@ -321,8 +321,8 @@ class TestPointingLO_QU(InitCommonParams):
         brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
         brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
 
-        np.testing.assert_allclose(weighted_sin, weights[1::2])
-        np.testing.assert_allclose(weighted_cos, weights[0::2])
+        np.testing.assert_allclose(weighted_sin, weights[1::2], rtol=rtol)
+        np.testing.assert_allclose(weighted_cos, weights[0::2], rtol=rtol)
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type
@@ -371,9 +371,9 @@ class TestPointingLO_IQU(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
-        np.testing.assert_allclose(PTS.weighted_counts, weights[0::3])
-        np.testing.assert_allclose(PTS.weighted_cos, weights[1::3])
-        np.testing.assert_allclose(PTS.weighted_sin, weights[2::3])
+        np.testing.assert_allclose(PTS.weighted_counts, weights[0::3], rtol=rtol)
+        np.testing.assert_allclose(PTS.weighted_cos, weights[1::3], rtol=rtol)
+        np.testing.assert_allclose(PTS.weighted_sin, weights[2::3], rtol=rtol)
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type

@@ -11,7 +11,7 @@ void repixelize_pol_I(                      //
     dfloat *__restrict weighted_counts      //
 ) {
 
-#pragma omp parallel for simd
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
@@ -32,7 +32,7 @@ void repixelize_pol_QU(                     //
     dfloat *__restrict one_over_determinant //
 ) {
 
-#pragma omp parallel for simd
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
@@ -59,7 +59,7 @@ void repixelize_pol_IQU(                    //
     dfloat *__restrict one_over_determinant //
 ) {
 
-#pragma omp parallel for simd
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
