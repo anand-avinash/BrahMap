@@ -40,7 +40,7 @@ jobs:
           ls $(brew --prefix gcc@14)/lib/gcc/current/gcc
 
       - name: Install MPI ${{ matrix.mpi }}
-        if: runner.os == "ubuntu-latest"
+        if: runner.os == 'Linux'
         uses: mpi4py/setup-mpi@v1
         with:
           mpi: ${{ matrix.mpi }}
