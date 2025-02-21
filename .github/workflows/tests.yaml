@@ -37,7 +37,7 @@ jobs:
           echo "CPPFLAGS=\"-I$(brew --prefix gcc@14)/include -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
           echo "LDFLAGS=\"-L$(brew --prefix libomp)/lib -lomp\"" >> $GITHUB_ENV
           brew install ${{ matrix.mpi }}
-          ls $(brew --prefix gcc@14)/lib/gcc/current/gcc
+          ls $(brew --prefix gcc@14)/lib/gcc/current/gcc/aarch64-apple-darwin23
 
       - name: Install MPI ${{ matrix.mpi }}
         if: runner.os == 'Linux'
@@ -55,7 +55,8 @@ jobs:
           mpicxx --version
           python -m pip install --upgrade pip
           if [[ "${{ runner.os }}" == "macOS" ]]; then
-            echo "CXX=$CXX"
+            echo "CC=$(brew --prefix ${{ matrix.mpi }})/bin/mpicc" >> $GITHUB_ENV
+            echo "CXX=$(brew --prefix ${{ matrix.mpi }})/bin/mpicxx" >> $GITHUB_ENV
             echo "CPPFLAGS=$CPPFLAGS"
             echo "LDFLAGS=$LDFLAGS"
             MPICXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} LDFLAGS=${{ env.LDFLAGS }} python3 -m pip install -v .
