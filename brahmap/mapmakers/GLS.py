@@ -1,5 +1,7 @@
+import gc
+
 import numpy as np
-import scipy
+
 from dataclasses import dataclass
 from typing import Union, Callable
 
@@ -8,6 +10,8 @@ from brahmap import MPI_RAISE_EXCEPTION
 from brahmap.linop import DiagonalOperator
 
 from brahmap.utilities import ProcessTimeSamples, SolverType, modify_numpy_context
+
+from brahmap.math import cg
 
 from brahmap.interfaces import (
     PointingLO,
@@ -22,7 +26,7 @@ from brahmap.interfaces import (
 class GLSParameters:
     solver_type: SolverType = SolverType.IQU
     use_preconditioner: bool = True
-    preconditioner_threshold: float = 1.0e-5
+    preconditioner_threshold: float = 1.0e-12
     preconditioner_max_iterations: int = 100
     callback_function: Callable = None
     return_processed_samples: bool = False
@@ -73,9 +77,7 @@ def compute_GLS_maps_from_PTS(
         )
     else:
         MPI_RAISE_EXCEPTION(
-            condition=(
-                inv_noise_cov_operator.shape[0] != len(processed_samples.nsamples)
-            ),
+            condition=(inv_noise_cov_operator.shape[0] != processed_samples.nsamples),
             exception=ValueError,
             message=f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = ({inv_noise_cov_operator.shape}, {inv_noise_cov_operator.shape})",
         )
@@ -93,19 +95,19 @@ def compute_GLS_maps_from_PTS(
     num_iterations = 0
     if gls_parameters.use_preconditioner:
 
-        def callback_function(x):
+        def callback_function(x, r, norm_residual):
             nonlocal num_iterations
             num_iterations += 1
             if gls_parameters.callback_function is not None:
-                gls_parameters.callback_function(x)
+                gls_parameters.callback_function(x, r, norm_residual)
 
         A = pointing_operator.T * inv_noise_cov_operator * pointing_operator
 
         with modify_numpy_context():
-            map_vector, pcg_status = scipy.sparse.linalg.cg(
+            map_vector, pcg_status = cg(
                 A=A,
                 b=b,
-                rtol=gls_parameters.preconditioner_threshold,
+                atol=gls_parameters.preconditioner_threshold,
                 maxiter=gls_parameters.preconditioner_max_iterations,
                 M=blockdiagprecond_operator,
                 callback=callback_function,
@@ -213,4 +215,6 @@ def compute_GLS_maps(
     if gls_parameters.return_processed_samples is True:
         return processed_samples, gls_result
     else:
+        del processed_samples
+        gc.collect()
         return gls_result

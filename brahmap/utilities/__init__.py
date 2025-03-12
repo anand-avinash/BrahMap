@@ -18,7 +18,12 @@ from .utilities_functions import (
     system_setup,
 )
 
-from .tools import TypeChangeWarning, LowerTypeCastWarning, modify_numpy_context
+from .tools import (
+    TypeChangeWarning,
+    LowerTypeCastWarning,
+    parallel_norm,
+    modify_numpy_context,
+)
 
 from .process_time_samples import ProcessTimeSamples, SolverType
 
@@ -40,5 +45,6 @@ __all__ = [
     "SolverType",
     "TypeChangeWarning",
     "LowerTypeCastWarning",
+    "parallel_norm",
     "modify_numpy_context",
 ]

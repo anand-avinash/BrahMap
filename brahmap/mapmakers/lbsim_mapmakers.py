@@ -1,3 +1,4 @@
+import gc
 import numpy as np
 import warnings
 from dataclasses import dataclass, asdict
@@ -265,4 +266,6 @@ def LBSim_compute_GLS_maps(
     if LBSim_gls_parameters.return_processed_samples is True:
         return processed_samples, gls_result
     else:
+        del processed_samples
+        gc.collect()
         return gls_result

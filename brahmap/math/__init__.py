@@ -13,6 +13,8 @@ from .unary_functions import (
     cbrt,
 )
 
+from .solvers import cg
+
 __all__ = [
     "sin",
     "cos",
@@ -26,4 +28,5 @@ __all__ = [
     "log2",
     "sqrt",
     "cbrt",
+    "cg",
 ]
