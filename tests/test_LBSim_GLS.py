@@ -6,8 +6,6 @@ import healpy as hp
 
 import brahmap
 
-brahmap.Initialize()
-
 litebird_sim = pytest.importorskip(
     modname="litebird_sim",
     minversion="0.13.0",
@@ -111,11 +109,14 @@ class lbsim_simulation:
         )
 
         ### Ideal half-wave plate
-        self.sim.set_hwp(
-            lbs.IdealHWP(
-                self.sim.instrument.hwp_rpm * 2 * np.pi / 60,
-            ),  # applies hwp rotation angle to the polarization angle
-        )
+        # self.sim.set_hwp(
+        #     lbs.IdealHWP(
+        #         self.sim.instrument.hwp_rpm * 2 * np.pi / 60,
+        #     ),  # applies hwp rotation angle to the polarization angle
+        # )
+
+        # Grid communicator object
+        self.MPI_COMM_GRID = lbs.MPI_COMM_GRID
 
         ### Compute pointings
         self.sim.prepare_pointings()
@@ -143,7 +144,7 @@ sim_float64 = lbsim_simulation(16, np.float64)
 )
 class TestLBSimGLS:
     def test_LBSim_compute_GLS_maps_I(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.comm)
+        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -189,7 +190,7 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps[0], input_map, rtol)
 
     def test_LBSim_compute_GLS_maps_QU(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.comm)
+        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -232,7 +233,7 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol)
 
     def test_LBSim_compute_GLS_maps_IQU(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.comm)
+        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:

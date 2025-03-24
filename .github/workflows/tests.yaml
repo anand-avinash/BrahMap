@@ -61,7 +61,7 @@ jobs:
             echo "MPICXX=$(brew --prefix ${{ matrix.mpi }})/bin/mpicxx" >> $GITHUB_ENV
             echo "CPPFLAGS=$CPPFLAGS"
             echo "LDFLAGS=$LDFLAGS"
-            MPICXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} LDFLAGS=${{ env.LDFLAGS }} python3 -m pip install -v .
+            MPILD=mpicxx MPICC=mpicc MPICXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} LDFLAGS=${{ env.LDFLAGS }} python3 -m pip install -v .
           else
             python3 -m pip install -v .
           fi

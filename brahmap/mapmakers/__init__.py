@@ -1,4 +1,10 @@
-from .GLS import GLSParameters, GLSResult, compute_GLS_maps_from_PTS, compute_GLS_maps
+from .GLS import (
+    GLSParameters,
+    GLSResult,
+    separate_map_vectors,
+    compute_GLS_maps_from_PTS,
+    compute_GLS_maps,
+)
 
 from importlib.util import find_spec
 
@@ -25,6 +31,7 @@ else:
 __all__ = __all__ + [
     "GLSParameters",
     "GLSResult",
+    "separate_map_vectors",
     "compute_GLS_maps_from_PTS",
     "compute_GLS_maps",
 ]

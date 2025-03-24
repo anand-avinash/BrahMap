@@ -26,7 +26,7 @@ class ProcessTimeSamples(object):
     Parameters
     ----------
         npix : int
-            Number of pixels on which the map-making has to be done
+            Number of pixels on which the map-making has to be done. Equal to `healpy.nside2npix(nside)` for a healpix map of given `nside`
         pointings : np.ndarray
             A 1-d array of pointing indices
         pointings_flag : np.ndarray
@@ -42,7 +42,7 @@ class ProcessTimeSamples(object):
         dtype_float : boh
             `dtype` of the floating point arrays
         update_pointings_inplace : bool
-            The class does some operations on the pointings array. Do you want to make it in-place? It saves memory
+            The class does some operations on the pointings array. Do you want to make these operations happen in-place? If yes, you will save a lot of memory. Not recommended if you are willing to use pointing arrays somewhere after doing map-making.
 
 
     Attributes
@@ -66,11 +66,13 @@ class ProcessTimeSamples(object):
         dtype_float : boh
             `dtype` of the floating point arrays
         observed_pixels : np.ndarray
-            pixel indices that are considered for map-making
+            Pixel indices that are considered for map-making
         pixel_flag : np.ndarray
             A 1-d array of size `npix`. `True` indicates that the corresponding pixel index will be dropped in map-making
+        bad_pixels : np.ndarray
+            A 1-d array that contains all the pixel indices that will be excluded in map-making
         weighted_counts : np.ndarray
-            weighted counts
+            Weighted counts
         sin2phi : np.ndarray
             A 1-d array of `sin(2\phi)`
         cos2phi : np.ndarray
@@ -86,7 +88,7 @@ class ProcessTimeSamples(object):
         weighted_sincos : np.ndarray
             Weighted `sin.cos`
         one_over_determinant : np.ndarray
-            inverse of determinant for each valid pixels
+            Inverse of determinant for each valid pixels
         new_npix : int
             The number of pixels actually being used in map-making. Equal to `len(observed_pixels)`
 
@@ -102,7 +104,7 @@ class ProcessTimeSamples(object):
         noise_weights: Union[np.ndarray, None] = None,
         threshold: float = 1.0e-5,
         dtype_float=None,
-        update_pointings_inplace: bool = True,
+        update_pointings_inplace: bool = False,
     ):
         if brahmap.bMPI is None:
             Initialize()
@@ -255,6 +257,10 @@ class ProcessTimeSamples(object):
             else:
                 old2new_pixel[idx] = -1
         return old2new_pixel
+
+    @property
+    def bad_pixels(self):
+        return np.nonzero(~self.pixel_flag)[0]
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""

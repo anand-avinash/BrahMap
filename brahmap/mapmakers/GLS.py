@@ -9,7 +9,7 @@ from brahmap import MPI_RAISE_EXCEPTION
 
 from brahmap.linop import DiagonalOperator
 
-from brahmap.utilities import ProcessTimeSamples, SolverType, modify_numpy_context
+from brahmap.utilities import ProcessTimeSamples, SolverType
 
 from brahmap.math import cg
 
@@ -43,6 +43,37 @@ class GLSResult:
     convergence_status: bool
     num_iterations: int
     GLSParameters: GLSParameters
+
+
+def separate_map_vectors(
+    map_vector: np.ndarray, processed_samples: ProcessTimeSamples
+) -> np.ndarray:
+    try:
+        map_vector = np.reshape(
+            map_vector,
+            shape=(processed_samples.solver_type, processed_samples.new_npix),
+            order="F",
+        )
+    except TypeError:
+        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should be removed once the support is dropped for lower version
+        map_vector = np.reshape(
+            map_vector,
+            newshape=(processed_samples.solver_type, processed_samples.new_npix),
+            order="F",
+        )
+
+    output_maps = np.ma.MaskedArray(
+        data=np.empty(processed_samples.npix, dtype=processed_samples.dtype_float),
+        mask=~processed_samples.pixel_flag,
+        fill_value=-1.6375e30,
+    )
+
+    output_maps = np.tile(A=output_maps, reps=(processed_samples.solver_type, 1))
+
+    for idx in range(processed_samples.solver_type):
+        output_maps[idx][~output_maps[idx].mask] = map_vector[idx]
+
+    return output_maps
 
 
 def compute_GLS_maps_from_PTS(
@@ -103,43 +134,21 @@ def compute_GLS_maps_from_PTS(
 
         A = pointing_operator.T * inv_noise_cov_operator * pointing_operator
 
-        with modify_numpy_context():
-            map_vector, pcg_status = cg(
-                A=A,
-                b=b,
-                atol=gls_parameters.preconditioner_threshold,
-                maxiter=gls_parameters.preconditioner_max_iterations,
-                M=blockdiagprecond_operator,
-                callback=callback_function,
-            )
+        map_vector, pcg_status = cg(
+            A=A,
+            b=b,
+            atol=gls_parameters.preconditioner_threshold,
+            maxiter=gls_parameters.preconditioner_max_iterations,
+            M=blockdiagprecond_operator,
+            callback=callback_function,
+        )
     else:
         pcg_status = 0
         map_vector = blockdiagprecond_operator * b
 
-    try:
-        map_vector = np.reshape(
-            map_vector,
-            shape=(processed_samples.solver_type, processed_samples.new_npix),
-            order="F",
-        )
-    except TypeError:
-        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should be removed once the support is dropped for lower version
-        map_vector = np.reshape(
-            map_vector,
-            newshape=(processed_samples.solver_type, processed_samples.new_npix),
-            order="F",
-        )
-
-    output_maps = np.ma.MaskedArray(
-        data=np.empty(processed_samples.npix, dtype=processed_samples.dtype_float),
-        mask=~processed_samples.pixel_flag,
-        fill_value=-1.6375e30,
+    output_maps = separate_map_vectors(
+        map_vector=map_vector, processed_samples=processed_samples
     )
-
-    output_maps = np.tile(A=output_maps, reps=(processed_samples.solver_type, 1))
-
-    for idx in range(processed_samples.solver_type):
-        output_maps[idx][~output_maps[idx].mask] = map_vector[idx]
 
     if gls_parameters.return_hit_map is True:
         hit_map = processed_samples.get_hit_counts()

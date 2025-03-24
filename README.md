@@ -9,28 +9,44 @@
 <font color="red"> **This project is currently under active development!!!** </font>
 <!-- markdownlint-enable MD033 -->
 
-`BrahMap` is an optimal map-making framework for the future CMB experiments,
-based on [COSMOMAP2](https://github.com/giuspugl/COSMOMAP2), as described in
-[*Puglisi et al (2018)*](https://doi.org/10.1051/0004-6361/201832710).
+`BrahMap` is a scalable and modular map-making framework for the CMB
+experiments. It features user-friendly Python interface for the linear
+operators used in map-making. The Python interface simply handles the workflow
+while delegating the heavy computations to the functions implemented in C++
+extension. In addition to the interface for linear operators, `BrahMap` offers
+a wrapper for Generalized Least Squares (GLS) map-making using the
+Preconditioned Conjugate Gradient (PCG) solver. `BrahMap` is also integrated
+with `litebird_sim` through dedicated wrappers.
 
-`BrahMap` is written Python with C++ extension handling the heavy computation.
-It implements GLS map-making with PCG solver, taking into account the
-block-band diagonal noise correlation matrix. This implementation offers
-solvers of I, QU, and IQU maps.
+For a quick introduction to map-making with BrahMap, refer to the
+[quick start guide](https://anand-avinash.github.io/BrahMap/quick_start/).
+For a complete reference of the `BrahMap` API, refer to the
+[API reference](https://anand-avinash.github.io/BrahMap/api_references/).
 
-Go to the [quick start guide](quick_start.md) for a quick introduction to
-map-making with `BrahMap`. Refer to the [API reference](api_references.md)
-for a completer reference to `BrahMap` API.
+You can find detailed information on the implementation and features of
+`BrahMap` at [arXiv:2501.16122](https://arxiv.org/abs/2501.16122).
 
 ## Installation
 
-`BrahMap` can be installed with the following steps:
+The versions of the dependencies for `BrahMap` are quite flexible. If you
+intend to use `BrahMap` alongside other packages (like `litebird_sim`), we
+recommend installing `BrahMap` after you have installed those packages in the
+same environment.
+
+`BrahMap` requires an MPI library to compile the C++ extensions. By default,
+it uses the `mpicxx` compiler wrapper for this task. However, you can override
+this default by setting the `MPICXX` environment variable to your preferred
+compiler. To install `BrahMap`, please follow these steps:
 
 ```shell
 # Clone the repository
 git clone --recursive https://github.com/anand-avinash/BrahMap.git
 
+# Enter the directory
 cd BrahMap
+
+# Set the compiler you want to use (optional)
+export MPICXX=mpiicpc
 
 # Install the package
 pip install .
@@ -41,15 +57,35 @@ pip install -e .
 pre-commit install
 ```
 
-### Notes
+> [!NOTE]
+> `BrahMap` uses [Setuptools](https://setuptools.pypa.io/en/latest/index.html)
+> to build the C++ extensions. By default, it generates the compilation command
+> by gathering various environment variables. You can customize the compilation
+> flags used during the installation by setting the `CXXFLAGS`, `CPPFLAGS`,
+> and `LDFLAGS` environment variables.
 
-`BrahMap` uses [Setuptools](https://setuptools.pypa.io/en/latest/index.html)
-to build the C++ extensions. By default, it creates the command for compilation
-by collecting
-[several environment variables](https://setuptools.pypa.io/en/latest/index.html).
-To change the compiler for the building the C++ extension, supply the
-compiler name via `CC` or `CXX` variables:
+## Citation
 
-```shell
-CC=clang++ pip install .
+This work can be cited with:
+
+<!-- markdownlint-disable MD013 -->
+```text
+@misc{anand2025brahmap,
+      title={\texttt{BrahMap}: A scalable and modular map-making framework for the CMB experiments}, 
+      author={Avinash Anand and Giuseppe Puglisi},
+      year={2025},
+      eprint={2501.16122},
+      archivePrefix={arXiv},
+      primaryClass={astro-ph.CO},
+      url={https://arxiv.org/abs/2501.16122}, 
+}
 ```
+<!-- markdownlint-enable MD013 -->
+
+## Acknowledgement
+
+This work is supported by Italian Research Center on High
+Performance Computing, Big Data and Quantum Computing
+(ICSC), project funded by European Union - NextGenerationEU - and National
+Recovery and Resilience Plan (NRRP) - Mission 4 Component 2 within the
+activities of Spoke 3 (Astrophysics and Cosmos Observations).
