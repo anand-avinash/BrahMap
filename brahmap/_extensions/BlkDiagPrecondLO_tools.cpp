@@ -1,8 +1,12 @@
 #include <functional>
-#include <omp.h>
+#include <vector>
+
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-#include <vector>
+
+#ifndef _DISABLE_OMP
+#include <omp.h>
+#endif
 
 namespace py = pybind11;
 

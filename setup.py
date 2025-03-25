@@ -38,10 +38,19 @@ linker_so_args = ["-pthread", "-shared"]
 ######################################
 
 # OpenMP compilation flags
-openmp_flags = ["-qopenmp", "-fopenmp", "-Xpreprocessor -fopenmp"]
+openmp_flags = [
+    "-qopenmp",
+    "-fopenmp",
+    "-D_DISABLE_OMP",  # If none of the valid flags work, then disable OpenMP
+]
 
 # Performance tuning flags
-performance_flags = ["-march=native", "-mtune=native", "-mcpu=native", ""]
+performance_flags = [
+    "-march=native",
+    "-mtune=native",
+    "-mcpu=native",
+    "",  # If none of the valid flags work, then use empty string
+]
 
 
 ##################
@@ -124,6 +133,9 @@ class brahmap_build_ext(build_ext):
         ldflags = []
         if "LDFLAGS" in os.environ:
             ldflags.append(os.environ["LDFLAGS"])
+
+        if "BRAHMAP_DISABLE_OMP" in os.environ:
+            cxxflags.append("-D_DISABLE_OMP")
 
         return MPICXX, cxxflags, cppflags, ldflags
 
