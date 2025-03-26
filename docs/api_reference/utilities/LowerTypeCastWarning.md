@@ -1,0 +1,3 @@
+# `LowerTypeCastWarning`
+
+::: brahmap.utilities.LowerTypeCastWarning

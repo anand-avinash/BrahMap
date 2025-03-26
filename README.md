@@ -22,6 +22,8 @@ For a quick introduction to map-making with BrahMap, refer to the
 [quick start guide](https://anand-avinash.github.io/BrahMap/quick_start/).
 For a complete reference of the `BrahMap` API, refer to the
 [API reference](https://anand-avinash.github.io/BrahMap/api_references/).
+Complete example notebooks and scripts can be
+[found here](./examples).
 
 You can find detailed information on the implementation and features of
 `BrahMap` at [arXiv:2501.16122](https://arxiv.org/abs/2501.16122).

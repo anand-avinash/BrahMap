@@ -17,7 +17,7 @@ site_url: https://anand-avinash.github.io/BrahMap/
 
 site_author: Avinash Anand, Giuseppe Puglisi
 site_description: >-
-  An optimal map-making package for LiteBIRD
+  BrahMap: A scalable and modular map-making framework for the CMB experiments
 
 # Repository
 repo_name: anand-avinash/BrahMap
@@ -25,25 +25,27 @@ repo_url: https://github.com/anand-avinash/BrahMap
 edit_uri: edit/main/docs/
 
 # Copyright
-copyright: Copyright &copy; 2024 Avinash Anand, Giuseppe Puglisi
+copyright: Copyright &copy; 2024-present | Avinash Anand, Giuseppe Puglisi
 
 theme:
   name: "material"
   icon:
     repo: fontawesome/brands/github
   features:
+    - content.action.view # view source of this page
+    - content.action.edit # edit source of this page, related to `edit_uri`
     - content.code.copy
+    - content.code.select
     - search.suggest # search suggestion
     - search.highlight # highlight the search terms
     - navigation.top
     - navigation.tabs
     - navigation.expand
     - navigation.footer
+    - navigation.indexes
     - navigation.path
     - navigation.top # Back to top button
     - toc.follow
-    - content.action.view # view source of this page
-    - content.action.edit # edit source of this page, related to `edit_uri`
     # - navigation.sections
     # - navigation.tracking # to track the address of the page with the active anchor
     # - header.autohide
@@ -83,6 +85,9 @@ markdown_extensions:
   ### TOC permalink
   - toc:
       permalink: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 ### Matjax support
 extra_javascript:
@@ -93,20 +98,65 @@ extra_javascript:
 
 plugins:
   ### Enable docstring parsing
-  - mkdocstrings
-      # handlers:
-      #   python:
-      #     options:
-      #       docstring_style: google
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
   - search # Enable search
 
 ### Page tree
 nav:
-  - Home: index.md
-  - Quick start: quick_start.md
-  - API References:
-    - api_references.md
+  - Overview:
+    - index.md
+    - Installation: overview/installation.md
+    - Roadmap: overview/roadmap.md
+    - License: overview/license.md
+    - What is in the name?: overview/name.md
+  
+  - Quick Start: 
+    - quick_start/index.md
+  
+  - User Guide:
+    - user_guide/index.md
+  
+  - API Reference:
+    - api_reference/index.md
+
     - Interfaces:
-      - Linear operators: api_ref/interfaces/linearoperators.md
-    - Utilities: api_ref/utilities.md
-    - linop package: api_ref/linop.md
+      - api_reference/interfaces/index.md
+      - PointingLO: api_reference/interfaces/PointingLO.md
+      - InvNoiseCovLO_Uncorrelated: api_reference/interfaces/InvNoiseCovLO_Uncorrelated.md
+      - BlockDiagonalPreconditionerLO: api_reference/interfaces/BlockDiagonalPreconditionerLO.md
+    
+    - Utilities:
+      - api_reference/utilities/index.md
+      - ProcessTimeSamples: api_reference/utilities/ProcessTimeSamples.md
+      - parallel_norm: api_reference/utilities/parallel_norm.md
+      - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
+      - TypeChangeWarning: api_reference/utilities/TypeChangeWarning.md
+      - LowerTypeCastWarning: api_reference/utilities/LowerTypeCastWarning.md
+      
+    - Map-makers:
+      - api_reference/map_makers/index.md
+      - GLSParameters: api_reference/map_makers/GLSParameters.md
+      - compute_GLS_maps_from_PTS: api_reference/map_makers/compute_GLS_maps_from_PTS.md
+      - compute_GLS_maps: api_reference/map_makers/compute_GLS_maps.md
+      - GLSResult: api_reference/map_makers/GLSResult.md
+      - separate_map_vectors: api_reference/map_makers/separate_map_vectors.md
+    
+      - LBSimGLSParameters: api_reference/map_makers/LBSimGLSParameters.md
+      - LBSim_InvNoiseCovLO_UnCorr: api_reference/map_makers/LBSim_InvNoiseCovLO_UnCorr.md
+      - LBSimProcessTimeSamples: api_reference/map_makers/LBSimProcessTimeSamples.md
+      - LBSim_compute_GLS_maps: api_reference/map_makers/LBSim_compute_GLS_maps.md
+      - LBSimGLSResult: api_reference/map_makers/LBSimGLSResult.md
+
+    - Math functions: api_reference/math_functions/index.md
+    - linop package: api_reference/linop/index.md
+    - C++ extensions: api_reference/cpp_extensions/index.md
+  
+  - Development:
+    - development/index.md
+  
+  - Changelog:
+    - changelog/index.md

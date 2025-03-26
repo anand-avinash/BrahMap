@@ -25,72 +25,71 @@ class ProcessTimeSamples(object):
 
     Parameters
     ----------
-        npix : int
-            Number of pixels on which the map-making has to be done. Equal to `healpy.nside2npix(nside)` for a healpix map of given `nside`
-        pointings : np.ndarray
-            A 1-d array of pointing indices
-        pointings_flag : np.ndarray
-            A 1-d array of pointing flags. `True` means good pointing, `False` means bad pointing.
-        solver_type : SolverType
-            Map-making level: I or QU or IQU
-        pol_angles : np.ndarray | None
-            A 1-d array containing the orientation angles of the detectors
-        noise_weights : np.ndarray | None
-            A 1-d array of noise weights, or the diagonal elements of the inverse of noise covariance matrix
-        threshold : float
-            The threshold to be used to flag pixels in the sky
-        dtype_float : boh
-            `dtype` of the floating point arrays
-        update_pointings_inplace : bool
-            The class does some operations on the pointings array. Do you want to make these operations happen in-place? If yes, you will save a lot of memory. Not recommended if you are willing to use pointing arrays somewhere after doing map-making.
-
+    npix : int
+        Number of pixels on which the map-making has to be done. Equal to `healpy.nside2npix(nside)` for a healpix map of given `nside`
+    pointings : np.ndarray
+        A 1-d array of pointing indices
+    pointings_flag : np.ndarray
+        A 1-d array of pointing flags. `True` means good pointing, `False` means bad pointing.
+    solver_type : SolverType
+        Map-making level: I or QU or IQU
+    pol_angles : np.ndarray | None
+        A 1-d array containing the orientation angles of the detectors
+    noise_weights : np.ndarray | None
+        A 1-d array of noise weights, or the diagonal elements of the inverse of noise covariance matrix
+    threshold : float
+        The threshold to be used to flag pixels in the sky
+    dtype_float : boh
+        `dtype` of the floating point arrays
+    update_pointings_inplace : bool
+        The class does some operations on the pointings array. Do you want to make these operations happen in-place? If yes, you will save a lot of memory. Not recommended if you are willing to use pointing arrays somewhere after doing map-making.
 
     Attributes
     ----------
-        npix : int
-            Number of pixels on which the map-making has to be done
-        pointings : np.ndarray
-            A 1-d array of pointing indices
-        pointings_flag : np.ndarray
-            A 1-d array of pointing flags
-        nsamples : int
-            Number of samples on present MPI rank
-        nsamples_global : int
-            Global number of samples
-        solver_type : SolverType
-            Level of map-making: I, QU, or IQU
-        pol_angles : np.ndarray
-            A 1-d array containing the orientation angles of detectors
-        threshold : float
-            Threshold to be used to flag the pixels in the sky
-        dtype_float : boh
-            `dtype` of the floating point arrays
-        observed_pixels : np.ndarray
-            Pixel indices that are considered for map-making
-        pixel_flag : np.ndarray
-            A 1-d array of size `npix`. `True` indicates that the corresponding pixel index will be dropped in map-making
-        bad_pixels : np.ndarray
-            A 1-d array that contains all the pixel indices that will be excluded in map-making
-        weighted_counts : np.ndarray
-            Weighted counts
-        sin2phi : np.ndarray
-            A 1-d array of `sin(2\phi)`
-        cos2phi : np.ndarray
-            A 1-d array of `cos(2\phi)`
-        weighted_sin : np.ndarray
-            Weighted `sin`
-        weighted_cos : np.ndarray
-            Weighted `cos`
-        weighted_sin_sq : np.ndarray
-            Weighted `sin^2`
-        weighted_cos_sq : np.ndarray
-            Weighted `cos^2`
-        weighted_sincos : np.ndarray
-            Weighted `sin.cos`
-        one_over_determinant : np.ndarray
-            Inverse of determinant for each valid pixels
-        new_npix : int
-            The number of pixels actually being used in map-making. Equal to `len(observed_pixels)`
+    npix : int
+        Number of pixels on which the map-making has to be done
+    pointings : np.ndarray
+        A 1-d array of pointing indices
+    pointings_flag : np.ndarray
+        A 1-d array of pointing flags
+    nsamples : int
+        Number of samples on present MPI rank
+    nsamples_global : int
+        Global number of samples
+    solver_type : SolverType
+        Level of map-making: I, QU, or IQU
+    pol_angles : np.ndarray
+        A 1-d array containing the orientation angles of detectors
+    threshold : float
+        Threshold to be used to flag the pixels in the sky
+    dtype_float : boh
+        `dtype` of the floating point arrays
+    observed_pixels : np.ndarray
+        Pixel indices that are considered for map-making
+    pixel_flag : np.ndarray
+        A 1-d array of size `npix`. `True` indicates that the corresponding pixel index will be dropped in map-making
+    bad_pixels : np.ndarray
+        A 1-d array that contains all the pixel indices that will be excluded in map-making
+    weighted_counts : np.ndarray
+        Weighted counts
+    sin2phi : np.ndarray
+        A 1-d array of `sin(2\phi)`
+    cos2phi : np.ndarray
+        A 1-d array of `cos(2\phi)`
+    weighted_sin : np.ndarray
+        Weighted `sin`
+    weighted_cos : np.ndarray
+        Weighted `cos`
+    weighted_sin_sq : np.ndarray
+        Weighted `sin^2`
+    weighted_cos_sq : np.ndarray
+        Weighted `cos^2`
+    weighted_sincos : np.ndarray
+        Weighted `sin.cos`
+    one_over_determinant : np.ndarray
+        Inverse of determinant for each valid pixels
+    new_npix : int
+        The number of pixels actually being used in map-making. Equal to `len(observed_pixels)`
 
     """
 
