@@ -1,39 +1,56 @@
 import os
+
 from mpi4py import MPI
+from mpi4py.MPI import Intracomm
 
 import brahmap
 
 
-def Initialize(communicator=None, raise_exception_per_process: bool = True):
-    if brahmap.bMPI is None:
-        brahmap.bMPI = _MPI(
-            comm=communicator, raise_exception_per_process=raise_exception_per_process
-        )
+class _MPI(object):
+    def __init__(
+        self,
+        comm: Intracomm,
+        raise_exception_per_process: bool,
+    ) -> None:
+        self.update_communicator(comm=comm)
+        self.raise_exception_per_process = raise_exception_per_process
+
+    def update_communicator(self, comm: Intracomm) -> None:
+        self.__comm = comm
+        self.__size = comm.size
+        self.__rank = comm.rank
+
+    @property
+    def comm(self):
+        return self.__comm
+
+    @property
+    def size(self):
+        return self.__size
+
+    @property
+    def rank(self):
+        return self.__rank
+
+    @property
+    def nthreads_per_process(self):
+        if "OMP_NUM_THREADS" in os.environ:
+            value = os.environ.get("OMP_NUM_THREADS")
+        else:
+            value = 1
+        return value
 
 
-def Finalize():
+MPI_UTILS: _MPI = _MPI(comm=MPI.COMM_WORLD, raise_exception_per_process=True)
+
+
+def Finalize() -> None:
     """A function to be called at the end of execution. Once registered with `atexit`, it will be called automatically at the end. The user doesn't need to call this function explicitly."""
     try:
         MPI.Finalize()
     except Exception as e:
-        if brahmap.bMPI.rank == 0:
+        if brahmap.MPI_UTILS.rank == 0:
             print(f"Caught an exception during MPI finalization: {e}")
-
-
-class _MPI(object):
-    def __init__(self, comm, raise_exception_per_process: bool) -> None:
-        if comm is None:
-            self.comm = MPI.COMM_WORLD
-        else:
-            self.comm = comm
-        self.size = self.comm.size
-        self.rank = self.comm.rank
-        self.raise_exception_per_process = raise_exception_per_process
-
-        if "OMP_NUM_THREADS" in os.environ:
-            self.nthreads_per_process = os.environ.get("OMP_NUM_THREADS")
-        else:
-            self.nthreads_per_process = 1
 
 
 def MPI_RAISE_EXCEPTION(
@@ -53,13 +70,13 @@ def MPI_RAISE_EXCEPTION(
         exception: _description_
     """
 
-    if brahmap.bMPI.raise_exception_per_process:
+    if brahmap.MPI_UTILS.raise_exception_per_process:
         if condition is True:
-            error_str = f"Exception raised by MPI rank {brahmap.bMPI.rank}\n"
+            error_str = f"Exception raised by MPI rank {brahmap.MPI_UTILS.rank}\n"
             raise exception(error_str + message)
     else:
-        exception_count = brahmap.bMPI.comm.reduce(condition, MPI.SUM, 0)
+        exception_count = brahmap.MPI_UTILS.comm.reduce(condition, MPI.SUM, 0)
 
-        if exception_count > 0 and brahmap.bMPI.rank == 0:
+        if exception_count > 0 and brahmap.MPI_UTILS.rank == 0:
             error_str = f"Exception raised by {int(exception_count)} MPI process(es)\n"
             raise exception(error_str + message)

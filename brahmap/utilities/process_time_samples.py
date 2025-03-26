@@ -4,13 +4,12 @@ from typing import Union
 from mpi4py import MPI
 
 
-from brahmap.utilities import bash_colors
+from ..utilities import bash_colors
 
-from brahmap._extensions import compute_weights
-from brahmap._extensions import repixelize
+from .._extensions import compute_weights
+from .._extensions import repixelize
 
-from brahmap import Initialize, MPI_RAISE_EXCEPTION
-import brahmap
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
 
 
 class SolverType(IntEnum):
@@ -105,13 +104,10 @@ class ProcessTimeSamples(object):
         dtype_float=None,
         update_pointings_inplace: bool = False,
     ):
-        if brahmap.bMPI is None:
-            Initialize()
-
         self.__npix = npix
         self.__nsamples = len(pointings)
 
-        self.__nsamples_global = brahmap.bMPI.comm.allreduce(self.nsamples, MPI.SUM)
+        self.__nsamples_global = MPI_UTILS.comm.allreduce(self.nsamples, MPI.SUM)
 
         if update_pointings_inplace:
             self.pointings = pointings
@@ -194,7 +190,7 @@ class ProcessTimeSamples(object):
         self._repixelization()
         self._flag_bad_pixel_samples()
 
-        if brahmap.bMPI.rank == 0:
+        if MPI_UTILS.rank == 0:
             bc = bash_colors()
             print(
                 f"\n{bc.header('--' * 13)} {bc.header(bc.bold('ProcessTimeSamples Summary'))} {bc.header('--' * 13)}"
@@ -267,7 +263,7 @@ class ProcessTimeSamples(object):
         for idx in range(self.nsamples):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
+        MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
 
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix),
@@ -295,7 +291,7 @@ class ProcessTimeSamples(object):
                 observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
                 pixel_flag=self.pixel_flag,
-                comm=brahmap.bMPI.comm,
+                comm=MPI_UTILS.comm,
             )
 
         else:
@@ -323,7 +319,7 @@ class ProcessTimeSamples(object):
                     weighted_cos_sq=self.weighted_cos_sq,
                     weighted_sincos=self.weighted_sincos,
                     one_over_determinant=self.one_over_determinant,
-                    comm=brahmap.bMPI.comm,
+                    comm=MPI_UTILS.comm,
                 )
 
             elif self.solver_type == SolverType.IQU:
@@ -346,7 +342,7 @@ class ProcessTimeSamples(object):
                     weighted_sin=self.weighted_sin,
                     weighted_cos=self.weighted_cos,
                     one_over_determinant=self.one_over_determinant,
-                    comm=brahmap.bMPI.comm,
+                    comm=MPI_UTILS.comm,
                 )
 
             self.new_npix = compute_weights.get_pixel_mask_pol(

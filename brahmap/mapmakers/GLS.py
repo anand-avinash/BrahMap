@@ -7,13 +7,13 @@ from typing import Union, Callable
 
 from brahmap import MPI_RAISE_EXCEPTION
 
-from brahmap.linop import DiagonalOperator
+from ..linop import DiagonalOperator
 
-from brahmap.utilities import ProcessTimeSamples, SolverType
+from ..utilities import ProcessTimeSamples, SolverType
 
-from brahmap.math import cg
+from ..math import cg
 
-from brahmap.interfaces import (
+from ..interfaces import (
     PointingLO,
     ToeplitzLO,
     BlockLO,

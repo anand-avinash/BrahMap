@@ -31,20 +31,18 @@ import brahmap
 import py_BlkDiagPrecondLO as bdplo
 import py_ProcessTimeSamples as hpts
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    np.random.seed(6534 + brahmap.bMPI.rank)
+    np.random.seed(6534 + brahmap.MPI_UTILS.rank)
     npix = 128
     nsamples_global = npix * 6
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
     nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
-    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)

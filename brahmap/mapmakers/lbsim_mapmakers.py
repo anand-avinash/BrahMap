@@ -1,26 +1,25 @@
 import gc
-import numpy as np
 import warnings
+from typing import List, Union
 from dataclasses import dataclass, asdict
+
+import numpy as np
 import healpy as hp
 import litebird_sim as lbs
-from typing import List, Union
 
-from brahmap.utilities import LowerTypeCastWarning
+from ..utilities import LowerTypeCastWarning
 
-from brahmap.linop import DiagonalOperator
+from ..linop import DiagonalOperator
 
-from brahmap.mapmakers import (
+from ..mapmakers import (
     GLSParameters,
     GLSResult,
     compute_GLS_maps_from_PTS,
 )
 
-from brahmap.interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
+from ..interfaces import ToeplitzLO, BlockLO, InvNoiseCovLO_Uncorrelated
 
-from brahmap.utilities import ProcessTimeSamples, SolverType
-
-import brahmap
+from ..utilities import ProcessTimeSamples, SolverType
 
 
 @dataclass
@@ -109,9 +108,6 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         threshold: float = 1.0e-5,
         dtype_float=np.float64,
     ):
-        if brahmap.bMPI is None:
-            brahmap.Initialize()
-
         self.__nside = nside
         npix = hp.nside2npix(self.nside)
 

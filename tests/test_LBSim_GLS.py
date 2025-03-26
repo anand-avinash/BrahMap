@@ -144,7 +144,7 @@ sim_float64 = lbsim_simulation(16, np.float64)
 )
 class TestLBSimGLS:
     def test_LBSim_compute_GLS_maps_I(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
+        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -190,7 +190,7 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps[0], input_map, rtol)
 
     def test_LBSim_compute_GLS_maps_QU(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
+        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -233,7 +233,7 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol)
 
     def test_LBSim_compute_GLS_maps_IQU(self, lbsim_obj, rtol):
-        brahmap.Initialize(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
+        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:

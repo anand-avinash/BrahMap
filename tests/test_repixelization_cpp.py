@@ -25,20 +25,18 @@ from brahmap._extensions import repixelize
 import py_ComputeWeights as cw
 import py_Repixelization as rp
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    np.random.seed(1234 + brahmap.bMPI.rank)
+    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
     npix = 128
     nsamples_global = npix * 6
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
     nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
-    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
@@ -116,7 +114,7 @@ class TestRepixelization(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             initfloat.dtype,
-            comm=brahmap.bMPI.comm,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -148,7 +146,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            comm=brahmap.bMPI.comm,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -225,7 +223,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            comm=brahmap.bMPI.comm,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -325,7 +323,7 @@ class TestFlagBadPixelSamples(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
-            comm=brahmap.bMPI.comm,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         __, __, old2new_pixel, pixel_flag = cw.get_pix_mask_pol(

@@ -24,15 +24,13 @@ from brahmap.interfaces import InvNoiseCovLO_Uncorrelated
 
 import brahmap
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    np.random.seed(12343 + brahmap.bMPI.rank)
+    np.random.seed(12343 + brahmap.MPI_UTILS.rank)
     nsamples_global = 1280
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
 
 class InitFloat32Params(InitCommonParams):

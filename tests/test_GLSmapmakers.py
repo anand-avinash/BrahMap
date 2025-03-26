@@ -21,11 +21,9 @@ import numpy as np
 
 import brahmap
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    rng = np.random.default_rng(seed=[123345, brahmap.bMPI.rank])
+    rng = np.random.default_rng(seed=[123345, brahmap.MPI_UTILS.rank])
 
     # random seed to generate common random map on all the processes
     rand_map_seed = 6454
@@ -33,12 +31,12 @@ class InitCommonParams:
     npix = 128
     nsamples_global = npix * 6
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
     nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
-    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = rng.integers(low=0, high=nsamples, size=nbad_pixels)
@@ -49,7 +47,7 @@ class InitIntegerParams(InitCommonParams):
     def __init__(self, dtype_int) -> None:
         super().__init__()
 
-        self.int_rng = np.random.default_rng(seed=[1234345, brahmap.bMPI.rank])
+        self.int_rng = np.random.default_rng(seed=[1234345, brahmap.MPI_UTILS.rank])
         self.dtype = dtype_int
         self.pointings = self.int_rng.integers(
             low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
@@ -60,7 +58,7 @@ class InitFloatParams(InitCommonParams):
     def __init__(self, dtype_float) -> None:
         super().__init__()
 
-        self.float_rng = np.random.default_rng(seed=[1237345, brahmap.bMPI.rank])
+        self.float_rng = np.random.default_rng(seed=[1237345, brahmap.MPI_UTILS.rank])
 
         self.dtype = dtype_float
         self.pol_angles = self.float_rng.uniform(

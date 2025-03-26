@@ -34,20 +34,18 @@ import py_PointingLO as hplo
 
 from mpi4py import MPI
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    np.random.seed(54321 + brahmap.bMPI.rank)
+    np.random.seed(54321 + brahmap.MPI_UTILS.rank)
     npix = 128
     nsamples_global = npix * 6
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
     nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
-    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
@@ -318,8 +316,8 @@ class TestPointingLO_QU(InitCommonParams):
                 weighted_sin[pixel] += PTS.sin2phi[idx] * initfloat.noise_weights[idx]
                 weighted_cos[pixel] += PTS.cos2phi[idx] * initfloat.noise_weights[idx]
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
 
         np.testing.assert_allclose(weighted_sin, weights[1::2], rtol=rtol)
         np.testing.assert_allclose(weighted_cos, weights[0::2], rtol=rtol)

@@ -3,11 +3,9 @@ import numpy as np
 import brahmap
 from brahmap import math
 
-brahmap.Initialize()
-
 
 class InitParams:
-    rng = np.random.default_rng(seed=[3234, brahmap.bMPI.rank])
+    rng = np.random.default_rng(seed=[3234, brahmap.MPI_UTILS.rank])
 
     size = 128
     input_vec_f32 = rng.uniform(low=-1.0, high=1.0, size=size).astype(dtype=np.float32)

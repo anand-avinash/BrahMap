@@ -29,20 +29,18 @@ import py_ProcessTimeSamples as hpts
 
 from mpi4py import MPI
 
-brahmap.Initialize()
-
 
 class InitCommonParams:
-    np.random.seed(1234 + brahmap.bMPI.rank)
+    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
     npix = 128
     nsamples_global = npix * 6
 
-    div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-    nsamples = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
     nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.bMPI.size)
-    nbad_pixels = div + (brahmap.bMPI.rank < rem)
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
     bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
@@ -276,7 +274,7 @@ class TestProcessTimeSamples(InitCommonParams):
                 pixel = PTS.pointings[idx]
                 weighted_counts[pixel] += initfloat.noise_weights[idx]
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
 
         np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
 
@@ -318,10 +316,10 @@ class TestProcessTimeSamples(InitCommonParams):
                     initfloat.noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
                 )
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
 
         one_over_determinant = 1.0 / (
             (weighted_cos_sq * weighted_sin_sq) - (weighted_sincos * weighted_sincos)
@@ -379,12 +377,12 @@ class TestProcessTimeSamples(InitCommonParams):
                 weighted_sin[pixel] += initfloat.noise_weights[idx] * sin2phi[idx]
                 weighted_cos[pixel] += initfloat.noise_weights[idx] * cos2phi[idx]
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
 
         one_over_determinant = 1.0 / (
             weighted_counts

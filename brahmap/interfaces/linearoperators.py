@@ -2,17 +2,16 @@ import numpy as np
 import warnings
 from typing import Union, List
 
-from brahmap.linop import linop as lp
-from brahmap.linop import blkop as blk
+from ..linop import linop as lp
+from ..linop import blkop as blk
 
-from brahmap.utilities import SolverType, ProcessTimeSamples, TypeChangeWarning
+from ..utilities import SolverType, ProcessTimeSamples, TypeChangeWarning
 
-from brahmap._extensions import PointingLO_tools
-from brahmap._extensions import BlkDiagPrecondLO_tools
-from brahmap._extensions import InvNoiseCov_tools
+from .._extensions import PointingLO_tools
+from .._extensions import BlkDiagPrecondLO_tools
+from .._extensions import InvNoiseCov_tools
 
-from brahmap import MPI_RAISE_EXCEPTION
-import brahmap
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
 
 
 class PointingLO(lp.LinearOperator):
@@ -105,7 +104,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -137,7 +136,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -153,7 +152,7 @@ class PointingLO(lp.LinearOperator):
             pointings_flag=self.pointings_flag,
             vec=vec,
             prod=prod,
-            comm=brahmap.bMPI.comm,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
@@ -174,7 +173,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -207,7 +206,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -225,7 +224,7 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
-            comm=brahmap.bMPI.comm,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
@@ -253,7 +252,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -289,7 +288,7 @@ class PointingLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -307,7 +306,7 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
-            comm=brahmap.bMPI.comm,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
@@ -414,7 +413,7 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -603,7 +602,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -627,7 +626,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,
@@ -661,7 +660,7 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         )
 
         if vec.dtype != self.dtype:
-            if brahmap.bMPI.rank == 0:
+            if MPI_UTILS.rank == 0:
                 warnings.warn(
                     f"dtype of `vec` will be changed to {self.dtype}",
                     TypeChangeWarning,

@@ -1,10 +1,10 @@
 import numpy as np
-import brahmap
+from brahmap import MPI_UTILS
 
 
 def parallel_norm(x: np.ndarray):
     sqnorm = x.dot(x)
-    sqnorm = brahmap.bMPI.comm.allreduce(sqnorm)
+    sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
     ret = np.sqrt(sqnorm)
     return ret
 

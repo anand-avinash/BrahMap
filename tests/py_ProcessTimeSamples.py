@@ -5,8 +5,8 @@ import warnings
 import py_ComputeWeights as cw
 import py_Repixelization as rp
 
-import brahmap
 from brahmap.utilities import TypeChangeWarning
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
 
 from mpi4py import MPI
 
@@ -30,9 +30,6 @@ class ProcessTimeSamples(object):
         dtype_float=None,
         update_pointings_inplace: bool = True,
     ):
-        if brahmap.bMPI is None:
-            brahmap.Initialize()
-
         self.npix = npix
         self.nsamples = len(pointings)
 
@@ -67,14 +64,14 @@ class ProcessTimeSamples(object):
         noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            brahmap.MPI_RAISE_EXCEPTION(
+            MPI_RAISE_EXCEPTION(
                 condition=(len(pol_angles) != self.nsamples),
                 exception=AssertionError,
                 message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
             )
 
             if pol_angles.dtype != self.dtype_float:
-                if brahmap.bMPI.rank == 0:
+                if MPI_UTILS.rank == 0:
                     warnings.warn(
                         f"dtype of `pol_angles` will be changed to {self.dtype_float}",
                         TypeChangeWarning,
@@ -95,7 +92,7 @@ class ProcessTimeSamples(object):
         for idx in range(self.nsamples):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
 
-        brahmap.bMPI.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
+        MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
 
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix, dtype=int),
@@ -130,7 +127,7 @@ class ProcessTimeSamples(object):
                 pointings_flag=self.pointings_flag,
                 noise_weights=noise_weights,
                 dtype_float=self.dtype_float,
-                comm=brahmap.bMPI.comm,
+                comm=MPI_UTILS.comm,
             )
 
         else:
@@ -151,7 +148,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
-                    comm=brahmap.bMPI.comm,
+                    comm=MPI_UTILS.comm,
                 )
 
             elif self.solver_type == SolverType.IQU:
@@ -173,7 +170,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
-                    comm=brahmap.bMPI.comm,
+                    comm=MPI_UTILS.comm,
                 )
 
             (
