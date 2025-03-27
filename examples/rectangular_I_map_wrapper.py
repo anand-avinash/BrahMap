@@ -2,10 +2,6 @@ import numpy as np
 import brahmap
 
 
-### Initializing the BrahMap environment
-brahmap.Initialize()
-
-
 ###########################################################
 ####### Producing the input maps, pointings and TOD #######
 ###########################################################
@@ -30,15 +26,15 @@ npix = pix_x * pix_y
 ### Number of samples
 nsamples_global = npix * 6  # Global number of samples
 
-div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-nsamples = div + (brahmap.bMPI.rank < rem)  # Local number of samples
+div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+nsamples = div + (brahmap.MPI_UTILS.rank < rem)  # Local number of samples
 
 
 ### Number of bad samples
 nbad_samples_global = npix  # Global number of bad samples
 
-div, rem = divmod(nbad_samples_global, brahmap.bMPI.size)
-nbad_samples = div + (brahmap.bMPI.rank < rem)  # Local number of bad samples
+div, rem = divmod(nbad_samples_global, brahmap.MPI_UTILS.size)
+nbad_samples = div + (brahmap.MPI_UTILS.rank < rem)  # Local number of bad samples
 
 
 ### Generating random pointing indices
@@ -53,14 +49,14 @@ pointings_flag[bad_samples] = False
 
 
 ### Generating random input map
-if brahmap.bMPI.rank == 0:
+if brahmap.MPI_UTILS.rank == 0:
     input_map = rng.uniform(low=-10.0, high=10.0, size=npix).astype(dtype=dtype_float)
 else:
     input_map = None
 
 
 ### Broadcasting input map to all MPI processes
-input_map = brahmap.bMPI.comm.bcast(input_map, 0)
+input_map = brahmap.MPI_UTILS.comm.bcast(input_map, 0)
 
 
 ### Scanning the input map

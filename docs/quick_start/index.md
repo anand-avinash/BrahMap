@@ -1,8 +1,13 @@
 # BrahMap quick start guide
 
-Before using any of the classes and functions from `BrahMap`, it is
-recommended to call `brahmap.Initialize(comm=...)`. Here `comm` refers to the
-MPI communicator over which the data to be used for map-making is available.
+Complete example scripts and notebooks can be found
+[here](https://github.com/anand-avinash/BrahMap/tree/main/examples).
+
+By default, `BrahMap` performs all the operations over global MPI communicator
+(`MPI.COMM_WORLD`). To modify this behavior, one can specify a different MPI
+communicator through the function
+`brahmap.MPI_UTILS.update_communicator(comm=...)`. This function must be
+called before calling any other `BrahMap` functions.
 
 ## General map-making
 
@@ -112,6 +117,16 @@ output maps can be accessed from this object with `gls_result.GLS_maps`.
 `litebird_sim`. It provides a wrapper function for GLS map-making that uses a
 list of `Observation` instances and a suitable inverse noise covariance
 operator to produce the sky maps.
+
+The MPI communicator used in map-making must be the one that contains
+exclusively all the data needed for map-making. In case of `litebird_sim`, the
+communicator `lbs.MPI_COMM_GRID.COMM_OBS_GRID` is a subset of
+`lbs.MPI_COMM_WORLD`, and it excludes the MPI processes that do not contain
+any detectors (and TODs). Therefore, it is a suitable communicator to be
+used in map-making. Therefore, communicator used by
+`BrahMap` must be updated as following before using any other `BrahMap`
+function with `litebird_sim` data:
+`brahmap.MPI_UTILS.update_communicator(comm=lbs.MPI_COMM_GRID.COMM_OBS_GRID)`
 
 ```python
 # Creating the inverse white noise covariance operator

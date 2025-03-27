@@ -145,14 +145,15 @@ lbs.scan_map_in_observations(
 #####################################
 
 
-### Initializing the BrahMap environment
-# The initialization function accepts an MPI communicator as the argument.
-# This MPI communicator must be the one that contains exclusively all the data
-# needed for map-making. In case of litebird_sim, the communicator
-# `lbs.MPI_COMM_GRID.COMM_OBS_GRID` is a subset of `lbs.MPI_COMM_WORLD`, and
-# it excludes the MPI processes that do not contain any detectors (and TODs).
-# Therefore, it is a suitable argument to pass to the initialization function.
-brahmap.Initialize(communicator=lbs.MPI_COMM_GRID.COMM_OBS_GRID)
+### Updating the BrahMap environment
+# The MPI communicator used in map-making must be the one that contains
+# exclusively all the data needed for map-making. In case of litebird_sim, the
+# communicator `lbs.MPI_COMM_GRID.COMM_OBS_GRID` is a subset of
+# `lbs.MPI_COMM_WORLD`, and it excludes the MPI processes that do not contain
+# any detectors (and TODs). Therefore, it is a suitable communicator to be
+# used in map-making. The default communicator (MPI.COMM_WORLD) used by
+# BrahMap can be updated to a new one using a dedicated functions as shown below:
+brahmap.MPI_UTILS.update_communicator(comm=lbs.MPI_COMM_GRID.COMM_OBS_GRID)
 
 
 ### Creating an inverse noise covariance operator (unit diagonal operator in this case)

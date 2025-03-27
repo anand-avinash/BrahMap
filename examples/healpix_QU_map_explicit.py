@@ -5,17 +5,13 @@ import healpy as hp
 import brahmap
 
 
-### Initializing the BrahMap environment
-brahmap.Initialize()
-
-
 ###########################################################
 ####### Producing the input maps, pointings and TOD #######
 ###########################################################
 
 
 ### Random number generator
-seed = 5455 + brahmap.bMPI.rank
+seed = 5455 + brahmap.MPI_UTILS.rank
 rng = np.random.default_rng(seed=seed)
 
 
@@ -32,15 +28,15 @@ npix = hp.nside2npix(nside)
 ### Number of samples
 nsamples_global = npix * 6  # Global number of samples
 
-div, rem = divmod(nsamples_global, brahmap.bMPI.size)
-nsamples = div + (brahmap.bMPI.rank < rem)  # Local number of samples
+div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+nsamples = div + (brahmap.MPI_UTILS.rank < rem)  # Local number of samples
 
 
 ### Number of bad samples
 nbad_samples_global = npix  # Global number of bad samples
 
-div, rem = divmod(nbad_samples_global, brahmap.bMPI.size)
-nbad_samples = div + (brahmap.bMPI.rank < rem)  # Local number of bad samples
+div, rem = divmod(nbad_samples_global, brahmap.MPI_UTILS.size)
+nbad_samples = div + (brahmap.MPI_UTILS.rank < rem)  # Local number of bad samples
 
 
 ### Generating random pointing indices
@@ -61,7 +57,7 @@ pointings_flag[bad_samples] = False
 
 
 ### Generating random input maps
-if brahmap.bMPI.rank == 0:
+if brahmap.MPI_UTILS.rank == 0:
     input_maps = np.empty((2, npix), dtype=dtype_float)
     input_maps[0] = rng.uniform(low=-10.0, high=10.0, size=npix)
     input_maps[1] = rng.uniform(low=-3.0, high=3.0, size=npix)
@@ -70,7 +66,7 @@ else:
 
 
 ### Broadcasting input maps to all MPI processes
-input_maps = brahmap.bMPI.comm.bcast(input_maps, 0)
+input_maps = brahmap.MPI_UTILS.comm.bcast(input_maps, 0)
 
 
 ### Scanning the input maps
