@@ -35,7 +35,7 @@ jobs:
           echo "CC=$(brew --prefix gcc@14)/bin/gcc-14" >> $GITHUB_ENV
           echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> $GITHUB_ENV
           echo "CPPFLAGS=\"-I$(brew --prefix gcc@14)/include -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
-          echo "LDFLAGS=\"-L$(brew --prefix libomp)/lib -lomp\"" >> $GITHUB_ENV
+          echo "LDFLAGS=\"-L$(brew --prefix libomp)/lib -lomp -undefined dynamic_lookup\"" >> $GITHUB_ENV
           brew install ${{ matrix.mpi }}
           ls $(brew --prefix gcc@14)/lib/gcc/current/gcc/aarch64-apple-darwin23/14/include
 
