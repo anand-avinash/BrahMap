@@ -30,7 +30,7 @@ compiler_args = [
 # These options are common with `compiler_so_args`. And since I am supplying
 # these options to `extra_link_args` of `Extension`, it will appear twice in
 # the executable.
-linker_so_args = ["-pthread", "-shared"]
+linker_so_args = ["-pthread"]
 
 
 ######################################
