@@ -1,0 +1,3 @@
+# `TypeChangeWarning`
+
+::: brahmap.utilities.TypeChangeWarning

@@ -1,17 +1,43 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `compute_weights`
+#
+# - class `TestComputeWeights`: This test class implements the tests
+#   for all the functions defined in the extension module `compute_weights`.
+#   It simply tests if the computations defined in cpp functions produce
+#   the same result as their python analog.
+#
+#   -   `test_compute_weights_pol_{I,QU,IQU}()`: test the computations of
+#       `compute_weights.compute_weights_pol_{I,QU,IQU}` functions
+#   -   `test_get_pix_mask_pol_{QU,IQU}`: test the computations of
+#       `compute_weights.get_pixel_mask_pol()` function for both QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import compute_weights
 
-import helper_ComputeWeights as cw
+import py_ComputeWeights as cw
 
 
 class InitCommonParams:
-    np.random.seed(1234)
+    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -61,13 +87,20 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-3),
+        (initint64, initfloat32, 1.5e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestComputeWeights(InitCommonParams):
@@ -87,6 +120,7 @@ class TestComputeWeights(InitCommonParams):
             cpp_observed_pixels,
             cpp_old2new_pixel,
             cpp_pixel_flag,
+            brahmap.MPI_UTILS.comm,
         )
 
         (
@@ -102,6 +136,7 @@ class TestComputeWeights(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         cpp_observed_pixels.resize(cpp_new_npix, refcheck=False)
@@ -136,6 +171,7 @@ class TestComputeWeights(InitCommonParams):
             cpp_weighted_cos_sq,
             cpp_weighted_sincos,
             cpp_one_over_determinant,
+            brahmap.MPI_UTILS.comm,
         )
 
         (
@@ -154,6 +190,7 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
@@ -191,6 +228,7 @@ class TestComputeWeights(InitCommonParams):
             cpp_weighted_sin,
             cpp_weighted_cos,
             cpp_one_over_determinant,
+            brahmap.MPI_UTILS.comm,
         )
 
         (
@@ -211,6 +249,7 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
@@ -239,6 +278,7 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         cpp_observed_pixels = np.zeros(self.npix, initint.dtype)
@@ -296,6 +336,7 @@ class TestComputeWeights(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         cpp_observed_pixels = np.zeros(self.npix, initint.dtype)

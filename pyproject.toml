@@ -1,22 +1,37 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm"]
+requires = [
+    "setuptools",
+    "setuptools_scm",
+    "mpi4py",         # `mpi4py` is needed to use `mpi4py.get_include()` in `setup.py`
+]
+
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "brahmap"
 version = "0.2.0"
-description = "An scalable map-making package for CMB experiments"
+description = "A scalable and modular map-making framework for the future CMB experiments"
 authors = [
     { name = "Avinash Anand", email = "avinash.anand@roma2.infn.it" },
     { name = "Giuseppe Puglisi" },
 ]
-keywords = ["brahmap", "cmb", "sky map", "map-maker", "map-making"]
+keywords = [
+    "brahmap",
+    "cmb",
+    "sky map",
+    "map-maker",
+    "map-making",
+    "GLS",
+    "destriper",
+]
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy",
     "scipy",
     "healpy",
+    "mpi4py",
     "ruff",
     "pre-commit",
     "pytest",
@@ -24,6 +39,21 @@ dependencies = [
     "mkdocstrings",
     "mkdocstrings-python",
     "mkdocs-material",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
 
 [project.urls]
@@ -40,7 +70,7 @@ namespaces = false
 [tool.pytest.ini_options]
 norecursedirs = ["extern"]
 # addopts = "-ra -q" # options for pytest
-# testpaths = ["brahmap/tests"] # directory to look for the test functions and modules
+testpaths = ["tests"] # directory to look for the test functions and modules
 
 [tool.setuptools_scm]
 # Keeping this enables setuptools_scm to keep all the files tracked by git under the package being installed (see `[tool.setuptools]`), to be included in the package. To include or exclude any other file, use MANIFEST.in

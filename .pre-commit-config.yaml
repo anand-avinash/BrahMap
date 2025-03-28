@@ -11,12 +11,25 @@ repos:
     - id: ruff-format
       types_or: [ python, pyi, jupyter ]
 
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: v17.0.6
+  hooks:
+  - id: clang-format
+    args: [--style=LLVM]
+    types_or: [c++, c, cuda]
+
+- repo: https://github.com/DavidAnson/markdownlint-cli2
+  rev: v0.12.1
+  hooks:
+  - id: markdownlint-cli2
+    args: [--fix]
+
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.5.0  # Use the ref you want to point at
   hooks:
-  - id: check-merge-conflict
   - id: check-toml
   - id: check-yaml
+  - id: check-merge-conflict
 
 - repo: local
   hooks:
@@ -24,15 +37,3 @@ repos:
     name: Building the markdown documentation with `mkdocs build`
     entry: bash -c 'mkdocs build'
     language: system
-
-- repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v17.0.6
-  hooks:
-  - id: clang-format
-    args: [--style=LLVM]
-
-- repo: https://github.com/DavidAnson/markdownlint-cli2
-  rev: v0.12.1
-  hooks:
-  - id: markdownlint-cli2
-    args: [--fix]

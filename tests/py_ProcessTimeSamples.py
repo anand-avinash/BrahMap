@@ -2,10 +2,13 @@ from enum import IntEnum
 import numpy as np
 import warnings
 
-import helper_ComputeWeights as cw
-import helper_Repixelization as rp
+import py_ComputeWeights as cw
+import py_Repixelization as rp
 
 from brahmap.utilities import TypeChangeWarning
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
+
+from mpi4py import MPI
 
 
 class SolverType(IntEnum):
@@ -61,16 +64,18 @@ class ProcessTimeSamples(object):
         noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            if len(pol_angles) != self.nsamples:
-                raise AssertionError(
-                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
-                )
+            MPI_RAISE_EXCEPTION(
+                condition=(len(pol_angles) != self.nsamples),
+                exception=AssertionError,
+                message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
+            )
 
             if pol_angles.dtype != self.dtype_float:
-                warnings.warn(
-                    f"dtype of `pol_angles` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
+                if MPI_UTILS.rank == 0:
+                    warnings.warn(
+                        f"dtype of `pol_angles` will be changed to {self.dtype_float}",
+                        TypeChangeWarning,
+                    )
                 pol_angles = pol_angles.astype(dtype=self.dtype_float, copy=False)
 
         self._compute_weights(
@@ -86,6 +91,8 @@ class ProcessTimeSamples(object):
         hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
         for idx in range(self.nsamples):
             hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
+
+        MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
 
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix, dtype=int),
@@ -120,6 +127,7 @@ class ProcessTimeSamples(object):
                 pointings_flag=self.pointings_flag,
                 noise_weights=noise_weights,
                 dtype_float=self.dtype_float,
+                comm=MPI_UTILS.comm,
             )
 
         else:
@@ -140,6 +148,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
+                    comm=MPI_UTILS.comm,
                 )
 
             elif self.solver_type == SolverType.IQU:
@@ -161,6 +170,7 @@ class ProcessTimeSamples(object):
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
                     dtype_float=self.dtype_float,
+                    comm=MPI_UTILS.comm,
                 )
 
             (

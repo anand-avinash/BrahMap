@@ -18,9 +18,15 @@ from .utilities_functions import (
     system_setup,
 )
 
-from .tools import TypeChangeWarning
+from .tools import (
+    TypeChangeWarning,
+    LowerTypeCastWarning,
+    parallel_norm,
+    modify_numpy_context,
+)
 
 from .process_time_samples import ProcessTimeSamples, SolverType
+
 
 __all__ = [
     "is_sorted",
@@ -38,4 +44,7 @@ __all__ = [
     "ProcessTimeSamples",
     "SolverType",
     "TypeChangeWarning",
+    "LowerTypeCastWarning",
+    "parallel_norm",
+    "modify_numpy_context",
 ]

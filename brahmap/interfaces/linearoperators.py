@@ -1,12 +1,17 @@
 import numpy as np
 import warnings
-from brahmap.linop import linop as lp
-from brahmap.linop import blkop as blk
-from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
+from typing import Union, List
 
-from brahmap._extensions import PointingLO_tools
-from brahmap._extensions import BlkDiagPrecondLO_tools
-from brahmap._extensions import InvNoiseCov_tools
+from ..linop import linop as lp
+from ..linop import blkop as blk
+
+from ..utilities import SolverType, ProcessTimeSamples, TypeChangeWarning
+
+from .._extensions import PointingLO_tools
+from .._extensions import BlkDiagPrecondLO_tools
+from .._extensions import InvNoiseCov_tools
+
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
 
 
 class PointingLO(lp.LinearOperator):
@@ -30,9 +35,20 @@ class PointingLO(lp.LinearOperator):
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
+        solver_type: Union[None, SolverType] = None,
     ):
-        self.solver_type = processed_samples.solver_type
+        if solver_type is None:
+            self.__solver_type = processed_samples.solver_type
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=(int(processed_samples.solver_type) < int(solver_type)),
+                exception=ValueError,
+                message="`solver_type` must be lower than or equal to the"
+                "`solver_type` of `processed_samples` object",
+            )
+            self.__solver_type = solver_type
 
+        self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
         self.nrows = processed_samples.nsamples
 
@@ -81,16 +97,18 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -111,26 +129,30 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_I(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
             vec=vec,
             prod=prod,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
@@ -144,16 +166,18 @@ class PointingLO(lp.LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -175,21 +199,24 @@ class PointingLO(lp.LinearOperator):
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_QU(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -197,6 +224,7 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
@@ -217,16 +245,18 @@ class PointingLO(lp.LinearOperator):
             :math:`\phi_t`.
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -251,21 +281,24 @@ class PointingLO(lp.LinearOperator):
 
         """
 
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.nrows),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
         PointingLO_tools.PLO_rmult_IQU(
+            new_npix=self.new_npix,
             nsamples=self.nrows,
             pointings=self.pointings,
             pointings_flag=self.pointings_flag,
@@ -273,20 +306,14 @@ class PointingLO(lp.LinearOperator):
             cos2phi=self.cos2phi,
             vec=vec,
             prod=prod,
+            comm=MPI_UTILS.comm,
         )
 
         return prod
 
-    def solver_string(self):
-        """
-        Return a string depending on the map you are processing
-        """
-        if self.solver_type == 1:
-            return "I"
-        elif self.solver_type == 2:
-            return "QU"
-        else:
-            return "IQU"
+    @property
+    def solver_type(self):
+        return self.__solver_type
 
 
 class ToeplitzLO(lp.LinearOperator):
@@ -325,9 +352,20 @@ class ToeplitzLO(lp.LinearOperator):
 
         return y
 
-    def __init__(self, a, size):
+    def __init__(self, a, size, dtype=None):
+        if dtype is None:
+            dtype = np.float64
+        else:
+            dtype = dtype
+
+        self.__size = size
+
         super(ToeplitzLO, self).__init__(
-            nargin=size, nargout=size, matvec=self.mult, symmetric=True
+            nargin=self.__size,
+            nargout=self.__size,
+            matvec=self.mult,
+            symmetric=True,
+            dtype=dtype,
         )
         self.array = a
 
@@ -342,18 +380,21 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
 
     """
 
-    def __init__(self, diag: np.ndarray, dtype=None):
+    def __init__(self, diag: Union[np.ndarray, List], dtype=None):
         if dtype is not None:
             self.diag = np.asarray(diag, dtype=dtype)
         elif isinstance(diag, np.ndarray):
+            self.diag = diag
             dtype = self.diag.dtype
         else:
             dtype = np.float64
             self.diag = np.asarray(diag, dtype=dtype)
 
-        if self.diag.ndim != 1:
-            msg = "diag array must be 1-d"
-            raise ValueError(msg)
+        MPI_RAISE_EXCEPTION(
+            condition=(self.diag.ndim != 1),
+            exception=ValueError,
+            message="The `diag` array must be a 1-d vector",
+        )
 
         super(InvNoiseCovLO_Uncorrelated, self).__init__(
             nargin=self.diag.shape[0],
@@ -365,16 +406,18 @@ class InvNoiseCovLO_Uncorrelated(lp.LinearOperator):
         )
 
     def _mult(self, vec: np.ndarray):
-        if len(vec) != self.diag.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.diag.shape[0]),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Uncorrelated` instance.\nShape of `InvNoiseCovLO_Uncorrelated` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.diag.shape[0], dtype=self.dtype)
@@ -490,8 +533,22 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         the size of each block of the matrix.
     """
 
-    def __init__(self, processed_samples: ProcessTimeSamples):
-        self.solver_type = processed_samples.solver_type
+    def __init__(
+        self,
+        processed_samples: ProcessTimeSamples,
+        solver_type: Union[None, SolverType] = None,
+    ):
+        if solver_type is None:
+            self.__solver_type = processed_samples.solver_type
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=(int(processed_samples.solver_type) < int(solver_type)),
+                exception=ValueError,
+                message="`solver_type` must be lower than or equal to the"
+                "`solver_type` of `processed_samples` object",
+            )
+            self.__solver_type = solver_type
+
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
 
@@ -538,16 +595,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = vec / self.weighted_counts
@@ -560,16 +619,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
@@ -592,16 +653,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
@@ -621,16 +684,9 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
 
         return prod
 
-    def solver_string(self):
-        """
-        Return a string depending on the map you are processing
-        """
-        if self.solver_type == 1:
-            return "I"
-        elif self.solver_type == 2:
-            return "QU"
-        else:
-            return "IQU"
+    @property
+    def solver_type(self):
+        return self.__solver_type
 
 
 class InverseLO(lp.LinearOperator):

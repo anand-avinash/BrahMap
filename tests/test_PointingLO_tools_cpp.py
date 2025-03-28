@@ -1,18 +1,43 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `PointingLO_tools`. All the tests defined here simply test if the
+# computations defined the cpp functions produce the same results as their
+# python analog.
+#
+# - class `TestPointingLOTools_I`:
+#
+#   -   `test_I`: tests the computations of `PointingLO_tools.PLO_mult_I()`
+# and `PointingLO_tools.PLO_rmult_I()`
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import PointingLO_tools
 
-import helper_ProcessTimeSamples as hpts
-import helper_PointingLO_tools as hplo_tools
+import py_ProcessTimeSamples as hpts
+import py_PointingLO_tools as hplo_tools
 
 
 class InitCommonParams:
-    np.random.seed(54321)
+    np.random.seed(54321 + brahmap.MPI_UTILS.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -68,13 +93,20 @@ class InitFloat64Params(InitCommonParams):
         self.rvec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_I(InitCommonParams):
@@ -115,11 +147,13 @@ class TestPointingLOTools_I(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_I(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
             rvec,
             cpp_rmult_prod,
+            brahmap.MPI_UTILS.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_I(
             nrows,
@@ -127,6 +161,7 @@ class TestPointingLOTools_I(InitCommonParams):
             PTS.pointings,
             PTS.pointings_flag,
             rvec,
+            brahmap.MPI_UTILS.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
@@ -136,10 +171,10 @@ class TestPointingLOTools_I(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_QU(InitCommonParams):
@@ -185,6 +220,7 @@ class TestPointingLOTools_QU(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_QU(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -192,6 +228,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             PTS.cos2phi,
             rvec,
             cpp_rmult_prod,
+            brahmap.MPI_UTILS.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
@@ -201,6 +238,7 @@ class TestPointingLOTools_QU(InitCommonParams):
             PTS.sin2phi,
             PTS.cos2phi,
             rvec,
+            brahmap.MPI_UTILS.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
@@ -210,10 +248,10 @@ class TestPointingLOTools_QU(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestPointingLOTools_IQU(InitCommonParams):
@@ -259,6 +297,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
         rvec = initfloat.rvec
 
         PointingLO_tools.PLO_rmult_QU(
+            PTS.new_npix,
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -266,6 +305,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             PTS.cos2phi,
             rvec,
             cpp_rmult_prod,
+            brahmap.MPI_UTILS.comm,
         )
         py_rmult_prod = hplo_tools.PLO_rmult_QU(
             nrows,
@@ -275,6 +315,7 @@ class TestPointingLOTools_IQU(InitCommonParams):
             PTS.sin2phi,
             PTS.cos2phi,
             rvec,
+            brahmap.MPI_UTILS.comm,
         )
 
         np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)

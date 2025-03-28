@@ -1,15 +1,20 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#ifndef _DISABLE_OMP
+#include <omp.h>
+#endif
+
 namespace py = pybind11;
 
 template <typename dint, typename dfloat>
-void repixelize_pol_I(           //
-    const ssize_t new_npix,      //
-    const dint *observed_pixels, //
-    dfloat *weighted_counts      //
+void repixelize_pol_I(                      //
+    const ssize_t new_npix,                 //
+    const dint *__restrict observed_pixels, //
+    dfloat *__restrict weighted_counts      //
 ) {
 
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
@@ -20,16 +25,17 @@ void repixelize_pol_I(           //
 } // repixelize_pol_I()
 
 template <typename dint, typename dfloat>
-void repixelize_pol_QU(          //
-    const ssize_t new_npix,      //
-    const dint *observed_pixels, //
-    dfloat *weighted_counts,     //
-    dfloat *weighted_sin_sq,     //
-    dfloat *weighted_cos_sq,     //
-    dfloat *weighted_sincos,     //
-    dfloat *one_over_determinant //
+void repixelize_pol_QU(                     //
+    const ssize_t new_npix,                 //
+    const dint *__restrict observed_pixels, //
+    dfloat *__restrict weighted_counts,     //
+    dfloat *__restrict weighted_sin_sq,     //
+    dfloat *__restrict weighted_cos_sq,     //
+    dfloat *__restrict weighted_sincos,     //
+    dfloat *__restrict one_over_determinant //
 ) {
 
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
@@ -44,18 +50,19 @@ void repixelize_pol_QU(          //
 } // repixelize_pol_QU()
 
 template <typename dint, typename dfloat>
-void repixelize_pol_IQU(         //
-    const ssize_t new_npix,      //
-    const dint *observed_pixels, //
-    dfloat *weighted_counts,     //
-    dfloat *weighted_sin_sq,     //
-    dfloat *weighted_cos_sq,     //
-    dfloat *weighted_sincos,     //
-    dfloat *weighted_sin,        //
-    dfloat *weighted_cos,        //
-    dfloat *one_over_determinant //
+void repixelize_pol_IQU(                    //
+    const ssize_t new_npix,                 //
+    const dint *__restrict observed_pixels, //
+    dfloat *__restrict weighted_counts,     //
+    dfloat *__restrict weighted_sin_sq,     //
+    dfloat *__restrict weighted_cos_sq,     //
+    dfloat *__restrict weighted_sincos,     //
+    dfloat *__restrict weighted_sin,        //
+    dfloat *__restrict weighted_cos,        //
+    dfloat *__restrict one_over_determinant //
 ) {
 
+  // #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < new_npix; ++idx) {
     dint pixel = observed_pixels[idx];
     weighted_counts[idx] = weighted_counts[pixel];
@@ -72,13 +79,15 @@ void repixelize_pol_IQU(         //
 } // repixelize_pol_IQU()
 
 template <typename dint>
-void flag_bad_pixel_samples(const ssize_t nsamples,    //
-                            const bool *pixel_flag,    //
-                            const dint *old2new_pixel, //
-                            dint *pointings,           //
-                            bool *pointings_flag       //
+void flag_bad_pixel_samples(              //
+    const ssize_t nsamples,               //
+    const bool *__restrict pixel_flag,    //
+    const dint *__restrict old2new_pixel, //
+    dint *__restrict pointings,           //
+    bool *__restrict pointings_flag       //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     dint pixel = pointings[idx];
     bool pixflag = pixel_flag[pixel];

@@ -1,4 +1,5 @@
 import numpy as np
+from mpi4py import MPI
 
 
 def PLO_mult_I(
@@ -23,6 +24,7 @@ def PLO_rmult_I(
     pointings: np.ndarray,
     pointings_flags: np.ndarray,
     vec: np.ndarray,
+    comm,
 ):
     prod = np.zeros(ncols, dtype=vec.dtype)
 
@@ -30,6 +32,8 @@ def PLO_rmult_I(
         pixel = pointings[idx]
         if pointings_flags[idx]:
             prod[pixel] += vec[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, prod, MPI.SUM)
 
     return prod
 
@@ -62,6 +66,7 @@ def PLO_rmult_QU(
     sin2phi: np.ndarray,
     cos2phi: np.ndarray,
     vec: np.ndarray,
+    comm,
 ):
     prod = np.zeros(ncols, dtype=vec.dtype)
 
@@ -70,6 +75,8 @@ def PLO_rmult_QU(
         if pointings_flags[idx]:
             prod[2 * pixel] += vec[idx] * cos2phi[idx]
             prod[2 * pixel + 1] += vec[idx] * sin2phi[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, prod, MPI.SUM)
 
     return prod
 
@@ -104,6 +111,7 @@ def PLO_rmult_IQU(
     sin2phi: np.ndarray,
     cos2phi: np.ndarray,
     vec: np.ndarray,
+    comm,
 ):
     prod = np.zeros(ncols, dtype=vec.dtype)
 
@@ -113,5 +121,7 @@ def PLO_rmult_IQU(
             prod[3 * pixel] += vec[idx]
             prod[3 * pixel + 1] += vec[idx] * cos2phi[idx]
             prod[3 * pixel + 2] += vec[idx] * sin2phi[idx]
+
+    comm.Allreduce(MPI.IN_PLACE, prod, MPI.SUM)
 
     return prod

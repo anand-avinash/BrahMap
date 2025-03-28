@@ -1,18 +1,51 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `BlockDiagonalPreconditionerLO` of BrahMap.
+# Analogous to this class, in the test suite, we have defined another version of `BlockDiagonalPreconditionerLO` based on only the python routines.
+#
+# - class `TestBlkDiagPrecondLO_I_Cpp`:
+#
+#   -   `test_I_cpp`: tests whether `mult` and `rmult` method overloads of
+# the two versions of `BlkDiagPrecondLO_tools.BDPLO_mult_I()` produce the
+# same result
+#
+# - Same as above, but for QU and IQU
+#
+# - class `TestBlkDiagPrecondLO_I`:
+#
+#   -   `test_I`: The matrix view of the operator
+# `brahmap.interfaces.BlockDiagonalPreconditionerLO` is a block matrix.
+# In this test, we first compute the matrix view of the operator and then
+# compare the elements of each block (corresponding to a given pixel) with
+# their explicit computations
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
+
 import brahmap
 
-import helper_BlkDiagPrecondLO as bdplo
-import helper_ProcessTimeSamples as hpts
+import py_BlkDiagPrecondLO as bdplo
+import py_ProcessTimeSamples as hpts
 
 
 class InitCommonParams:
-    np.random.seed(6543)
+    np.random.seed(6534 + brahmap.MPI_UTILS.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -62,13 +95,20 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_I_Cpp(InitCommonParams):
@@ -101,10 +141,10 @@ class TestBlkDiagPrecondLO_I_Cpp(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_QU_Cpp(InitCommonParams):
@@ -138,10 +178,10 @@ class TestBlkDiagPrecondLO_QU_Cpp(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_IQU_Cpp(InitCommonParams):
@@ -175,10 +215,10 @@ class TestBlkDiagPrecondLO_IQU_Cpp(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_I(InitCommonParams):
@@ -205,10 +245,10 @@ class TestBlkDiagPrecondLO_I(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-3),
+        (initint64, initfloat32, 1.5e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_QU(InitCommonParams):
@@ -252,10 +292,10 @@ class TestBlkDiagPrecondLO_QU(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-3),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-3),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.0e-3),
+        (initint64, initfloat32, 1.0e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLO_IQU(InitCommonParams):

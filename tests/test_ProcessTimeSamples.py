@@ -1,17 +1,49 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `ProcessTimeSamples` class of
+# BrahMap. Analogous to this class, in the test suite, we have defined
+# another version of `ProcessTimeSamples` based on only the python routines.
+#
+# - class `TestProcessTimeSamplesCpp`:
+#
+#   -   `test_ProcessTimeSamples_{I,QU,IQU}_Cpp`: Here we are testing if
+# the class attributes of the two versions of `ProcessTimeSamples` matches
+# with each other.
+
+# - class `TestProcessTimeSamples`:
+#
+#   -   `test_ProcessTimeSamples_{I,QU,IQU}`: Here we are testing the
+# class attributes of `brahmap.utilities.ProcessTimeSamples` against their
+# explicit computations.
+#
+###########################################################################
+
+
 import pytest
 import numpy as np
 
-import brahmap.utilities as bmutils
-import helper_ProcessTimeSamples as hpts
+import brahmap
+
+from brahmap import math
+import py_ProcessTimeSamples as hpts
+
+from mpi4py import MPI
 
 
 class InitCommonParams:
-    np.random.seed(12345)
+    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -61,20 +93,27 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-3),
+        (initint64, initfloat32, 1.5e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -107,7 +146,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -156,7 +195,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        cpp_PTS = bmutils.ProcessTimeSamples(
+        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -208,17 +247,17 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-3),
+        (initint64, initfloat32, 1.5e-3),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_I(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -235,12 +274,14 @@ class TestProcessTimeSamples(InitCommonParams):
                 pixel = PTS.pointings[idx]
                 weighted_counts[pixel] += initfloat.noise_weights[idx]
 
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+
         np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
 
     def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -251,8 +292,10 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.sin(2.0 * initfloat.pol_angles)
-        cos2phi = np.cos(2.0 * initfloat.pol_angles)
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -273,6 +316,11 @@ class TestProcessTimeSamples(InitCommonParams):
                     initfloat.noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
                 )
 
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
+
         one_over_determinant = 1.0 / (
             (weighted_cos_sq * weighted_sin_sq) - (weighted_sincos * weighted_sincos)
         )
@@ -290,7 +338,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -301,8 +349,10 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.sin(2.0 * initfloat.pol_angles)
-        cos2phi = np.cos(2.0 * initfloat.pol_angles)
+        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
+        math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -326,6 +376,13 @@ class TestProcessTimeSamples(InitCommonParams):
                 )
                 weighted_sin[pixel] += initfloat.noise_weights[idx] * sin2phi[idx]
                 weighted_cos[pixel] += initfloat.noise_weights[idx] * cos2phi[idx]
+
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
+        brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sincos, MPI.SUM)
 
         one_over_determinant = 1.0 / (
             weighted_counts

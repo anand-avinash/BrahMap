@@ -1,18 +1,45 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the extension module `repixelize`. All
+# the tests defined here simply test if the computations defined in the cpp
+# functions produce the same result as their python analog.
+#
+# - class `TestRepixelization`:
+#
+#   -   `test_repixelize_pol_{I,QU,IQU}`: tests the computations of
+#       `repixelize.repixelize_pol_{I,QU,IQU}()` functions
+#
+# - class `TestFlagBadPixelSamples`:
+#
+#   -   `test_flag_bad_pixel_samples()`: tests the computations of
+# `repixelize.flag_bad_pixel_samples()` function
+#
+###########################################################################
+
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import repixelize
 
-import helper_ComputeWeights as cw
-import helper_Repixelization as rp
+import py_ComputeWeights as cw
+import py_Repixelization as rp
 
 
 class InitCommonParams:
-    np.random.seed(1234)
+    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -62,13 +89,20 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestRepixelization(InitCommonParams):
@@ -80,6 +114,7 @@ class TestRepixelization(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         cpp_weighted_counts = py_weighted_counts.copy()
@@ -111,6 +146,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -187,6 +223,7 @@ class TestRepixelization(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         new_npix, observed_pixels, __, __ = cw.get_pix_mask_pol(
@@ -260,10 +297,10 @@ class TestRepixelization(InitCommonParams):
 @pytest.mark.parametrize(
     "initint, initfloat",
     [
-        (InitInt32Params(), InitFloat32Params()),
-        (InitInt64Params(), InitFloat32Params()),
-        (InitInt32Params(), InitFloat64Params()),
-        (InitInt64Params(), InitFloat64Params()),
+        (initint32, initfloat32),
+        (initint64, initfloat32),
+        (initint32, initfloat64),
+        (initint64, initfloat64),
     ],
 )
 class TestFlagBadPixelSamples(InitCommonParams):
@@ -286,6 +323,7 @@ class TestFlagBadPixelSamples(InitCommonParams):
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
+            comm=brahmap.MPI_UTILS.comm,
         )
 
         __, __, old2new_pixel, pixel_flag = cw.get_pix_mask_pol(

@@ -1,13 +1,36 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the `InvNoiseCovLO_Uncorrelated` class of BrahMap.
+#
+# - class `TestInvNoiseCov_tools`:
+#
+#   -   `test_mult`: Here we are testing the computation of `mult()`
+# routine defined in the extension module `InvNoiseCov_tools`
+
+# - class `TestInvNoiseCovLO_Uncorrelated`:
+#
+#   -   `test_InvNoiseCovLO_Uncorrelated`: Here we are testing the
+# `mult` method overload of `TestInvNoiseCovLO_Uncorrelated` against its
+# explicit computation.
+#
+###########################################################################
+
+
 import pytest
 import numpy as np
-from brahmap._extensions import InvNoiseCov_tools
 
+from brahmap._extensions import InvNoiseCov_tools
 from brahmap.interfaces import InvNoiseCovLO_Uncorrelated
+
+import brahmap
 
 
 class InitCommonParams:
-    np.random.seed(12343)
-    nsamples = 1280
+    np.random.seed(12343 + brahmap.MPI_UTILS.rank)
+    nsamples_global = 1280
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
 
 
 class InitFloat32Params(InitCommonParams):
@@ -28,11 +51,16 @@ class InitFloat64Params(InitCommonParams):
         self.vec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initfloat, rtol",
     [
-        (InitFloat32Params(), 1.5e-4),
-        (InitFloat64Params(), 1.5e-5),
+        (initfloat32, 1.5e-4),
+        (initfloat64, 1.5e-5),
     ],
 )
 class TestInvNoiseCov_tools(InitCommonParams):
@@ -54,8 +82,8 @@ class TestInvNoiseCov_tools(InitCommonParams):
 @pytest.mark.parametrize(
     "initfloat, rtol",
     [
-        (InitFloat32Params(), 1.5e-4),
-        (InitFloat64Params(), 1.5e-5),
+        (initfloat32, 1.5e-4),
+        (initfloat64, 1.5e-5),
     ],
 )
 class TestInvNoiseCovLO_Uncorrelated(InitCommonParams):

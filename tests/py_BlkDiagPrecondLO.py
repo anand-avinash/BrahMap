@@ -1,9 +1,12 @@
 import numpy as np
 import warnings
-import brahmap.linop as lp
-from brahmap.utilities import ProcessTimeSamples, TypeChangeWarning
 
-import helper_BlkDiagPrecondLO_tools as bdplo_tools
+from brahmap import linop as lp
+from brahmap.utilities import TypeChangeWarning
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, ProcessTimeSamples
+
+
+import py_BlkDiagPrecondLO_tools as bdplo_tools
 
 
 class BlockDiagonalPreconditionerLO(lp.LinearOperator):
@@ -49,17 +52,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype_float:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = vec / self.weighted_counts
@@ -72,16 +76,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype_float:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = bdplo_tools.BDPLO_mult_QU(
@@ -102,16 +108,18 @@ class BlockDiagonalPreconditionerLO(lp.LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.size),
+            exception=ValueError,
+            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
 
         if vec.dtype != self.dtype_float:
-            warnings.warn(
-                f"dtype of `vec` will be changed to {self.dtype_float}",
-                TypeChangeWarning,
-            )
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype_float}",
+                    TypeChangeWarning,
+                )
             vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = bdplo_tools.BDPLO_mult_IQU(

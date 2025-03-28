@@ -1,18 +1,42 @@
+############################ TEST DESCRIPTION ############################
+#
+# Test defined here are related to the functions defined in the extension
+# module `BlkDiagPrecondLO_tools`. All the tests defined here simply test if the
+# computations defined the cpp functions produce the same results as their
+# python analog.
+#
+# - class `TestBlkDiagPrecondLOToolsCpp`:
+#
+#   -   `test_I_Cpp`: tests the computations of
+# `BlkDiagPrecondLO_tools.BDPLO_mult_I()`
+#
+# - Same as above, but for QU and IQU
+#
+###########################################################################
+
 import pytest
 import numpy as np
+
+import brahmap
 from brahmap._extensions import BlkDiagPrecondLO_tools
 
-import helper_ProcessTimeSamples as hpts
-import helper_BlkDiagPrecondLO_tools as bdplo_tools
+import py_BlkDiagPrecondLO_tools as bdplo_tools
 
 
 class InitCommonParams:
-    np.random.seed(987)
+    np.random.seed([987, brahmap.MPI_UTILS.rank])
     npix = 128
-    nsamples = npix * 6
+    nsamples_global = npix * 6
+
+    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
+    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+
+    nbad_pixels_global = npix
+    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
+    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
 
     pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=npix)
+    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
     pointings_flag[bad_samples] = False
 
 
@@ -62,20 +86,27 @@ class InitFloat64Params(InitCommonParams):
         ).astype(dtype=self.dtype)
 
 
+# Initializing the parameter classes
+initint32 = InitInt32Params()
+initint64 = InitInt64Params()
+initfloat32 = InitFloat32Params()
+initfloat64 = InitFloat64Params()
+
+
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
-        (InitInt32Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt64Params(), InitFloat32Params(), 1.5e-4),
-        (InitInt32Params(), InitFloat64Params(), 1.5e-5),
-        (InitInt64Params(), InitFloat64Params(), 1.5e-5),
+        (initint32, initfloat32, 1.5e-4),
+        (initint64, initfloat32, 1.5e-4),
+        (initint32, initfloat64, 1.5e-5),
+        (initint64, initfloat64, 1.5e-5),
     ],
 )
 class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
     def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.I
+        solver_type = brahmap.utilities.SolverType.I
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -99,9 +130,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.QU
+        solver_type = brahmap.utilities.SolverType.QU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -140,9 +171,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = hpts.SolverType.IQU
+        solver_type = brahmap.utilities.SolverType.IQU
 
-        PTS = hpts.ProcessTimeSamples(
+        PTS = brahmap.utilities.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,

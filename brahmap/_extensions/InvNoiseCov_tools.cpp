@@ -1,17 +1,23 @@
 #include <functional>
+
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+
+#ifndef _DISABLE_OMP
+#include <omp.h>
+#endif
 
 namespace py = pybind11;
 
 template <typename dfloat>
-void uncorrelated_mult(     //
-    const ssize_t nsamples, //
-    const dfloat *diag,     //
-    const dfloat *vec,      //
-    dfloat *prod            //
+void uncorrelated_mult(            //
+    const ssize_t nsamples,        //
+    const dfloat *__restrict diag, //
+    const dfloat *__restrict vec,  //
+    dfloat *__restrict prod        //
 ) {
 
+#pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
     prod[idx] = diag[idx] * vec[idx];
   } // for
