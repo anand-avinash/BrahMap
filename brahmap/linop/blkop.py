@@ -28,15 +28,14 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-from .linop import BaseLinearOperator, LinearOperator
-from .linop import ShapeError, null_log
+from brahmap.linop import BaseLinearOperator, LinearOperator
+from brahmap.linop import ShapeError, null_log
 import numpy as np
 import itertools
 from functools import reduce
 
 
 class BlockLinearOperator(LinearOperator):
-
     """
     A linear operator defined by blocks. Each block must be a linear operator.
 
@@ -170,7 +169,6 @@ class BlockLinearOperator(LinearOperator):
 
 
 class BlockDiagonalLinearOperator(LinearOperator):
-
     """
     A block diagonal linear operator.
 
@@ -277,7 +275,6 @@ class BlockDiagonalLinearOperator(LinearOperator):
 
 
 class BlockPreconditioner(BlockLinearOperator):
-
     """An alias for ``BlockLinearOperator``.
 
     Holds an additional ``solve`` method equivalent to ``__mul__``.
@@ -290,7 +287,6 @@ class BlockPreconditioner(BlockLinearOperator):
 
 
 class BlockDiagonalPreconditioner(BlockDiagonalLinearOperator):
-
     """
     An alias for ``BlockDiagonalLinearOperator``.
 
@@ -304,7 +300,6 @@ class BlockDiagonalPreconditioner(BlockDiagonalLinearOperator):
 
 
 class BlockHorizontalLinearOperator(BlockLinearOperator):
-
     """
     A block horizontal linear operator.
 
@@ -328,7 +323,6 @@ class BlockHorizontalLinearOperator(BlockLinearOperator):
 
 
 class BlockVerticalLinearOperator(BlockLinearOperator):
-
     """
     A block vertical linear operator.
 

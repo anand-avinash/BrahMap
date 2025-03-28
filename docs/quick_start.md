@@ -5,10 +5,11 @@ Proceed with following steps:
 1. Process the pointings, provided as pixel indices
 
     ```py
-    processed_pointings = ProcessTimeSamples(pixs=pointings, 
+    processed_pointings = ProcessTimeSamples(
         npix=npix, 
-        pol=3, 
-        phi=pol_angles
+        pointings=pointings, 
+        solver_type=3, 
+        pol_angles=pol_angles
     )
     npix_new, __ = processed_pointings.get_new_pixel
     ```

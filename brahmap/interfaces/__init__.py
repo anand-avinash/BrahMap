@@ -1,17 +1,19 @@
 from .linearoperators import (
-    SparseLO,
+    PointingLO,
     ToeplitzLO,
     BlockLO,
-    BlockDiagonalLO,
+    InvNoiseCovLO_Uncorrelated,
+    # BlockDiagonalLO,
     BlockDiagonalPreconditionerLO,
     InverseLO,
 )
 
 __all__ = [
-    "SparseLO",
+    "PointingLO",
     "ToeplitzLO",
     "BlockLO",
-    "BlockDiagonalLO",
+    "InvNoiseCovLO_Uncorrelated",
+    # "BlockDiagonalLO",
     "BlockDiagonalPreconditionerLO",
     "InverseLO",
 ]
