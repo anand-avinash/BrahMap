@@ -566,66 +566,6 @@ class ShapeError(Exception):
         return repr(self.value)
 
 
-def PysparseLinearOperator(A):
-    """
-    Return a linear operator from a Pysparse sparse matrix.
-
-    .. deprecated:: 0.6
-        Use :func:`aslinearoperator` instead.
-
-    """
-
-    nargout, nargin = A.shape
-    try:
-        symmetric = A.issym
-    except Exception:
-        symmetric = A.isSymmetric()
-
-    def matvec(x):
-        if x.shape != (nargin,):
-            msg = "Input has shape " + str(x.shape)
-            msg += " instead of (%d,)" % nargin
-            raise ValueError(msg)
-        if hasattr(A, "__mul__"):
-            return A * x
-        Ax = np.empty(nargout)
-        A.matvec(x, Ax)
-        return Ax
-
-    def rmatvec(y):
-        if y.shape != (nargout,):
-            msg = "Input has shape " + str(y.shape)
-            msg += " instead of (%d,)" % nargout
-            raise ValueError(msg)
-        if hasattr(A, "__rmul__"):
-            return y * A
-        ATy = np.empty(nargin)
-        A.rmatvec(y, ATy)
-        return ATy
-
-    return LinearOperator(
-        nargin, nargout, matvec=matvec, rmatvec=rmatvec, symmetric=symmetric
-    )
-
-
-def linop_from_ndarray(A):
-    """
-    Return a linear operator from a Numpy `ndarray`.
-
-    .. deprecated:: 0.4
-        Use :class:`MatrixLinearOperator` or :func:`aslinearoperator` instead.
-
-    """
-    return LinearOperator(
-        A.shape[1],
-        A.shape[0],
-        lambda v: np.dot(A, v),
-        rmatvec=lambda u: np.dot(A.T, u),
-        symmetric=False,
-        dtype=A.dtype,
-    )
-
-
 def aslinearoperator(A):
     """Return A as a LinearOperator.
 

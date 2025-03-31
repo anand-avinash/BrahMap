@@ -1,12 +1,5 @@
 import numpy as np
-from brahmap import MPI_UTILS
-
-
-def parallel_norm(x: np.ndarray):
-    sqnorm = x.dot(x)
-    sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
-    ret = np.sqrt(sqnorm)
-    return ret
+from ..math import parallel_norm
 
 
 class modify_numpy_context(object):

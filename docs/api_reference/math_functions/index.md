@@ -1,3 +1,5 @@
-# User Guide
+# Math functions
 
-Under development!
+## Linear Algebra
+
+- [`parallel_norm`](parallel_norm.md)

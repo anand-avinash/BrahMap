@@ -38,8 +38,6 @@ from .linop import (
     ReducedLinearOperator,
     SymmetricallyReducedLinearOperator,
     ShapeError,
-    PysparseLinearOperator,
-    linop_from_ndarray,
     aslinearoperator,
     null_log,
 )
@@ -62,8 +60,6 @@ __all__ = [
     "ReducedLinearOperator",
     "SymmetricallyReducedLinearOperator",
     "ShapeError",
-    "PysparseLinearOperator",
-    "linop_from_ndarray",
     "aslinearoperator",
     "BlockLinearOperator",
     "BlockDiagonalLinearOperator",

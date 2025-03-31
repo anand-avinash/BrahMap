@@ -1,3 +1,5 @@
+from numpy import _typing
+
 from .unary_functions import (
     sin,
     cos,
@@ -13,7 +15,12 @@ from .unary_functions import (
     cbrt,
 )
 
-from .solvers import cg
+from .linalg import parallel_norm, cg
+
+DTypeFloat = _typing._DTypeLikeFloat
+DTypeInt = _typing._DTypeLikeInt
+DTypeUInit = _typing._DTypeLikeUInt
+DTypeBool = _typing._DTypeLikeBool
 
 __all__ = [
     "sin",
@@ -28,5 +35,10 @@ __all__ = [
     "log2",
     "sqrt",
     "cbrt",
+    "parallel_norm",
     "cg",
+    "DTypeFloat",
+    "DTypeInt",
+    "DTypeUInit",
+    "DTypeBool",
 ]

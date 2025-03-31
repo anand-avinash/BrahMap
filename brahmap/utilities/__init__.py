@@ -21,7 +21,6 @@ from .utilities_functions import (
 from .tools import (
     TypeChangeWarning,
     LowerTypeCastWarning,
-    parallel_norm,
     modify_numpy_context,
 )
 
@@ -45,6 +44,5 @@ __all__ = [
     "SolverType",
     "TypeChangeWarning",
     "LowerTypeCastWarning",
-    "parallel_norm",
     "modify_numpy_context",
 ]
