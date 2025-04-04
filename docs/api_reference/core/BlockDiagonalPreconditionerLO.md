@@ -1,0 +1,3 @@
+# `BlockDiagonalPreconditionerLO`
+
+::: brahmap.core.BlockDiagonalPreconditionerLO

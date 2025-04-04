@@ -1,0 +1,3 @@
+# `ProcessTimeSamples`
+
+::: brahmap.core.ProcessTimeSamples

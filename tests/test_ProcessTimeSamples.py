@@ -13,7 +13,7 @@
 # - class `TestProcessTimeSamples`:
 #
 #   -   `test_ProcessTimeSamples_{I,QU,IQU}`: Here we are testing the
-# class attributes of `brahmap.utilities.ProcessTimeSamples` against their
+# class attributes of `brahmap.core.ProcessTimeSamples` against their
 # explicit computations.
 #
 ###########################################################################
@@ -24,7 +24,6 @@ import numpy as np
 
 import brahmap
 
-from brahmap import math
 import py_ProcessTimeSamples as hpts
 
 from mpi4py import MPI
@@ -113,7 +112,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
+        cpp_PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -146,7 +145,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
+        cpp_PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -195,7 +194,7 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
     def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        cpp_PTS = brahmap.utilities.ProcessTimeSamples(
+        cpp_PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -257,7 +256,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_I(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.I
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -281,7 +280,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.QU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -294,8 +293,8 @@ class TestProcessTimeSamples(InitCommonParams):
 
         sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
         cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
-        math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -338,7 +337,7 @@ class TestProcessTimeSamples(InitCommonParams):
     def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
         solver_type = hpts.SolverType.IQU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -351,8 +350,8 @@ class TestProcessTimeSamples(InitCommonParams):
 
         sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
         cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
-        math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)

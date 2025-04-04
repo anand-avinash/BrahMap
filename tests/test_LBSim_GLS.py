@@ -164,13 +164,13 @@ class TestLBSimGLS:
             input_map_in_galactic=True,
         )
 
-        GLSparams = brahmap.mapmakers.LBSimGLSParameters(
-            solver_type=brahmap.utilities.SolverType.I,
+        GLSparams = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.I,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
+        GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
             observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
@@ -210,13 +210,13 @@ class TestLBSimGLS:
             input_map_in_galactic=True,
         )
 
-        GLSparams = brahmap.mapmakers.LBSimGLSParameters(
-            solver_type=brahmap.utilities.SolverType.QU,
+        GLSparams = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.QU,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
+        GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
             observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
@@ -246,13 +246,13 @@ class TestLBSimGLS:
             input_map_in_galactic=True,
         )
 
-        GLSparams = brahmap.mapmakers.LBSimGLSParameters(
-            solver_type=brahmap.utilities.SolverType.IQU,
+        GLSparams = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.IQU,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
         )
 
-        GLSresults = brahmap.mapmakers.LBSim_compute_GLS_maps(
+        GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
             observations=lbsim_obj.sim.observations,
             dtype_float=lbsim_obj.dtype_float,
@@ -286,7 +286,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
             "001_002_047_00A_195_B": 3,
         }
 
-        inv_noise_variance_op = brahmap.mapmakers.LBSim_InvNoiseCovLO_UnCorr(
+        inv_noise_variance_op = brahmap.lbsim.LBSim_InvNoiseCovLO_UnCorr(
             obs=lbsim_obj.sim.observations,
             inverse_noise_variance=inv_noise_variance,
             dtype=lbsim_obj.dtype_float,

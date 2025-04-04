@@ -1,3 +1,0 @@
-# `GLSParameters`
-
-::: brahmap.mapmakers.GLSParameters

@@ -1,0 +1,3 @@
+# `LBSimProcessTimeSamples`
+
+::: brahmap.lbsim.LBSimProcessTimeSamples

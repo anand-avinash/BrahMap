@@ -5,8 +5,7 @@ import warnings
 import py_ComputeWeights as cw
 import py_Repixelization as rp
 
-from brahmap.utilities import TypeChangeWarning
-from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, TypeChangeWarning
 
 from mpi4py import MPI
 

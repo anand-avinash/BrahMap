@@ -1,0 +1,3 @@
+# `SolverType`
+
+::: brahmap.core.SolverType

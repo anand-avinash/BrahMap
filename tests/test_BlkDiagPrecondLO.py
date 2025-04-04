@@ -124,7 +124,7 @@ class TestBlkDiagPrecondLO_I_Cpp(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
         BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
@@ -161,7 +161,7 @@ class TestBlkDiagPrecondLO_QU_Cpp(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
         BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
@@ -198,7 +198,7 @@ class TestBlkDiagPrecondLO_IQU_Cpp(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP_cpp = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
         BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
 
         vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
@@ -234,7 +234,7 @@ class TestBlkDiagPrecondLO_I(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
         bdp_array = BDP.to_array(dtype=initfloat.dtype)
         diag_inv_count = np.diag(1.0 / PTS.weighted_counts)
@@ -265,7 +265,7 @@ class TestBlkDiagPrecondLO_QU(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
         bdp_matrix = BDP.to_array(dtype=initfloat.dtype)
 
@@ -312,7 +312,7 @@ class TestBlkDiagPrecondLO_IQU(InitCommonParams):
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
         )
-        BDP = brahmap.interfaces.BlockDiagonalPreconditionerLO(PTS)
+        BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
         bdp_matrix = BDP.to_array(dtype=initfloat.dtype)
 

@@ -122,9 +122,9 @@ initfloat64 = InitFloat64Params()
 )
 class TestPointingLO_I_Cpp(InitCommonParams):
     def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.I
+        solver_type = brahmap.core.SolverType.I
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -134,7 +134,7 @@ class TestPointingLO_I_Cpp(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P_cpp = brahmap.interfaces.PointingLO(PTS)
+        P_cpp = brahmap.core.PointingLO(PTS)
         P_py = hplo.PointingLO(PTS)
 
         ncols = PTS.new_npix * PTS.solver_type
@@ -162,9 +162,9 @@ class TestPointingLO_I_Cpp(InitCommonParams):
 )
 class TestPointingLO_QU_Cpp(InitCommonParams):
     def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.QU
+        solver_type = brahmap.core.SolverType.QU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -175,7 +175,7 @@ class TestPointingLO_QU_Cpp(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P_cpp = brahmap.interfaces.PointingLO(PTS)
+        P_cpp = brahmap.core.PointingLO(PTS)
         P_py = hplo.PointingLO(PTS)
 
         ncols = PTS.new_npix * PTS.solver_type
@@ -203,9 +203,9 @@ class TestPointingLO_QU_Cpp(InitCommonParams):
 )
 class TestPointingLO_IQU_Cpp(InitCommonParams):
     def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.IQU
+        solver_type = brahmap.core.SolverType.IQU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -216,7 +216,7 @@ class TestPointingLO_IQU_Cpp(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P_cpp = brahmap.interfaces.PointingLO(PTS)
+        P_cpp = brahmap.core.PointingLO(PTS)
         P_py = hplo.PointingLO(PTS)
 
         ncols = PTS.new_npix * PTS.solver_type
@@ -244,9 +244,9 @@ class TestPointingLO_IQU_Cpp(InitCommonParams):
 )
 class TestPointingLO_I(InitCommonParams):
     def test_I(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.I
+        solver_type = brahmap.core.SolverType.I
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -256,7 +256,7 @@ class TestPointingLO_I(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P = brahmap.interfaces.PointingLO(PTS)
+        P = brahmap.core.PointingLO(PTS)
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
@@ -289,9 +289,9 @@ class TestPointingLO_I(InitCommonParams):
 )
 class TestPointingLO_QU(InitCommonParams):
     def test_QU(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.QU
+        solver_type = brahmap.core.SolverType.QU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -302,7 +302,7 @@ class TestPointingLO_QU(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P = brahmap.interfaces.PointingLO(PTS)
+        P = brahmap.core.PointingLO(PTS)
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
@@ -351,9 +351,9 @@ class TestPointingLO_QU(InitCommonParams):
 )
 class TestPointingLO_IQU(InitCommonParams):
     def test_IQU(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.IQU
+        solver_type = brahmap.core.SolverType.IQU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -364,7 +364,7 @@ class TestPointingLO_IQU(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        P = brahmap.interfaces.PointingLO(PTS)
+        P = brahmap.core.PointingLO(PTS)
 
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights

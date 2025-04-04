@@ -1,3 +1,0 @@
-# `LBSimGLSParameters`
-
-::: brahmap.mapmakers.LBSimGLSParameters

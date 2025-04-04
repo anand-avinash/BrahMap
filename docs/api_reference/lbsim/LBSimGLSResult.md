@@ -1,0 +1,3 @@
+# `LBSimGLSResult`
+
+::: brahmap.lbsim.LBSimGLSResult

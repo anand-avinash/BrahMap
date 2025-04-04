@@ -1,0 +1,3 @@
+# `ShapeError`
+
+::: brahmap.utilities.ShapeError

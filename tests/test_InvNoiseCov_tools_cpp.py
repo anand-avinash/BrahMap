@@ -20,7 +20,6 @@ import pytest
 import numpy as np
 
 from brahmap._extensions import InvNoiseCov_tools
-from brahmap.interfaces import InvNoiseCovLO_Uncorrelated
 
 import brahmap
 
@@ -88,7 +87,9 @@ class TestInvNoiseCov_tools(InitCommonParams):
 )
 class TestInvNoiseCovLO_Uncorrelated(InitCommonParams):
     def test_InvNoiseCovLO_Uncorrelated(self, initfloat, rtol):
-        test_lo = InvNoiseCovLO_Uncorrelated(diag=initfloat.diag, dtype=initfloat.dtype)
+        test_lo = brahmap.core.InvNoiseCovLO_Uncorrelated(
+            diag=initfloat.diag, dtype=initfloat.dtype
+        )
 
         cpp_prod = test_lo * initfloat.vec
         py_prod = initfloat.diag * initfloat.vec

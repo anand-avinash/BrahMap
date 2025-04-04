@@ -1,0 +1,3 @@
+# `GLSResult`
+
+::: brahmap.core.GLSResult
