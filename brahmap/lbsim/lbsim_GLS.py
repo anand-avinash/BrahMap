@@ -5,18 +5,11 @@ from dataclasses import dataclass, asdict
 import numpy as np
 import litebird_sim as lbs
 
-from ..base import DiagonalOperator
+from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS, DTypeNoiseCov
 
-from ..core import (
-    GLSParameters,
-    GLSResult,
-    compute_GLS_maps_from_PTS,
-    ToeplitzLO,
-    BlockLO,
-    InvNoiseCovLO_Uncorrelated,
-)
+from ..lbsim import LBSimProcessTimeSamples, DTypeLBSNoiseCov
 
-from ..lbsim import LBSimProcessTimeSamples, LBSim_InvNoiseCovLO_UnCorr
+from ..math import DTypeFloat
 
 
 @dataclass
@@ -36,16 +29,9 @@ def LBSim_compute_GLS_maps(
     observations: Union[lbs.Observation, List[lbs.Observation]],
     component: str = "tod",
     pointings_flag: Union[np.ndarray, None] = None,
-    inv_noise_cov_operator: Union[
-        ToeplitzLO,
-        BlockLO,
-        DiagonalOperator,
-        LBSim_InvNoiseCovLO_UnCorr,
-        InvNoiseCovLO_Uncorrelated,
-        None,
-    ] = None,
+    inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
     threshold: float = 1.0e-5,
-    dtype_float=None,
+    dtype_float: Union[DTypeFloat, None] = None,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
 ) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:
     if inv_noise_cov_operator is None:

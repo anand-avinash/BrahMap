@@ -7,19 +7,16 @@ from typing import Union, Callable
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
-from ..base import DiagonalOperator
-
-from ..core import ProcessTimeSamples, SolverType
-
-from ..math import cg
-
 from ..core import (
+    SolverType,
+    ProcessTimeSamples,
     PointingLO,
-    ToeplitzLO,
-    BlockLO,
     BlockDiagonalPreconditionerLO,
     InvNoiseCovLO_Uncorrelated,
+    DTypeNoiseCov,
 )
+
+from ..math import cg, DTypeFloat
 
 
 @dataclass
@@ -79,9 +76,7 @@ def separate_map_vectors(
 def compute_GLS_maps_from_PTS(
     processed_samples: ProcessTimeSamples,
     time_ordered_data: np.ndarray,
-    inv_noise_cov_operator: Union[
-        ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
-    ] = None,
+    inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
     gls_parameters: GLSParameters = GLSParameters(),
 ) -> GLSResult:
     MPI_RAISE_EXCEPTION(
@@ -180,11 +175,9 @@ def compute_GLS_maps(
     time_ordered_data: np.ndarray,
     pointings_flag: Union[np.ndarray, None] = None,
     pol_angles: Union[np.ndarray, None] = None,
-    inv_noise_cov_operator: Union[
-        ToeplitzLO, BlockLO, DiagonalOperator, InvNoiseCovLO_Uncorrelated, None
-    ] = None,
+    inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
     threshold: float = 1.0e-5,
-    dtype_float=None,
+    dtype_float: Union[DTypeFloat, None] = None,
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
 ) -> Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]:

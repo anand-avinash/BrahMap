@@ -1,8 +1,12 @@
+from typing import Union
+
 from .lbsim_process_time_samples import LBSimProcessTimeSamples
 
 from .lbsim_noise_operators import LBSim_InvNoiseCovLO_UnCorr
 
-from .lbsim_GLS import LBSimGLSParameters, LBSimGLSResult, LBSim_compute_GLS_maps
+DTypeLBSNoiseCov = Union[LBSim_InvNoiseCovLO_UnCorr]
+
+from .lbsim_GLS import LBSimGLSParameters, LBSimGLSResult, LBSim_compute_GLS_maps  # noqa: E402
 
 
 __all__ = [
@@ -14,4 +18,6 @@ __all__ = [
     "LBSimGLSParameters",
     "LBSimGLSResult",
     "LBSim_compute_GLS_maps",
+    # NoiseCov dtype
+    "DTypeLBSNoiseCov",
 ]

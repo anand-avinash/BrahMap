@@ -7,13 +7,25 @@ from .linearoperators import (
 
 from .noise_operators import ToeplitzLO, InvNoiseCovLO_Uncorrelated, BlockLO
 
-from .GLS import (
+# Imports for type hinting
+from ..base import DiagonalOperator
+from typing import Union
+
+DTypeNoiseCov = Union[
+    DiagonalOperator,
+    ToeplitzLO,
+    InvNoiseCovLO_Uncorrelated,
+    BlockLO,
+]
+
+from .GLS import (  # noqa: E402
     GLSParameters,
     GLSResult,
     separate_map_vectors,
     compute_GLS_maps_from_PTS,
     compute_GLS_maps,
 )
+
 
 __all__ = [
     # process_time_samples.py
@@ -32,4 +44,6 @@ __all__ = [
     "separate_map_vectors",
     "compute_GLS_maps_from_PTS",
     "compute_GLS_maps",
+    # NoiseCov dtype
+    "DTypeNoiseCov",
 ]

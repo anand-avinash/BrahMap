@@ -11,6 +11,8 @@ from .._extensions import repixelize
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
+from ..math import DTypeFloat
+
 from brahmap import MPI_UTILS
 
 
@@ -103,7 +105,7 @@ class ProcessTimeSamples(object):
         pol_angles: Union[np.ndarray, None] = None,
         noise_weights: Union[np.ndarray, None] = None,
         threshold: float = 1.0e-5,
-        dtype_float=None,
+        dtype_float: Union[DTypeFloat, None] = None,
         update_pointings_inplace: bool = False,
     ):
         self.__npix = npix
