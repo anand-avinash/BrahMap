@@ -6,7 +6,3 @@
 - [`TypeChangeWarning`](TypeChangeWarning.md)
 - [`LowerTypeCastWarning`](LowerTypeCastWarning.md)
 - [`ShapeError`](ShapeError.md)
-
-<!-- ::: brahmap.utilities -->
-
-<!-- ::: brahmap.utilities.lbsim_interface -->

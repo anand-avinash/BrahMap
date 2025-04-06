@@ -6,7 +6,7 @@
 
 ## `dtype` hints
 
-- `DTypeFloat`: type-hint for floating-point numbers
-- `DTypeInt`: type-hint for signed integers
-- `DTypeUInit`: type-hint for unsigned integers
-- `DTypeBool`: type-hint for bools
+- `DTypeFloat`: type-hint for the `dtype` of floating-point numbers
+- `DTypeInt`: type-hint for the `dtype` of signed integers
+- `DTypeUInit`: type-hint for the `dtype` of unsigned integers
+- `DTypeBool`: type-hint for the `dtype` of bools
