@@ -222,13 +222,14 @@ class LinearOperator(BaseLinearOperator):
 
         return y
 
-    def to_array(self, dtype=np.float64):
+    def to_array(self):
         n, m = self.shape
-        H = np.empty((n, m), dtype=dtype)
+        H = np.empty((n, m), dtype=self.dtype)
+        ej = np.zeros(m, dtype=self.dtype)
         for j in range(m):
-            ej = np.zeros(m, dtype=dtype)
             ej[j] = 1.0
             H[:, j] = self * ej
+            ej[j] = 0.0
         return H
 
     def __mul_scalar(self, x):

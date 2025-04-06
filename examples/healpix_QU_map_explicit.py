@@ -86,10 +86,11 @@ for idx, pixel in enumerate(pointings):
 # Note that each MPI process has its own instance of local linear operator,
 # but it performs the matrix-vector multiplication in global space. Same
 # applies for all the linear operators we define in this script.
-inv_cov = brahmap.InvNoiseCovLO_Uncorrelated(
-    diag=np.ones(nsamples, dtype=dtype_float), dtype=dtype_float
+inv_cov = brahmap.InvNoiseCovLO_Diagonal(
+    size=nsamples,
+    input=1.0,
+    dtype=dtype_float,
 )
-
 
 ### Processing the pointing information
 processed_samples = brahmap.ProcessTimeSamples(

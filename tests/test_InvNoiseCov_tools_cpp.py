@@ -1,16 +1,16 @@
 ############################ TEST DESCRIPTION ############################
 #
-# Test defined here are related to the `InvNoiseCovLO_Uncorrelated` class of BrahMap.
+# Test defined here are related to the `NoiseCovLO_Diagonal` class of BrahMap.
 #
 # - class `TestInvNoiseCov_tools`:
 #
 #   -   `test_mult`: Here we are testing the computation of `mult()`
 # routine defined in the extension module `InvNoiseCov_tools`
 
-# - class `TestInvNoiseCovLO_Uncorrelated`:
+# - class `TestNoiseCovLO_Diagonal`:
 #
-#   -   `test_InvNoiseCovLO_Uncorrelated`: Here we are testing the
-# `mult` method overload of `TestInvNoiseCovLO_Uncorrelated` against its
+#   -   `test_NoiseCovLO_Diagonal`: Here we are testing the
+# `mult` method overload of `TestNoiseCovLO_Diagonal` against its
 # explicit computation.
 #
 ###########################################################################
@@ -85,10 +85,12 @@ class TestInvNoiseCov_tools(InitCommonParams):
         (initfloat64, 1.5e-5),
     ],
 )
-class TestInvNoiseCovLO_Uncorrelated(InitCommonParams):
-    def test_InvNoiseCovLO_Uncorrelated(self, initfloat, rtol):
-        test_lo = brahmap.core.InvNoiseCovLO_Uncorrelated(
-            diag=initfloat.diag, dtype=initfloat.dtype
+class TestNoiseCovLO_Diagonal(InitCommonParams):
+    def test_NoiseCovLO_Diagonal(self, initfloat, rtol):
+        test_lo = brahmap.core.NoiseCovLO_Diagonal(
+            size=self.nsamples,
+            input=initfloat.diag,
+            dtype=initfloat.dtype,
         )
 
         cpp_prod = test_lo * initfloat.vec
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     pytest.main([f"{__file__}::TestInvNoiseCov_tools::test_mult", "-v", "-s"])
     pytest.main(
         [
-            f"{__file__}::TestInvNoiseCovLO_Uncorrelated::test_InvNoiseCovLO_Uncorrelated",
+            f"{__file__}::TestNoiseCovLO_Diagonal::test_NoiseCovLO_Diagonal",
             "-v",
             "-s",
         ]

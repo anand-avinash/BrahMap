@@ -236,7 +236,7 @@ class TestBlkDiagPrecondLO_I(InitCommonParams):
         )
         BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
-        bdp_array = BDP.to_array(dtype=initfloat.dtype)
+        bdp_array = BDP.to_array()
         diag_inv_count = np.diag(1.0 / PTS.weighted_counts)
 
         np.testing.assert_allclose(bdp_array, diag_inv_count, rtol=rtol)
@@ -267,7 +267,7 @@ class TestBlkDiagPrecondLO_QU(InitCommonParams):
         )
         BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
-        bdp_matrix = BDP.to_array(dtype=initfloat.dtype)
+        bdp_matrix = BDP.to_array()
 
         bdp_test_matrix = np.zeros(
             (PTS.new_npix * PTS.solver_type, PTS.new_npix * PTS.solver_type),
@@ -314,7 +314,7 @@ class TestBlkDiagPrecondLO_IQU(InitCommonParams):
         )
         BDP = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
 
-        bdp_matrix = BDP.to_array(dtype=initfloat.dtype)
+        bdp_matrix = BDP.to_array()
 
         bdp_test_matrix = np.zeros(
             (PTS.new_npix * PTS.solver_type, PTS.new_npix * PTS.solver_type),

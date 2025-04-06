@@ -5,7 +5,12 @@ from .linearoperators import (
     BlockDiagonalPreconditionerLO,
 )
 
-from .noise_operators import ToeplitzLO, InvNoiseCovLO_Uncorrelated, BlockLO
+from .noise_operators import (
+    ToeplitzLO,
+    BlockLO,
+    InvNoiseCovLO_Diagonal,
+    NoiseCovLO_Diagonal,
+)
 
 # Imports for type hinting
 from ..base import DiagonalOperator
@@ -13,8 +18,8 @@ from typing import Union
 
 DTypeNoiseCov = Union[
     DiagonalOperator,
+    InvNoiseCovLO_Diagonal,
     ToeplitzLO,
-    InvNoiseCovLO_Uncorrelated,
     BlockLO,
 ]
 
@@ -36,8 +41,9 @@ __all__ = [
     "BlockDiagonalPreconditionerLO",
     # noise_operators.py
     "ToeplitzLO",
-    "InvNoiseCovLO_Uncorrelated",
     "BlockLO",
+    "InvNoiseCovLO_Diagonal",
+    "NoiseCovLO_Diagonal",
     # GLS.py
     "GLSParameters",
     "GLSResult",

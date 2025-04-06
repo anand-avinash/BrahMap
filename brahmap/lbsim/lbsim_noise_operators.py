@@ -3,16 +3,16 @@ from typing import List, Union
 import numpy as np
 import litebird_sim as lbs
 
-from ..core import InvNoiseCovLO_Uncorrelated
+from ..core import InvNoiseCovLO_Diagonal
 
 
-class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
-    """This operator class accepts `inverse_noise_variance` as a dictionary of the inverse of noise variance associated with detector names. It will then arrange the blocks of inverse noise variance in the same way as tods in the `obs_list` are distributed"""
+class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Diagonal):
+    """This operator class accepts `noise_variance` as a dictionary of the noise variance associated with detector names. It will then arrange the blocks of inverse noise variance in the same way as tods in the `obs_list` are distributed"""
 
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        inverse_noise_variance: Union[dict, None] = None,
+        noise_variance: Union[dict, None] = None,
         dtype=None,
     ):
         if isinstance(obs, lbs.Observation):
@@ -44,16 +44,16 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
         # diagonal array of the local diagonal operator
         diagonal = np.ones(diagonal_len, dtype=dtype)
 
-        if inverse_noise_variance is not None:
-            noise_dict_keys = list(inverse_noise_variance.keys())
+        if noise_variance is not None:
+            noise_dict_keys = list(noise_variance.keys())
 
             # list of the name of the detectors available on the current rank
             det_list = list(obs_list[0].name)
 
-            # setting the `inverse_noise_variance`` to 1 for the detectors whose inverse noise variance is not provided in the dictionary
+            # setting the `noise_variance`` to 1 for the detectors whose noise variance is not provided in the dictionary
             det_no_variance = np.setdiff1d(det_list, noise_dict_keys)
             for detector in det_no_variance:
-                inverse_noise_variance[detector] = 1.0
+                noise_variance[detector] = 1.0
 
             # populating the diagonal array of the local diagonal operator
             start_idx = 0
@@ -61,8 +61,10 @@ class LBSim_InvNoiseCovLO_UnCorr(InvNoiseCovLO_Uncorrelated):
                 for det_list_idx, detector in enumerate(det_list):
                     end_idx = start_idx + tod_size[det_list_idx, obs_idx]
 
-                    # filling a range of the diagonal array with the inverse noise variance value
-                    diagonal[start_idx:end_idx].fill(inverse_noise_variance[detector])
+                    # filling a range of the diagonal array with the noise variance value
+                    diagonal[start_idx:end_idx].fill(noise_variance[detector])
                     start_idx = end_idx
 
-        super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(diag=diagonal, dtype=dtype)
+        super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(
+            size=diagonal_len, input=diagonal, dtype=dtype
+        )

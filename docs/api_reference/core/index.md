@@ -12,7 +12,7 @@
 
 ## Noise covariance (and their inverse) operators
 
-- [`InvNoiseCovLO_Uncorrelated`](InvNoiseCovLO_Uncorrelated.md)
+- [`InvNoiseCovLO_Diagonal`](InvNoiseCovLO_Diagonal.md)
 - [`ToeplitzLO`](ToeplitzLO.md)
 - [`BlockLO`](BlockLO.md)
 

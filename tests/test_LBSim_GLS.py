@@ -279,7 +279,7 @@ class TestLBSimGLS:
 class TestLBSim_InvNoiseCovLO_UnCorr:
     def test_LBSim_InvNoiseCov_UnCorr(self, lbsim_obj):
         # Assigning the key values same as their `det_idx`
-        inv_noise_variance = {
+        noise_variance = {
             "001_002_030_00A_195_B": 0,
             # "001_002_029_45B_195_B", # the operator should set it to 1.0 by default
             "001_002_015_15A_195_T": 2,
@@ -288,7 +288,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
 
         inv_noise_variance_op = brahmap.lbsim.LBSim_InvNoiseCovLO_UnCorr(
             obs=lbsim_obj.sim.observations,
-            inverse_noise_variance=inv_noise_variance,
+            noise_variance=noise_variance,
             dtype=lbsim_obj.dtype_float,
         )
 
@@ -308,7 +308,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
-                [obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
+                [1.0 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
             ),
         )
 

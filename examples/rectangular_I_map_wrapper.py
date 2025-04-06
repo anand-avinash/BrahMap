@@ -72,8 +72,10 @@ for idx, pixel in enumerate(pointings):
 
 
 ### Creating an inverse noise covariance operator (unit diagonal operator in this case)
-inv_cov = brahmap.InvNoiseCovLO_Uncorrelated(
-    diag=np.ones(nsamples, dtype=dtype_float), dtype=dtype_float
+inv_cov = brahmap.InvNoiseCovLO_Diagonal(
+    size=nsamples,
+    input=1.0,
+    dtype=dtype_float,
 )
 
 

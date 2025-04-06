@@ -129,7 +129,7 @@ nav:
       - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
       - PointingLO: api_reference/core/PointingLO.md
       - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
-      - InvNoiseCovLO_Uncorrelated: api_reference/core/InvNoiseCovLO_Uncorrelated.md
+      - InvNoiseCovLO_Diagonal: api_reference/core/InvNoiseCovLO_Diagonal.md
       - ToeplitzLO: api_reference/core/ToeplitzLO.md
       - BlockLO: api_reference/core/BlockLO.md
       - GLSParameters: api_reference/core/GLSParameters.md

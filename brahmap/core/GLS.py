@@ -12,7 +12,7 @@ from ..core import (
     ProcessTimeSamples,
     PointingLO,
     BlockDiagonalPreconditionerLO,
-    InvNoiseCovLO_Uncorrelated,
+    InvNoiseCovLO_Diagonal,
     DTypeNoiseCov,
 )
 
@@ -95,11 +95,8 @@ def compute_GLS_maps_from_PTS(
         )
 
     if inv_noise_cov_operator is None:
-        inv_noise_cov_operator = InvNoiseCovLO_Uncorrelated(
-            diag=np.ones(
-                processed_samples.nsamples,
-                dtype=processed_samples.dtype_float,
-            )
+        inv_noise_cov_operator = InvNoiseCovLO_Diagonal(
+            size=processed_samples.nsamples, dtype=processed_samples.dtype_float
         )
     else:
         MPI_RAISE_EXCEPTION(
