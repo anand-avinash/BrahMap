@@ -4,7 +4,6 @@
 # setting up compiler: <https://github.com/marketplace/actions/setup-c-c-compiler>
 
 name: Tests
-run-name: Testing BrahMap
 on: [push]
 
 jobs:
@@ -23,30 +22,26 @@ jobs:
             python-version: "3.9"
 
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
         with:
           submodules: true
 
       - name: Install libomp and set environment variables for macos
-        if: runner.os == 'macOS'
+        if: runner.os == 'macAOS'
         run: |
-          brew install gcc@14
           brew install libomp
           echo "CC=$(brew --prefix gcc@14)/bin/gcc-14" >> $GITHUB_ENV
           echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> $GITHUB_ENV
-          echo "CPPFLAGS=\"-I$(brew --prefix gcc@14)/include -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
-          echo "LDFLAGS=\"-L$(brew --prefix libomp)/lib -lomp\"" >> $GITHUB_ENV
+          echo "CPPFLAGS=\"-I$(brew --prefix gcc@14)/include\"" >> $GITHUB_ENV
           brew install ${{ matrix.mpi }}
-          ls $(brew --prefix gcc@14)/lib/gcc/current/gcc/aarch64-apple-darwin23/14/include
 
       - name: Install MPI ${{ matrix.mpi }}
-        if: runner.os == 'Linux'
-        uses: mpi4py/setup-mpi@v1
+        uses: mpi4py/setup-mpi@v1.3.1
         with:
           mpi: ${{ matrix.mpi }}
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -55,13 +50,9 @@ jobs:
           mpicxx --version
           python -m pip install --upgrade pip
           if [[ "${{ runner.os }}" == "macOS" ]]; then
-            echo "CC=$(brew --prefix ${{ matrix.mpi }})/bin/mpicc" >> $GITHUB_ENV
-            echo "CXX=$(brew --prefix ${{ matrix.mpi }})/bin/mpicxx" >> $GITHUB_ENV
-            echo "MPICC=$(brew --prefix ${{ matrix.mpi }})/bin/mpicc" >> $GITHUB_ENV
-            echo "MPICXX=$(brew --prefix ${{ matrix.mpi }})/bin/mpicxx" >> $GITHUB_ENV
-            echo "CPPFLAGS=$CPPFLAGS"
-            echo "LDFLAGS=$LDFLAGS"
-            MPILD=mpicxx MPICC=mpicc MPICXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} LDFLAGS=${{ env.LDFLAGS }} python3 -m pip install -v .
+            # echo "CC=$(brew --prefix ${{ matrix.mpi }})/bin/mpicc" >> $GITHUB_ENV
+            # echo "CXX=$(brew --prefix ${{ matrix.mpi }})/bin/mpicxx" >> $GITHUB_ENV
+            MPILD=mpicxx MPICC=mpicc MPICXX=mpicxx CPPFLAGS=${{ env.CPPFLAGS }} python3 -m pip install -v .
           else
             python3 -m pip install -v .
           fi
