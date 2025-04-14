@@ -60,15 +60,15 @@ std::function<void(              //
 PYBIND11_MODULE(InvNoiseCov_tools, m) {
   m.doc() = "InvNoiseCov_tools";
   m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, float>,
-        py::arg("nsamples"),         //
-        py::arg("diag").noconvert(), //
-        py::arg("vec").noconvert(),  //
-        py::arg("prod").noconvert()  //
+        py::arg("nsamples"), //
+        py::arg("diag"),     //
+        py::arg("vec"),      //
+        py::arg("prod")      //
   );
   m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, double>,
-        py::arg("nsamples"),         //
-        py::arg("diag").noconvert(), //
-        py::arg("vec").noconvert(),  //
-        py::arg("prod").noconvert()  //
+        py::arg("nsamples"), //
+        py::arg("diag"),     //
+        py::arg("vec"),      //
+        py::arg("prod")      //
   );
 }

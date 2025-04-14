@@ -41,6 +41,7 @@ from .linop import (
     aslinearoperator,
     null_log,
 )
+
 from .blkop import (
     BlockLinearOperator,
     BlockDiagonalLinearOperator,
@@ -50,8 +51,10 @@ from .blkop import (
     BlockVerticalLinearOperator,
 )
 
+from .noise_ops import NoiseCovLinearOperator, InvNoiseCovLinearOperator
+
 __all__ = [
-    # linop
+    # linop.py
     "BaseLinearOperator",
     "LinearOperator",
     "IdentityOperator",
@@ -63,11 +66,14 @@ __all__ = [
     "SymmetricallyReducedLinearOperator",
     "aslinearoperator",
     "null_log",
-    # blkop
+    # blkop.py
     "BlockLinearOperator",
     "BlockDiagonalLinearOperator",
     "BlockPreconditioner",
     "BlockDiagonalPreconditioner",
     "BlockHorizontalLinearOperator",
     "BlockVerticalLinearOperator",
+    # noise_ops.py
+    "NoiseCovLinearOperator",
+    "InvNoiseCovLinearOperator",
 ]

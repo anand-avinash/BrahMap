@@ -29,6 +29,8 @@ copyright: Copyright &copy; 2024-present | Avinash Anand, Giuseppe Puglisi
 
 theme:
   name: "material"
+  font:
+    code: Roboto Mono
   icon:
     repo: fontawesome/brands/github
   features:

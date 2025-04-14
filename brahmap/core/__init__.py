@@ -5,7 +5,7 @@ from .linearoperators import (
     BlockDiagonalPreconditionerLO,
 )
 
-from .noise_operators import (
+from .noise_ops_diagonal import (
     ToeplitzLO,
     BlockLO,
     InvNoiseCovLO_Diagonal,

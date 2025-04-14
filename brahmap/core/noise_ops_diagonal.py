@@ -12,184 +12,54 @@ from ..math import DTypeFloat
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
+from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
+
 from brahmap import MPI_UTILS
 
 
-class NoiseCovLinearOperator(LinearOperator):
+class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
     def __init__(
-        self, nargin, matvec, input, input_type="covariance", dtype=np.float64, **kwargs
+        self,
+        size: int,
+        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input_type="covariance",
+        dtype: DTypeFloat = np.float64,
     ):
-        MPI_RAISE_EXCEPTION(
-            condition=(input_type not in ["covariance", "power_spectrum"]),
-            exception=ValueError,
-            message="Please provide only one of `covariance` or `power_spectrum`",
-        )
-
-        if input_type == "covariance":
-            self.__noise_covariance = input
-            self.__power_spectrum = None
+        if isinstance(input, float) and input_type == "covariance":
+            self.__noise_covariance = np.full(shape=size, fill_value=input, dtype=dtype)
+        elif input_type == "covariance":
+            self.__noise_covariance = np.asarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
-            self.__noise_covariance = None
-            self.__power_spectrum = input
-
-        super(NoiseCovLinearOperator, self).__init__(
-            nargin=nargin,
-            nargout=nargin,
-            matvec=matvec,
-            symmetric=True,
-            dtype=dtype,
-            **kwargs,
-        )
-
-    @property
-    def power_spectrum(self) -> np.ndarray:
-        if self.__power_spectrum is None:
-            return np.fft.fft(self.__noise_covariance).real.astype(dtype=self.dtype)
-        else:
-            return self.__power_spectrum
-
-    @property
-    def noise_covariance(self) -> np.ndarray:
-        if self.__noise_covariance is None:
-            return np.fft.ifft(self.__power_spectrum).real.astype(dtype=self.dtype)
-        else:
-            return self.__noise_covariance
-
-    @property
-    def diag(self) -> np.ndarray:
-        MPI_RAISE_EXCEPTION(
-            condition=True,
-            exception=NotImplementedError,
-            message="Please subclass to implement `diag`",
-        )
-
-    def get_inverse(self) -> "InvNoiseCovLinearOperator":
-        MPI_RAISE_EXCEPTION(
-            condition=True,
-            exception=NotImplementedError,
-            message="Please subclass to implement `get_inverse`",
-        )
-
-
-class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
-    def __init__(
-        self, nargin, matvec, input, input_type="covariance", dtype=np.float64, **kwargs
-    ):
-        super(InvNoiseCovLinearOperator, self).__init__(
-            nargin, matvec, input, input_type, dtype, **kwargs
-        )
-
-
-class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
-    def __init__(
-        self,
-        size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
-        input_type="covariance",
-        dtype: DTypeFloat = np.float64,
-    ):
-        if isinstance(input, float):
-            input = np.full(shape=size, fill_value=input, dtype=dtype)
-        else:
-            input = np.asarray(a=input, dtype=dtype)
-            MPI_RAISE_EXCEPTION(
-                condition=(input.ndim != 1),
-                exception=ValueError,
-                message="The `input` array must be a 1-d vector",
-            )
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0]),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator",
+            self.__noise_covariance = np.fft.ifft(input).real.astype(
+                dtype=dtype, copy=False
             )
 
-        super(InvNoiseCovLO_Diagonal, self).__init__(
-            nargin=size,
-            matvec=self._mult,
-            input=input,
-            input_type=input_type,
-            dtype=dtype,
-        )
-
-    @property
-    def diag(self) -> np.ndarray:
-        return 1.0 / self.noise_covariance
-
-    def get_inverse(self):
-        noise_cov = NoiseCovLO_Diagonal(
-            size=self.shape[0],
-            input=self.noise_covariance,
-            input_type="covariance",
-            dtype=self.dtype,
-        )
-        return noise_cov
-
-    def _mult(self, vec: np.ndarray):
         MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
+            condition=(self.__noise_covariance.ndim != 1),
             exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+            message="The `input` array must be a 1-d vector",
         )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
-        prod = np.zeros(self.shape[0], dtype=self.dtype)
-
-        InvNoiseCov_tools.uncorrelated_mult(
-            nsamples=self.shape[0],
-            diag=1.0 / self.noise_covariance,
-            vec=vec,
-            prod=prod,
+        MPI_RAISE_EXCEPTION(
+            condition=(size != self.__noise_covariance.shape[0]),
+            exception=ValueError,
+            message="The input array size must be same as the size of the linear operator",
         )
-
-        return prod
-
-
-class NoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
-    def __init__(
-        self,
-        size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
-        input_type="covariance",
-        dtype: DTypeFloat = np.float64,
-    ):
-        if isinstance(input, float):
-            input = np.full(shape=size, fill_value=input, dtype=dtype)
-        else:
-            input = np.asarray(a=input, dtype=dtype)
-            MPI_RAISE_EXCEPTION(
-                condition=(input.ndim != 1),
-                exception=ValueError,
-                message="The `input` array must be a 1-d vector",
-            )
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0]),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator",
-            )
 
         super(NoiseCovLO_Diagonal, self).__init__(
             nargin=size,
             matvec=self._mult,
-            input=input,
             input_type=input_type,
             dtype=dtype,
         )
 
     @property
     def diag(self) -> np.ndarray:
-        return self.noise_covariance
+        return self.__noise_covariance
 
     def get_inverse(self):
         inv_noise_cov = InvNoiseCovLO_Diagonal(
             size=self.shape[0],
-            input=self.noise_covariance,
+            input=self.__noise_covariance,
             input_type="covariance",
             dtype=self.dtype,
         )
@@ -214,7 +84,84 @@ class NoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
 
         InvNoiseCov_tools.uncorrelated_mult(
             nsamples=self.shape[0],
-            diag=self.noise_covariance,
+            diag=self.__noise_covariance,
+            vec=vec,
+            prod=prod,
+        )
+
+        return prod
+
+
+class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
+    def __init__(
+        self,
+        size: int,
+        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input_type="covariance",
+        dtype: DTypeFloat = np.float64,
+    ):
+        if isinstance(input, float) and input_type == "covariance":
+            self.__inv_noise_cov = np.full(
+                shape=size, fill_value=1.0 / input, dtype=dtype
+            )
+        elif input_type == "covariance":
+            self.__inv_noise_cov = 1.0 / np.asarray(a=input, dtype=dtype)
+        elif input_type == "power_spectrum":
+            self.__inv_noise_cov = 1.0 / np.fft.ifft(input).real.astype(
+                dtype=dtype, copy=False
+            )
+
+        MPI_RAISE_EXCEPTION(
+            condition=(self.__inv_noise_cov.ndim != 1),
+            exception=ValueError,
+            message="The `input` array must be a 1-d vector",
+        )
+        MPI_RAISE_EXCEPTION(
+            condition=(size != self.__inv_noise_cov.shape[0]),
+            exception=ValueError,
+            message="The input array size must be same as the size of the linear operator",
+        )
+
+        super(InvNoiseCovLO_Diagonal, self).__init__(
+            nargin=size,
+            matvec=self._mult,
+            input_type=input_type,
+            dtype=dtype,
+        )
+
+    @property
+    def diag(self) -> np.ndarray:
+        return self.__inv_noise_cov
+
+    def get_inverse(self):
+        noise_cov = NoiseCovLO_Diagonal(
+            size=self.shape[0],
+            input=1.0 / self.__inv_noise_cov,
+            input_type="covariance",
+            dtype=self.dtype,
+        )
+        return noise_cov
+
+    def _mult(self, vec: np.ndarray):
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != self.shape[0]),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
+        )
+
+        if vec.dtype != self.dtype:
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {self.dtype}",
+                    TypeChangeWarning,
+                )
+            vec = vec.astype(dtype=self.dtype, copy=False)
+
+        prod = np.zeros(self.shape[0], dtype=self.dtype)
+
+        InvNoiseCov_tools.uncorrelated_mult(
+            nsamples=self.shape[0],
+            diag=self.__inv_noise_cov,
             vec=vec,
             prod=prod,
         )
