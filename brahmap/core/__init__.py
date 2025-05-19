@@ -12,6 +12,11 @@ from .noise_ops_diagonal import (
     NoiseCovLO_Diagonal,
 )
 
+from .noise_ops_circulant import (
+    NoiseCovLO_Circulant,
+    InvNoiseCovLO_Circulant,
+)
+
 # Imports for type hinting
 from ..base import DiagonalOperator
 from typing import Union
@@ -39,11 +44,14 @@ __all__ = [
     # linearoperators.py
     "PointingLO",
     "BlockDiagonalPreconditionerLO",
-    # noise_operators.py
+    # noise_ops_diagonal.py
     "ToeplitzLO",
     "BlockLO",
     "InvNoiseCovLO_Diagonal",
     "NoiseCovLO_Diagonal",
+    # noise_ops_circulant.py
+    "NoiseCovLO_Circulant",
+    "InvNoiseCovLO_Circulant",
     # GLS.py
     "GLSParameters",
     "GLSResult",

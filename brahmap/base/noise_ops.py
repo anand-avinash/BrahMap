@@ -24,6 +24,8 @@ class NoiseCovLinearOperator(LinearOperator):
             **kwargs,
         )
 
+        self.size = nargin
+
     @property
     def diag(self) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
