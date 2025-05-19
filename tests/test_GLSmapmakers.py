@@ -284,10 +284,6 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
         )
 
 
-# @pytest.mark.skip(
-#     reason="Unlike other tests, this one is producing"
-#     "different result on each execution. Under investigation!"
-# )
 @pytest.mark.parametrize(
     "initint, initfloat, rtol",
     [
