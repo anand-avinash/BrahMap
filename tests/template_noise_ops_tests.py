@@ -113,6 +113,28 @@ class BaseTestNoiseLO:
         )
 
     @pytest.mark.parametrize(
+        "operator, ex_operator",
+        [
+            ("operator1", "ex_operator1"),
+            ("operator2", "ex_operator2"),
+            ("inv_operator1", "ex_inv_operator1"),
+            ("inv_operator2", "ex_inv_operator2"),
+        ],
+    )
+    @pytest.mark.ignore_param_count
+    def test_is_symmetric(self, operator, ex_operator):
+        """Tests whether the matrix is symmetric"""
+        op = getattr(self, operator)
+        ex_op = getattr(self, ex_operator)
+        tr_op = op.T.to_array()
+        np.testing.assert_allclose(
+            ex_op,
+            tr_op,
+            rtol=self.rtol,
+            atol=self.atol,
+        )
+
+    @pytest.mark.parametrize(
         "operator, numpy_operator",
         [
             ("operator1", "numpy_operator1"),
