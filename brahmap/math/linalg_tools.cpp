@@ -10,7 +10,7 @@
 namespace py = pybind11;
 
 template <typename dfloat>
-void uncorrelated_mult(            //
+void multiply_array(               //
     const ssize_t nsamples,        //
     const dfloat *__restrict diag, //
     const dfloat *__restrict vec,  //
@@ -22,7 +22,7 @@ void uncorrelated_mult(            //
     prod[idx] = diag[idx] * vec[idx];
   } // for
   return;
-} // uncorrelated_mult()
+} // multiply_array()
 
 template <template <typename, int = py::array::c_style> class buffer_t,
           typename dfloat>
@@ -32,11 +32,11 @@ std::function<void(              //
     const buffer_t<dfloat> vec,  //
     buffer_t<dfloat> prod        //
     )>
-    numpy_bind_uncorrelated_mult = //
-    [](const ssize_t nsamples,     //
-       const py::buffer diag,      //
-       const py::buffer vec,       //
-       py::buffer prod             //
+    numpy_bind_multiply_array = //
+    [](const ssize_t nsamples,  //
+       const py::buffer diag,   //
+       const py::buffer vec,    //
+       py::buffer prod          //
 
     ) {
       py::buffer_info diag_info = diag.request();
@@ -47,25 +47,25 @@ std::function<void(              //
       const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
       dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
 
-      uncorrelated_mult( //
-          nsamples,      //
-          diag_ptr,      //
-          vec_ptr,       //
-          prod_ptr       //
+      multiply_array( //
+          nsamples,   //
+          diag_ptr,   //
+          vec_ptr,    //
+          prod_ptr    //
       );
 
       return;
-    }; // numpy_bind_uncorrelated_mult()
+    }; // numpy_bind_multiply_array()
 
-PYBIND11_MODULE(InvNoiseCov_tools, m) {
-  m.doc() = "InvNoiseCov_tools";
-  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, float>,
+PYBIND11_MODULE(linalg_tools, m) {
+  m.doc() = "linalg_tools";
+  m.def("multiply_array", numpy_bind_multiply_array<py::array_t, float>,
         py::arg("nsamples"), //
         py::arg("diag"),     //
         py::arg("vec"),      //
         py::arg("prod")      //
   );
-  m.def("uncorrelated_mult", numpy_bind_uncorrelated_mult<py::array_t, double>,
+  m.def("multiply_array", numpy_bind_multiply_array<py::array_t, double>,
         py::arg("nsamples"), //
         py::arg("diag"),     //
         py::arg("vec"),      //

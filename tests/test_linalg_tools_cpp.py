@@ -1,17 +1,11 @@
 ############################ TEST DESCRIPTION ############################
 #
-# Test defined here are related to the `NoiseCovLO_Diagonal` class of BrahMap.
+# Test defined here are related to the following class of BrahMap.
 #
-# - class `TestInvNoiseCov_tools`:
+# - class `TestLinAlg_tools`:
 #
 #   -   `test_mult`: Here we are testing the computation of `mult()`
-# routine defined in the extension module `InvNoiseCov_tools`
-
-# - class `TestNoiseCovLO_Diagonal`:
-#
-#   -   `test_NoiseCovLO_Diagonal`: Here we are testing the
-# `mult` method overload of `TestNoiseCovLO_Diagonal` against its
-# explicit computation.
+# routine defined in the extension module `linalg_tools`
 #
 ###########################################################################
 
@@ -19,7 +13,7 @@
 import pytest
 import numpy as np
 
-from brahmap._extensions import InvNoiseCov_tools
+from brahmap.math import linalg_tools
 
 import brahmap
 
@@ -62,11 +56,11 @@ initfloat64 = InitFloat64Params()
         (initfloat64, 1.5e-5),
     ],
 )
-class TestInvNoiseCov_tools(InitCommonParams):
+class TestLinAlg_tools(InitCommonParams):
     def test_mult(self, initfloat, rtol):
         cpp_prod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
-        InvNoiseCov_tools.uncorrelated_mult(
+        linalg_tools.multiply_array(
             nsamples=self.nsamples,
             diag=initfloat.diag,
             vec=initfloat.vec,
@@ -78,33 +72,5 @@ class TestInvNoiseCov_tools(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
 
-@pytest.mark.parametrize(
-    "initfloat, rtol",
-    [
-        (initfloat32, 1.5e-4),
-        (initfloat64, 1.5e-5),
-    ],
-)
-class TestNoiseCovLO_Diagonal(InitCommonParams):
-    def test_NoiseCovLO_Diagonal(self, initfloat, rtol):
-        test_lo = brahmap.core.NoiseCovLO_Diagonal(
-            size=self.nsamples,
-            input=initfloat.diag,
-            dtype=initfloat.dtype,
-        )
-
-        cpp_prod = test_lo * initfloat.vec
-        py_prod = initfloat.diag * initfloat.vec
-
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
-
-
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::TestInvNoiseCov_tools::test_mult", "-v", "-s"])
-    pytest.main(
-        [
-            f"{__file__}::TestNoiseCovLO_Diagonal::test_NoiseCovLO_Diagonal",
-            "-v",
-            "-s",
-        ]
-    )
+    pytest.main([f"{__file__}::TestLinAlg_tools::test_mult", "-v", "-s"])

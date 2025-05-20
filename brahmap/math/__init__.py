@@ -15,6 +15,8 @@ from .unary_functions import (
     cbrt,
 )
 
+from .linalg_tools import multiply_array
+
 from .linalg import parallel_norm, cg
 
 DTypeFloat = _typing._DTypeLikeFloat
@@ -35,6 +37,7 @@ __all__ = [
     "log2",
     "sqrt",
     "cbrt",
+    "multiply_array",
     "parallel_norm",
     "cg",
     "DTypeFloat",

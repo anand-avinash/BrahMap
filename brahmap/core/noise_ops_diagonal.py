@@ -6,9 +6,7 @@ from ..base import LinearOperator, DiagonalOperator, BlockDiagonalLinearOperator
 
 from ..utilities import TypeChangeWarning
 
-from .._extensions import InvNoiseCov_tools
-
-from ..math import DTypeFloat
+from ..math import DTypeFloat, linalg_tools
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
@@ -82,7 +80,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
 
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 
-        InvNoiseCov_tools.uncorrelated_mult(
+        linalg_tools.multiply_array(
             nsamples=self.shape[0],
             diag=self.__noise_covariance,
             vec=vec,
@@ -159,7 +157,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
 
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 
-        InvNoiseCov_tools.uncorrelated_mult(
+        linalg_tools.multiply_array(
             nsamples=self.shape[0],
             diag=self.__inv_noise_cov,
             vec=vec,
