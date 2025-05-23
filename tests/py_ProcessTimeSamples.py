@@ -1,12 +1,13 @@
 from enum import IntEnum
 import numpy as np
 import warnings
+from typing import Union
 
 import py_ComputeWeights as cw
 import py_Repixelization as rp
 
-from brahmap.utilities import TypeChangeWarning
-from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION
+from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, TypeChangeWarning
+from brahmap.math import DTypeFloat
 
 from mpi4py import MPI
 
@@ -27,7 +28,7 @@ class ProcessTimeSamples(object):
         pol_angles: np.ndarray = None,
         noise_weights: np.ndarray = None,
         threshold: float = 1.0e-5,
-        dtype_float=None,
+        dtype_float: Union[DTypeFloat, None] = None,
         update_pointings_inplace: bool = True,
     ):
         self.npix = npix

@@ -2,15 +2,19 @@
 
 ## Core API
 
-- [Interfaces](./interfaces/index.md)
+- [Core Interface](./core/index.md)
+- [`litebird_sim` Interface](./lbsim/index.md)
 - [Utilities](./utilities/index.md)
-- [Map-makers](./map_makers/index.md)
-- [Math functions](./math_functions/index.md)
 
 ## Base API
 
-- [`linop` package](./linop/index.md)
+- [Base Operators](./base_operators/index.md)
+
+## C++ Extensions
+
+- [Math functions](./math_functions/index.md)
+- [C++ extensions](./cpp_extensions/index.md)
 
 ## C++ API
 
-- [C++ extensions](./cpp_extensions/index.md)
+_Under development_ <!-- markdownlint-disable-line -->
