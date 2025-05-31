@@ -115,11 +115,11 @@ class BlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
         return self.__block_list
 
     def get_inverse(self):
-        MPI_RAISE_EXCEPTION(
-            condition=True,
-            exception=NotImplementedError,
-            message="Please subclass to implement `get_inverse()`",
-        )
+        inv_block_list = []
+        for idx, op in enumerate(self.__block_list):
+            inv_block_list.append(op.get_inverse())
+
+        return BlockDiagonalLinearOperator(inv_block_list)
 
     def __build_blocks(self, operator, block_input, input_type, dtype):
         self.__block_list = []
@@ -138,5 +138,25 @@ class BlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             start_idx = end_idx
 
 
+class BlockDiagInvNoiseCovLinearOperator(BlockDiagNoiseCovLinearOperator):
+    def __init__(
+        self,
+        operator,
+        block_size,
+        block_input,
+        input_type="power_spectrum",
+        dtype=np.float64,
+        **kwargs,
+    ):
+        super().__init__(
+            operator,
+            block_size,
+            block_input,
+            input_type,
+            dtype,
+            **kwargs,
+        )
+
+
 BlockDiagNoiseCovLO = BlockDiagNoiseCovLinearOperator
-BlockDiagInvNoiseCovLO = BlockDiagNoiseCovLinearOperator
+BlockDiagInvNoiseCovLO = BlockDiagInvNoiseCovLinearOperator

@@ -144,7 +144,7 @@ class BaseTestNoiseLO:
         ],
     )
     @pytest.mark.ignore_param_count
-    def test_diagonal__ignore_param_count__(self, operator, numpy_operator):
+    def test_diagonal(self, operator, numpy_operator):
         """Tests whether the `diag` attribute of operators are same as their
         diagonal
         """
