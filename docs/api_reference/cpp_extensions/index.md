@@ -1,3 +1,3 @@
-# User Guide
+# C++ Extensions
 
 Under development!

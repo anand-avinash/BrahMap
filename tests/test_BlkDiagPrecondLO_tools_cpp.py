@@ -104,9 +104,9 @@ initfloat64 = InitFloat64Params()
 )
 class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
     def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.I
+        solver_type = brahmap.core.SolverType.I
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -130,9 +130,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.QU
+        solver_type = brahmap.core.SolverType.QU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -171,9 +171,9 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
 
     def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.IQU
+        solver_type = brahmap.core.SolverType.IQU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,

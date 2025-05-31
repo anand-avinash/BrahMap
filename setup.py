@@ -240,10 +240,9 @@ ext4 = Extension(
 )
 
 ext5 = Extension(
-    "brahmap._extensions.InvNoiseCov_tools",
-    sources=[os.path.join("brahmap", "_extensions", "InvNoiseCov_tools.cpp")],
+    "brahmap.math.linalg_tools",
+    sources=[os.path.join("brahmap", "math", "linalg_tools.cpp")],
     include_dirs=[
-        os.path.join("brahmap", "_extensions"),
         os.path.join("extern", "pybind11", "include"),
     ],
     define_macros=None,

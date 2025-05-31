@@ -1,15 +1,19 @@
 import numpy as np
 import warnings
 
-from brahmap import linop as lp
-from brahmap.utilities import TypeChangeWarning
-from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, ProcessTimeSamples
+from brahmap import (
+    MPI_UTILS,
+    MPI_RAISE_EXCEPTION,
+    ProcessTimeSamples,
+    TypeChangeWarning,
+)
 
+from brahmap.base import LinearOperator
 
 import py_BlkDiagPrecondLO_tools as bdplo_tools
 
 
-class BlockDiagonalPreconditionerLO(lp.LinearOperator):
+class BlockDiagonalPreconditionerLO(LinearOperator):
     def __init__(self, processed_samples: ProcessTimeSamples):
         self.solver_type = processed_samples.solver_type
         self.dtype_float = processed_samples.dtype_float
