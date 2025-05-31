@@ -51,7 +51,12 @@ from .blkop import (
     BlockVerticalLinearOperator,
 )
 
-from .noise_ops import NoiseCovLinearOperator, InvNoiseCovLinearOperator
+from .noise_ops import (
+    NoiseCovLinearOperator,
+    InvNoiseCovLinearOperator,
+    BlockDiagNoiseCovLO,
+    BlockDiagInvNoiseCovLO,
+)
 
 __all__ = [
     # linop.py
@@ -76,4 +81,6 @@ __all__ = [
     # noise_ops.py
     "NoiseCovLinearOperator",
     "InvNoiseCovLinearOperator",
+    "BlockDiagNoiseCovLO",
+    "BlockDiagInvNoiseCovLO",
 ]

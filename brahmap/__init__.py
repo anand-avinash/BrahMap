@@ -15,6 +15,8 @@ from .mpi import MPI_UTILS, Finalize, MPI_RAISE_EXCEPTION  # noqa: E402
 
 from . import base, _extensions, core, utilities, math  # noqa: E402
 
+from .base import BlockDiagNoiseCovLO, BlockDiagInvNoiseCovLO  # noqa: E402
+
 from .core import (  # noqa: E402
     SolverType,
     ProcessTimeSamples,
@@ -69,6 +71,8 @@ __all__ = __all__ + [
     "MPI_RAISE_EXCEPTION",
     # ./base/
     "base",
+    "BlockDiagNoiseCovLO",
+    "BlockDiagInvNoiseCovLO",
     # ./_extensions/
     "_extensions",
     # ./core/
