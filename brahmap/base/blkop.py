@@ -28,12 +28,18 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-from ..base import BaseLinearOperator, LinearOperator
-from ..base import null_log
-from ..utilities import ShapeError
 import numpy as np
 import itertools
-from functools import reduce
+import warnings
+from typing import List
+from functools import reduce, partial
+
+from ..base import BaseLinearOperator, LinearOperator
+from ..base import null_log
+from ..utilities import ShapeError, TypeChangeWarning
+from ..mpi import MPI_RAISE_EXCEPTION
+
+from brahmap import MPI_UTILS
 
 
 class BlockLinearOperator(LinearOperator):
@@ -170,109 +176,113 @@ class BlockLinearOperator(LinearOperator):
 
 
 class BlockDiagonalLinearOperator(LinearOperator):
-    """
-    A block diagonal linear operator.
-
-    Each block must be a linear operator.
-    The blocks may be specified as one list, e.g., `[A, B, C]`.
-
-    """
-
-    def __init__(self, blocks, **kwargs):
+    def __init__(self, block_list, **kwargs):
         try:
-            for block in blocks:
-                __ = block.shape
+            for block in block_list:
+                __, __ = block.shape
         except (TypeError, AttributeError):
-            raise ValueError("blocks should be a flattened list of operators")
+            MPI_RAISE_EXCEPTION(
+                condition=True,
+                exception=ValueError,
+                message="The `block_list` must be a flat list of linear" "operators",
+            )
 
-        symmetric = reduce(lambda x, y: x and y, [blk.symmetric for blk in blocks])
+        self.__row_size = np.asarray(
+            [block.shape[0] for block in block_list], dtype=int
+        )
+        self.__col_size = np.asarray(
+            [block.shape[-1] for block in block_list], dtype=int
+        )
 
-        self._blocks = blocks
+        nargin = sum(self.__col_size)
+        nargout = sum(self.__row_size)
+        symmetric = reduce(
+            lambda x, y: x and y, [block.symmetric for block in block_list]
+        )
+        dtype = np.result_type(*[block.dtype for block in block_list])
 
-        log = kwargs.get("logger", null_log)
-        log.debug("Building new BlockDiagonalLinearOperator")
+        self.__block_list = block_list
 
-        nargins = [blk.shape[-1] for blk in blocks]
-        log.debug("nargins = " + repr(nargins))
+        # transpose operator
+        blocks_list_transposed = [block.T for block in block_list]
 
-        nargouts = [blk.shape[0] for blk in blocks]
-        log.debug("nargouts = " + repr(nargouts))
-
-        nargins = np.array(nargins)
-        nargouts = np.array(nargouts)
-        nargin = sum(nargins)
-        nargout = sum(nargouts)
-
-        # Create blocks of transpose operator.
-        blocksT = [blk.T for blk in blocks]
-
-        def blk_matvec(x, blks):
-            nx = len(x)
-            nargins = [blk.shape[-1] for blk in blocks]
-            nargin = sum(nargins)
-            nargouts = [blk.shape[0] for blk in blocks]
-            nargout = sum(nargouts)
-            self.logger.debug("Multiplying with a vector of size %d" % nx)
-            self.logger.debug("nargin=%d, nargout=%d" % (nargin, nargout))
-            if nx != nargin:
-                raise ShapeError("Multiplying with vector of wrong shape.")
-
-            result_type = np.result_type(self.dtype, x.dtype)
-            y = np.empty(int(nargout), dtype=result_type)
-
-            nblks = len(blks)
-
-            row_start = col_start = 0
-            for blk in range(nblks):
-                row_end = row_start + int(nargouts[blk])
-                yout = y[row_start:row_end]
-
-                col_end = col_start + int(nargins[blk])
-                xin = x[col_start:col_end]
-
-                B = blks[blk]
-                yout[:] = B * xin
-
-                col_start = col_end
-                row_start = row_end
-
-            return y
-
-        blk_dtypes = [blk.dtype for blk in blocks]
-        op_dtype = np.result_type(*blk_dtypes[0:10])
+        matvec = partial(
+            self._mult,
+            block_list=self.block_list,
+            dtype=dtype,
+        )
+        rmatvec = partial(
+            self._mult,
+            block_list=blocks_list_transposed,
+            dtype=dtype,
+        )
 
         super(BlockDiagonalLinearOperator, self).__init__(
-            nargin,
-            nargout,
+            nargin=nargin,
+            nargout=nargout,
             symmetric=symmetric,
-            matvec=lambda x: blk_matvec(x, self._blocks),
-            rmatvec=lambda x: blk_matvec(x, blocksT),
-            dtype=op_dtype,
+            matvec=matvec,
+            rmatvec=rmatvec,
+            dtype=dtype,
             **kwargs,
         )
 
-        self.H._blocks = blocksT
+    @property
+    def block_list(self) -> List:
+        return self.__block_list
 
     @property
-    def blocks(self):
-        """The list of blocks defining the block diagonal operator."""
-        return self._blocks
+    def num_blocks(self) -> int:
+        return len(self.block_list)
+
+    @property
+    def row_size(self) -> np.ndarray:
+        return self.__row_size
+
+    @property
+    def col_size(self) -> np.ndarray:
+        return self.__col_size
 
     def __getitem__(self, idx):
-        blks = self._blocks[idx]
+        block_range = self.block_list[idx]
         if isinstance(idx, slice):
-            return BlockDiagonalLinearOperator(blks, symmetric=self.symmetric)
-        return blks
+            return BlockDiagonalLinearOperator(
+                block_list=block_range,
+            )
+        else:
+            return block_range
 
-    def __setitem__(self, idx, ops):
-        if not isinstance(ops, BaseLinearOperator):
-            if isinstance(ops, list) or isinstance(ops, tuple):
-                for op in ops:
-                    if not isinstance(op, BaseLinearOperator):
-                        msg = "Block operators can only contain"
-                        msg += " linear operators"
-                        raise ValueError(msg)
-        self._blocks[idx] = ops
+    def _mult(self, vec: np.ndarray, block_list: List, dtype) -> np.ndarray:
+        nrows = sum([block.shape[0] for block in block_list])
+        ncols = sum([block.shape[1] for block in block_list])
+        MPI_RAISE_EXCEPTION(
+            condition=(len(vec) != ncols),
+            exception=ValueError,
+            message=f"Dimensions of `vec` is not compatible with the dimensions of this `BlockDiagonalLinearOperator` instance.\nShape of `BlockDiagonalLinearOperator` instance: ({nrows, ncols})\nShape of `vec`: {vec.shape}",
+        )
+
+        if vec.dtype != dtype:
+            if MPI_UTILS.rank == 0:
+                warnings.warn(
+                    f"dtype of `vec` will be changed to {dtype}",
+                    TypeChangeWarning,
+                )
+            vec = vec.astype(dtype=dtype, copy=False)
+
+        prod = np.zeros(nrows, dtype=dtype)
+
+        start_row_idx = 0
+        start_col_idx = 0
+        for idx, block in enumerate(block_list):
+            end_row_idx = start_row_idx + block.shape[0]
+            end_col_idx = start_col_idx + block.shape[1]
+
+            prod[start_row_idx:end_row_idx] = block * vec[start_col_idx:end_col_idx]
+
+            start_row_idx = end_row_idx
+            start_col_idx = end_col_idx
+
+        return prod
 
 
 class BlockPreconditioner(BlockLinearOperator):
