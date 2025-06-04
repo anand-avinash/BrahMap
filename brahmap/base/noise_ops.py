@@ -1,5 +1,4 @@
 import numpy as np
-from typing import List, Union
 
 from ..base import LinearOperator, BlockDiagonalLinearOperator
 
@@ -68,95 +67,33 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
         )
 
 
-class BlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
-    def __init__(
-        self,
-        operator,
-        block_size: Union[np.ndarray, List],
-        block_input: List[Union[np.ndarray, List]],
-        input_type: str = "power_spectrum",
-        dtype: DTypeFloat = np.float64,
-        **kwargs,
-    ):
-        block_size = np.asarray(block_size, dtype=int)
+class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
+    def __init__(self, block_list, **kwargs):
+        super(BaseBlockDiagNoiseCovLinearOperator, self).__init__(block_list, **kwargs)
 
         MPI_RAISE_EXCEPTION(
-            condition=(block_size.shape[0] != len(block_input)),
+            condition=(not self.symmetric),
             exception=ValueError,
-            message="The number of blocks listed in `block_size` is different"
-            "from the number of blocks listed in `block_input`",
-        )
-
-        self.dtype = dtype
-        self.__block_size = block_size
-        self.size = sum(self.block_size)
-        self.__build_blocks(
-            operator=operator,
-            block_input=block_input,
-            input_type=input_type,
-            dtype=dtype,
-        )
-
-        super(BlockDiagNoiseCovLinearOperator, self).__init__(
-            blocks=self.block_list,
-            **kwargs,
+            message="The noise (inv-)covariance operators must be symmetric",
         )
 
     @property
     def diag(self) -> np.ndarray:
-        return self.__diag
-
-    @property
-    def block_size(self) -> np.ndarray:
-        return self.__block_size
-
-    @property
-    def block_list(self) -> List:
-        return self.__block_list
-
-    def get_inverse(self):
-        inv_block_list = []
-        for idx, op in enumerate(self.__block_list):
-            inv_block_list.append(op.get_inverse())
-
-        return BlockDiagonalLinearOperator(inv_block_list)
-
-    def __build_blocks(self, operator, block_input, input_type, dtype):
-        self.__block_list = []
-        self.__diag = np.empty(self.size, dtype=dtype)
-        start_idx = 0
-        for idx, input in enumerate(block_input):
-            block_op = operator(
-                size=self.block_size[idx],
-                input=input,
-                input_type=input_type,
-                dtype=dtype,
-            )
-            self.__block_list.append(block_op)
-            end_idx = start_idx + self.block_size[idx]
-            self.__diag[start_idx:end_idx] = block_op.diag
-            start_idx = end_idx
-
-
-class BlockDiagInvNoiseCovLinearOperator(BlockDiagNoiseCovLinearOperator):
-    def __init__(
-        self,
-        operator,
-        block_size,
-        block_input,
-        input_type="power_spectrum",
-        dtype=np.float64,
-        **kwargs,
-    ):
-        super().__init__(
-            operator,
-            block_size,
-            block_input,
-            input_type,
-            dtype,
-            **kwargs,
+        diag = np.concatenate(
+            [block.diag for block in self.block_list],
+            axis=None,
         )
+        return diag
+
+    def get_inverse(self) -> "BaseBlockDiagInvNoiseCovLinearOperator":
+        inverse_list = [block.get_inverse() for block in self.block_list]
+        return BaseBlockDiagInvNoiseCovLinearOperator(block_list=inverse_list)
 
 
-BlockDiagNoiseCovLO = BlockDiagNoiseCovLinearOperator
-BlockDiagInvNoiseCovLO = BlockDiagInvNoiseCovLinearOperator
+class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator):
+    def __init__(self, block_list, **kwargs):
+        super().__init__(block_list, **kwargs)
+
+    def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":
+        inverse_list = [block.get_inverse() for block in self.block_list]
+        return BaseBlockDiagNoiseCovLinearOperator(block_list=inverse_list)
