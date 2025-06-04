@@ -26,7 +26,7 @@ formatted_print() {
 error_nprocs=()
 
 # Testing the execution for different nprocs
-for nprocs in 1 2 5 6; do
+for nprocs in 1 2 4 5; do
 
   formatted_print "Running test with nprocs = $nprocs"
 

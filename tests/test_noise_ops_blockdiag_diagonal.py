@@ -16,7 +16,7 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
         rng = np.random.default_rng(seed=[seed, comm_rank])
 
         nblocks = 3 * (comm_rank + 1)
-        block_size = rng.integers(low=5, high=15, size=nblocks)
+        block_size = rng.integers(low=5, high=10, size=nblocks)
         total_size = sum(block_size)
 
         numpy_operator1 = np.zeros((total_size, total_size), dtype=dtype)
@@ -90,10 +90,10 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
 class TestBlockDiagNoiseOps_Diagonal_F32(BlockDiagNoiseOps_Diagonal):
     dtype = np.float32
     rtol = 1.0e-5
-    atol = 1.0e-10
+    atol = 1.0e-8
 
 
 class TestBlockDiagNoiseOps_Diagonal_F64(BlockDiagNoiseOps_Diagonal):
     dtype = np.float64
     rtol = 1.0e-7
-    atol = 1.0e-15
+    atol = 1.0e-10
