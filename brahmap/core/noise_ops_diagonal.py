@@ -1,5 +1,6 @@
 import numpy as np
 import warnings
+from numbers import Number
 from typing import List, Union
 
 from ..base import LinearOperator, DiagonalOperator, BlockDiagonalLinearOperator
@@ -23,7 +24,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         input_type="covariance",
         dtype: DTypeFloat = np.float64,
     ):
-        if isinstance(input, float) and input_type == "covariance":
+        if isinstance(input, Number) and input_type == "covariance":
             self.__noise_covariance = np.full(shape=size, fill_value=input, dtype=dtype)
         elif input_type == "covariance":
             self.__noise_covariance = np.asarray(a=input, dtype=dtype)

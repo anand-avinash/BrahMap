@@ -76,6 +76,7 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             exception=ValueError,
             message="The noise (inv-)covariance operators must be symmetric",
         )
+        self.size = sum(self.col_size)
 
     @property
     def diag(self) -> np.ndarray:
@@ -92,7 +93,9 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
 
 class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator):
     def __init__(self, block_list, **kwargs):
-        super().__init__(block_list, **kwargs)
+        super(BaseBlockDiagInvNoiseCovLinearOperator, self).__init__(
+            block_list, **kwargs
+        )
 
     def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":
         inverse_list = [block.get_inverse() for block in self.block_list]

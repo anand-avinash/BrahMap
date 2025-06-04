@@ -17,6 +17,11 @@ from .noise_ops_circulant import (
     InvNoiseCovLO_Circulant,
 )
 
+from .noise_ops_block_diag import (
+    BlockDiagNoiseCovLO,
+    BlockDiagInvNoiseCovLO,
+)
+
 # Imports for type hinting
 from ..base import DiagonalOperator
 from typing import Union
@@ -52,6 +57,9 @@ __all__ = [
     # noise_ops_circulant.py
     "NoiseCovLO_Circulant",
     "InvNoiseCovLO_Circulant",
+    # noise_ops_block_diag.py
+    "BlockDiagNoiseCovLO",
+    "BlockDiagInvNoiseCovLO",
     # GLS.py
     "GLSParameters",
     "GLSResult",

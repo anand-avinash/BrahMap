@@ -43,7 +43,7 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
             )
             start_idx = end_idx
 
-        operator1 = brahmap.base.BlockDiagNoiseCovLO(
+        operator1 = brahmap.core.BlockDiagNoiseCovLO(
             operator=brahmap.core.NoiseCovLO_Diagonal,
             block_size=block_size,
             block_input=covariance_list,
@@ -51,7 +51,7 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
             dtype=dtype,
         )
 
-        operator2 = brahmap.base.BlockDiagNoiseCovLO(
+        operator2 = brahmap.core.BlockDiagNoiseCovLO(
             operator=brahmap.core.NoiseCovLO_Diagonal,
             block_size=block_size,
             block_input=power_spec_list,
@@ -59,7 +59,7 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
             dtype=dtype,
         )
 
-        inv_operator1 = brahmap.base.BlockDiagInvNoiseCovLO(
+        inv_operator1 = brahmap.core.BlockDiagInvNoiseCovLO(
             operator=brahmap.core.InvNoiseCovLO_Diagonal,
             block_size=block_size,
             block_input=covariance_list,
@@ -67,7 +67,7 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
             dtype=dtype,
         )
 
-        inv_operator2 = brahmap.base.BlockDiagInvNoiseCovLO(
+        inv_operator2 = brahmap.core.BlockDiagInvNoiseCovLO(
             operator=brahmap.core.InvNoiseCovLO_Diagonal,
             block_size=block_size,
             block_input=power_spec_list,
