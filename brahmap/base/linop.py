@@ -442,13 +442,12 @@ class MatrixLinearOperator(LinearOperator):
             raise ValueError(msg)
 
         matvec = matrix.dot
-        iscomplex = issubclass(np.dtype(matrix.dtype).type, np.complex)
+        iscomplex = np.iscomplexobj(matrix)
 
-        symmetric = (
-            np.all(matrix == matrix.conj().T)
-            if iscomplex
-            else np.all(matrix == matrix.T)
-        )
+        if matrix.shape[0] == matrix.shape[1]:
+            symmetric = np.all(matrix == matrix.conj().T)
+        else:
+            symmetric = False
 
         if not symmetric:
             rmatvec = matrix.conj().T.dot if iscomplex else matrix.T.dot
