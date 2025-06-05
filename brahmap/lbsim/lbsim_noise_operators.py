@@ -3,7 +3,11 @@ from typing import List, Union
 import numpy as np
 import litebird_sim as lbs
 
-from ..core import InvNoiseCovLO_Diagonal, BlockDiagInvNoiseCovLO
+from ..core import (
+    InvNoiseCovLO_Diagonal,
+    InvNoiseCovLO_Circulant,
+    BlockDiagInvNoiseCovLO,
+)
 
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
@@ -47,5 +51,35 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
             block_size=block_size,
             block_input=block_input,
             input_type="covariance",
+            dtype=dtype,
+        )
+
+
+class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
+    def __init__(
+        self,
+        obs: Union[lbs.Observation, List[lbs.Observation]],
+        input: dict,
+        input_type: str = "power_spectrum",
+        dtype=np.float64,
+    ):
+        if isinstance(obs, lbs.Observation):
+            obs_list = [obs]
+        else:
+            obs_list = obs
+
+        block_size = []
+        block_input = []
+
+        for obs in obs_list:
+            for det_idx in range(obs.n_detectors):
+                block_size.append(obs.n_samples)
+                block_input.append(input[obs.name[det_idx]])
+
+        super(LBSim_InvNoiseCovLO_Circulant, self).__init__(
+            InvNoiseCovLO_Circulant,
+            block_size=block_size,
+            block_input=block_input,
+            input_type=input_type,
             dtype=dtype,
         )
