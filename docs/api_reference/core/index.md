@@ -14,7 +14,6 @@
 
 - [`InvNoiseCovLO_Diagonal`](InvNoiseCovLO_Diagonal.md)
 - [`ToeplitzLO`](ToeplitzLO.md)
-- [`BlockLO`](BlockLO.md)
 
 ## GLS map-making functions and tools
 

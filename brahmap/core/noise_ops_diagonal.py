@@ -3,7 +3,7 @@ import warnings
 from numbers import Number
 from typing import List, Union
 
-from ..base import LinearOperator, DiagonalOperator, BlockDiagonalLinearOperator
+from ..base import LinearOperator
 
 from ..utilities import TypeChangeWarning
 
@@ -220,78 +220,3 @@ class ToeplitzLO(LinearOperator):
             dtype=dtype,
         )
         self.array = a
-
-
-class BlockLO(BlockDiagonalLinearOperator):
-    r"""
-    Derived class from  :mod:`blkop.BlockDiagonalLinearOperator`.
-    It basically relies on the definition of a block diagonal operator,
-    composed by ``nblocks``  diagonal operators with equal size .
-    If it does not have any  off-diagonal terms (*default case* ), each block is a multiple  of
-    the identity characterized by the  values listed in ``t`` and therefore is
-    initialized by the :func:`BlockLO.build_blocks` as a :class:`linop.DiagonalOperator`.
-
-    **Parameters**
-
-    - ``blocksize`` : {int or list }
-        size of each diagonal block, if `int` it is : :math:`blocksize= n/nblocks`.
-    - ``t`` : {array}
-        noise values for each block
-    - ``offdiag`` : {bool, default ``False``}
-        strictly  related to the way  the array ``t`` is passed (see notes ).
-
-        .. note::
-
-            - True : ``t`` is a list of array,
-                    ``shape(t)= [nblocks,bandsize]``, to have a Toeplitz band diagonal operator,
-                    :math:`bandsize != blocksize`
-            - False : ``t`` is an array, ``shape(t)=[nblocks]``.
-                    each block is identified by a scalar value in the diagonal.
-    """
-
-    def build_blocks(self):
-        r"""
-        Build each block of the operator either with or
-        without off diagonal terms.
-        Each block is initialized as a Toeplitz (either **band** or **diagonal**)
-        linear operator.
-
-        .. see also::
-
-        ``self.diag``: {numpy array}
-            the array resuming the :math:`diag(N^{-1})`.
-        """
-
-        tmplist = []
-        self.blocklist = []
-
-        for idx, elem in enumerate(self.covnoise):
-            d = np.ones(self.blocksize[idx])
-
-            # d = np.empty(self.blocksize)
-            if self.isoffdiag:
-                d.fill(elem[0])
-                tmplist.append(d)
-                self.blocklist.append(ToeplitzLO(elem, self.blocksize[idx]))
-            else:
-                d.fill(elem)
-                tmplist.append(d)
-                self.blocklist.append(DiagonalOperator(d))
-
-            # for j, i in enumerate(self.covnoise):
-        self.diag = np.concatenate(tmplist)
-
-    def __init__(self, blocksize, t, offdiag=False):
-        self.__isoffdiag = offdiag
-        self.blocksize = blocksize
-        self.covnoise = t
-        self.build_blocks()
-        super(BlockLO, self).__init__(self.blocklist)
-
-    @property
-    def isoffdiag(self):
-        """
-        Property saying whether or not the operator has
-        off-diagonal terms.
-        """
-        return self.__isoffdiag

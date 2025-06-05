@@ -7,7 +7,6 @@ from .linearoperators import (
 
 from .noise_ops_diagonal import (
     ToeplitzLO,
-    BlockLO,
     InvNoiseCovLO_Diagonal,
     NoiseCovLO_Diagonal,
 )
@@ -30,7 +29,6 @@ DTypeNoiseCov = Union[
     DiagonalOperator,
     InvNoiseCovLO_Diagonal,
     ToeplitzLO,
-    BlockLO,
 ]
 
 from .GLS import (  # noqa: E402
@@ -51,7 +49,6 @@ __all__ = [
     "BlockDiagonalPreconditionerLO",
     # noise_ops_diagonal.py
     "ToeplitzLO",
-    "BlockLO",
     "InvNoiseCovLO_Diagonal",
     "NoiseCovLO_Diagonal",
     # noise_ops_circulant.py
