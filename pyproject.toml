@@ -26,7 +26,7 @@ keywords = [
 ]
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.9,<3.13"
+requires-python = ">3.9,<3.14"
 dependencies = [
     "numpy",
     "scipy",
@@ -49,10 +49,10 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C++",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 
