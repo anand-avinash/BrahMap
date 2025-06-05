@@ -120,7 +120,7 @@ class lbsim_simulation:
 
         ### Compute pointings
         self.sim.prepare_pointings()
-        self.sim.precompute_pointings(pointings_dtype=self.dtype_float)
+        # self.sim.precompute_pointings(pointings_dtype=self.dtype_float)
 
         ### Random maps
         np.random.seed(map_seed)

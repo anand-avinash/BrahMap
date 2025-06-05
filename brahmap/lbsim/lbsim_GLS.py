@@ -1,5 +1,5 @@
 import gc
-from typing import List, Union
+from typing import List, Union, Optional
 from dataclasses import dataclass, asdict
 
 import numpy as np
@@ -27,6 +27,8 @@ class LBSimGLSResult(GLSResult):
 def LBSim_compute_GLS_maps(
     nside: int,
     observations: Union[lbs.Observation, List[lbs.Observation]],
+    pointings: Union[np.ndarray, List[np.ndarray], None] = None,
+    hwp: Optional[lbs.HWP] = None,
     component: str = "tod",
     pointings_flag: Union[np.ndarray, None] = None,
     inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
@@ -42,6 +44,8 @@ def LBSim_compute_GLS_maps(
     processed_samples = LBSimProcessTimeSamples(
         nside=nside,
         observations=observations,
+        pointings=pointings,
+        hwp=hwp,
         pointings_flag=pointings_flag,
         solver_type=LBSim_gls_parameters.solver_type,
         noise_weights=noise_weights,

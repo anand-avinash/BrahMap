@@ -1,5 +1,4 @@
-import warnings
-from typing import List, Union
+from typing import List, Union, Optional
 
 import numpy as np
 import healpy as hp
@@ -7,14 +6,14 @@ import litebird_sim as lbs
 
 from ..core import SolverType, ProcessTimeSamples
 
-from ..utilities import LowerTypeCastWarning
-
 
 class LBSimProcessTimeSamples(ProcessTimeSamples):
     def __init__(
         self,
         nside: int,
         observations: Union[lbs.Observation, List[lbs.Observation]],
+        pointings: Union[np.ndarray, List[np.ndarray], None] = None,
+        hwp: Optional[lbs.HWP] = None,
         pointings_flag: Union[np.ndarray, None] = None,
         solver_type: SolverType = SolverType.IQU,
         noise_weights: Union[np.ndarray, None] = None,
@@ -23,12 +22,15 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         dtype_float=np.float64,
     ):
         self.__nside = nside
+        self.__coordinate_system = output_coordinate_system
         npix = hp.nside2npix(self.nside)
 
-        if isinstance(observations, lbs.Observation):
-            self.__obs_list = [observations]
-        else:
-            self.__obs_list = observations
+        (
+            self.__obs_list,
+            ptg_list,
+        ) = lbs.pointings_in_obs._normalize_observations_and_pointings(
+            observations=observations, pointings=pointings
+        )
 
         pix_indices = np.empty(
             (
@@ -47,53 +49,39 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
             dtype=dtype_float,
         )
 
-        for obs_idx, obs in enumerate(self.obs_list):
-            for det_idx in range(obs.n_detectors):
-                if hasattr(obs, "pointing_matrix"):
-                    cur_pointings = obs.pointing_matrix[det_idx]
-                    hwp_angle = getattr(obs, "hwp_angle", None)
-
-                    if not np.can_cast(obs.pointing_matrix.dtype, dtype_float):
-                        warnings.warn(
-                            f"`obs.pointing_matrix` has been casted from higher dtype to lower one. You might want to call `LBSimProcessTimeSamples` with `dtype_float={obs.pointing_matrix.dtype}`",
-                            LowerTypeCastWarning,
-                        )
-
-                    if hwp_angle is not None and not np.can_cast(
-                        hwp_angle.dtype, dtype_float
-                    ):
-                        warnings.warn(
-                            f"`obs.hwp_angle` has been casted from higher dtype to lower one. You might want to call `LBSimProcessTimeSamples` with `dtype_float={hwp_angle.dtype}`",
-                            LowerTypeCastWarning,
-                        )
-
-                else:
-                    cur_pointings, hwp_angle = obs.get_pointings(
-                        detector_idx=det_idx, pointings_dtype=dtype_float
-                    )
-
-                self.__coordinate_system = output_coordinate_system
-                if self.coordinate_system == lbs.CoordinateSystem.Galactic:
-                    cur_pointings = lbs.coordinates.rotate_coordinates_e2g(
-                        cur_pointings
-                    )
-
-                if hwp_angle is None:
-                    pol_angles[obs_idx, det_idx] = (
-                        obs.pol_angle_rad[det_idx] + cur_pointings[:, 2]
-                    )
-                else:
-                    pol_angles[obs_idx, det_idx] = (
-                        2.0 * hwp_angle
-                        - obs.pol_angle_rad[det_idx]
-                        + cur_pointings[:, 2]
-                    )
-
-                pix_indices[obs_idx, det_idx] = hp.ang2pix(
-                    nside, cur_pointings[:, 0], cur_pointings[:, 1]
+        for obs_idx, (obs, curr_pointings) in enumerate(zip(self.obs_list, ptg_list)):
+            if hwp is None:
+                hwp_angle = None
+            else:
+                hwp_angle = lbs.pointings_in_obs._get_hwp_angle(
+                    obs=obs, hwp=hwp, pointing_dtype=dtype_float
                 )
 
-            del cur_pointings, hwp_angle
+            for det_idx in range(obs.n_detectors):
+                (
+                    curr_pointings_det,
+                    hwp_angle,
+                ) = lbs.pointings_in_obs._get_pointings_array(
+                    detector_idx=det_idx,
+                    pointings=curr_pointings,
+                    hwp_angle=hwp_angle,
+                    output_coordinate_system=output_coordinate_system,
+                    pointings_dtype=dtype_float,
+                )
+
+                pol_angles[obs_idx, det_idx] = lbs.pointings_in_obs._get_pol_angle(
+                    curr_pointings_det=curr_pointings_det,
+                    hwp_angle=hwp_angle,
+                    pol_angle_detectors=obs.pol_angle_rad[det_idx],
+                )
+
+                pix_indices[obs_idx, det_idx] = hp.ang2pix(
+                    nside, curr_pointings_det[:, 0], curr_pointings_det[:, 1]
+                )
+
+            del hwp_angle, curr_pointings_det
+
+        del curr_pointings
 
         pix_indices = np.concatenate(pix_indices, axis=None)
         pol_angles = np.concatenate(pol_angles, axis=None)
