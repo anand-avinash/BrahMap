@@ -99,7 +99,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         input_type="covariance",
         dtype: DTypeFloat = np.float64,
     ):
-        if isinstance(input, float) and input_type == "covariance":
+        if isinstance(input, Number) and input_type == "covariance":
             self.__inv_noise_cov = np.full(
                 shape=size, fill_value=1.0 / input, dtype=dtype
             )
