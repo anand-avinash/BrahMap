@@ -21,14 +21,13 @@ from .utilities_functions import (
 from .tools import (
     TypeChangeWarning,
     LowerTypeCastWarning,
-    parallel_norm,
     modify_numpy_context,
+    ShapeError,
 )
-
-from .process_time_samples import ProcessTimeSamples, SolverType
 
 
 __all__ = [
+    # utilities_functions.py
     "is_sorted",
     "bash_colors",
     "filter_warnings",
@@ -41,10 +40,9 @@ __all__ = [
     "noise_val",
     "subscan_resize",
     "system_setup",
-    "ProcessTimeSamples",
-    "SolverType",
+    # tools.py
     "TypeChangeWarning",
     "LowerTypeCastWarning",
-    "parallel_norm",
     "modify_numpy_context",
+    "ShapeError",
 ]

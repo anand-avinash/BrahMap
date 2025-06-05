@@ -1,3 +1,0 @@
-# `LBSimGLSResult`
-
-::: brahmap.mapmakers.LBSimGLSResult
