@@ -16,7 +16,7 @@ class BlockDiagNoiseOps_Circulant(BaseTestNoiseLO):
         rng = np.random.default_rng(seed=[seed, comm_rank])
 
         nblocks = 3 * (comm_rank + 1)
-        block_size = rng.integers(low=5, high=10, size=nblocks)
+        block_size = rng.integers(low=4, high=7, size=nblocks)
         total_size = sum(block_size)
 
         numpy_operator1 = np.zeros((total_size, total_size), dtype=dtype)

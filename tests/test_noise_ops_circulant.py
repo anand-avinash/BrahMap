@@ -14,7 +14,7 @@ class NoiseOps_Circulant(BaseTestNoiseLO):
         comm_rank = brahmap.MPI_UTILS.rank
         rng = np.random.default_rng(seed=[seed, comm_rank])
 
-        size = 5 * (comm_rank + 1)
+        size = 3 * (comm_rank + 1)
 
         covariance = rng.random(size, dtype=dtype)
         power_spec = np.fft.fft(covariance).real.astype(dtype=dtype)
