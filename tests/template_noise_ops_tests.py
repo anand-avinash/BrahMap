@@ -71,8 +71,8 @@ class BaseTestNoiseLO:
         expect
         """
         np.testing.assert_allclose(
-            self.numpy_operator1,
             self.ex_operator1,
+            self.numpy_operator1,
             rtol=self.rtol,
         )
 
@@ -81,8 +81,8 @@ class BaseTestNoiseLO:
         matrix we expect
         """
         np.testing.assert_allclose(
-            self.numpy_inv_operator1,
             self.ex_inv_operator1,
+            self.numpy_inv_operator1,
             rtol=self.rtol,
         )
 
@@ -106,8 +106,8 @@ class BaseTestNoiseLO:
         """Tests whether the inv_operator1 is indeed an inverse of operator1"""
         product = self.operator1 * self.inv_operator1
         np.testing.assert_allclose(
-            self.identity_operator,
             product.to_array(),
+            self.identity_operator,
             rtol=self.rtol,
             atol=self.atol,
         )
@@ -132,8 +132,8 @@ class BaseTestNoiseLO:
         op_diag = op.diag
         np_diag = np.diagonal(np_op)
         np.testing.assert_allclose(
-            np_diag,
             op_diag,
+            np_diag,
             rtol=self.rtol,
             atol=self.atol,
         )
@@ -156,8 +156,8 @@ class BaseTestNoiseLO:
         inverse = op.get_inverse()
         product = op * inverse
         np.testing.assert_allclose(
-            self.identity_operator,
             product.to_array(),
+            self.identity_operator,
             rtol=self.rtol,
             atol=self.atol,
         )

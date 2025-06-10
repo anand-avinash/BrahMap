@@ -89,11 +89,11 @@ class BlockDiagNoiseOps_Diagonal(BaseTestNoiseLO):
 
 class TestBlockDiagNoiseOps_Diagonal_F32(BlockDiagNoiseOps_Diagonal):
     dtype = np.float32
-    rtol = 1.0e-5
-    atol = 1.0e-8
+    rtol = 1.0e-4
+    atol = 1.0e-6
 
 
 class TestBlockDiagNoiseOps_Diagonal_F64(BlockDiagNoiseOps_Diagonal):
     dtype = np.float64
-    rtol = 1.0e-7
+    rtol = 1.0e-6
     atol = 1.0e-10

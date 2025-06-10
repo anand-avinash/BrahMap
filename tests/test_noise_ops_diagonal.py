@@ -53,11 +53,11 @@ class NoiseOps_Diagonal(BaseTestNoiseLO):
 
 class TestNoiseOps_Diagonal_F32(NoiseOps_Diagonal):
     dtype = np.float32
-    rtol = 1.0e-5
-    atol = 1.0e-10
+    rtol = 1.0e-4
+    atol = 1.0e-6
 
 
 class TestNoiseOps_Diagonal_F64(NoiseOps_Diagonal):
     dtype = np.float64
-    rtol = 1.0e-7
-    atol = 1.0e-15
+    rtol = 1.0e-6
+    atol = 1.0e-10

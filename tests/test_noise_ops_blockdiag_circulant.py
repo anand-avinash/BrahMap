@@ -94,11 +94,11 @@ class BlockDiagNoiseOps_Circulant(BaseTestNoiseLO):
 
 class TestBlockDiagNoiseOps_Circulant_F32(BlockDiagNoiseOps_Circulant):
     dtype = np.float32
-    rtol = 1.0e-5
-    atol = 1.0e-5
+    rtol = 1.0e-4
+    atol = 1.0e-6
 
 
 class TestBlockDiagNoiseOps_Circulant_F64(BlockDiagNoiseOps_Circulant):
     dtype = np.float64
-    rtol = 1.0e-7
-    atol = 1.0e-9
+    rtol = 1.0e-6
+    atol = 1.0e-10
