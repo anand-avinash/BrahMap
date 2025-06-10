@@ -1,12 +1,5 @@
 import numpy as np
-from brahmap import MPI_UTILS
-
-
-def parallel_norm(x: np.ndarray):
-    sqnorm = x.dot(x)
-    sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
-    ret = np.sqrt(sqnorm)
-    return ret
+from ..math import parallel_norm
 
 
 class modify_numpy_context(object):
@@ -35,3 +28,20 @@ class LowerTypeCastWarning(Warning):
 
     def __str__(self):
         return repr(self.message)
+
+
+class ShapeError(Exception):
+    """
+    Exception class for handling shape mismatch errors.
+
+    Exception raised when defining a linear operator of the wrong shape or
+    multiplying a linear operator with a vector of the wrong shape.
+
+    """
+
+    def __init__(self, value):
+        super(ShapeError, self).__init__()
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
