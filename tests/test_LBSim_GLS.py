@@ -349,7 +349,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
-                [1.0 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
+                [1.0e4 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
             ),
         )
 

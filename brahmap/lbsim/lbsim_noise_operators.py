@@ -29,7 +29,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
             noise_variance = dict(
                 zip(
                     obs_list[0].name,
-                    lbs.mapmaking.common.get_map_making_weights(obs_list[0]),
+                    lbs.mapmaking.common.get_map_making_weights(obs_list[0]) / 1.0e4,
                 )
             )
 
