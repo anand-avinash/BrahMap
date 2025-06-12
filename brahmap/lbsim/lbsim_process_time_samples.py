@@ -32,23 +32,15 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
             observations=observations, pointings=pointings
         )
 
-        pix_indices = np.empty(
-            (
-                len(self.obs_list),
-                self.obs_list[0].n_detectors,
-                self.obs_list[0].n_samples,
-            ),
-            dtype=int,
-        )
-        pol_angles = np.empty(
-            (
-                len(self.obs_list),
-                self.obs_list[0].n_detectors,
-                self.obs_list[0].n_samples,
-            ),
-            dtype=dtype_float,
-        )
+        num_total_samples = 0
+        for obs in self.obs_list:
+            num_total_samples += obs.n_detectors * obs.n_samples
 
+        pix_indices = np.empty(num_total_samples, dtype=int)
+        pol_angles = np.empty(num_total_samples, dtype=dtype_float)
+
+        start_idx = 0
+        end_idx = 0
         for obs_idx, (obs, curr_pointings) in enumerate(zip(self.obs_list, ptg_list)):
             if hwp is None:
                 hwp_angle = None
@@ -69,22 +61,23 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                     pointings_dtype=dtype_float,
                 )
 
-                pol_angles[obs_idx, det_idx] = lbs.pointings_in_obs._get_pol_angle(
+                end_idx += obs.n_samples
+
+                pol_angles[start_idx:end_idx] = lbs.pointings_in_obs._get_pol_angle(
                     curr_pointings_det=curr_pointings_det,
                     hwp_angle=hwp_angle,
                     pol_angle_detectors=obs.pol_angle_rad[det_idx],
                 )
 
-                pix_indices[obs_idx, det_idx] = hp.ang2pix(
+                pix_indices[start_idx:end_idx] = hp.ang2pix(
                     nside, curr_pointings_det[:, 0], curr_pointings_det[:, 1]
                 )
+
+                start_idx = end_idx
 
             del hwp_angle, curr_pointings_det
 
         del curr_pointings
-
-        pix_indices = np.concatenate(pix_indices, axis=None)
-        pol_angles = np.concatenate(pol_angles, axis=None)
 
         super().__init__(
             npix=npix,
