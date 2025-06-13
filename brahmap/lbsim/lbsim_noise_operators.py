@@ -14,6 +14,8 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     """The assumption is that at a given MPI process, all observations
     contain same set of detectors"""
 
+    # Keep a note of the hard-coded factor of 1e4
+
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
@@ -59,7 +61,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        input: dict,
+        input: Union[dict, Union[np.ndarray, List]],
         input_type: str = "power_spectrum",
         dtype=np.float64,
     ):
@@ -72,9 +74,34 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
         block_input = []
 
         for obs in obs_list:
-            for det_idx in range(obs.n_detectors):
-                block_size.append(obs.n_samples)
-                block_input.append(input[obs.name[det_idx]])
+            if isinstance(input, dict):
+                # if input is a dict
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    if obs.n_samples < len(input[obs.name[det_idx]]):
+                        resized_input = self._resize_power_spectrum(
+                            new_size=obs.n_samples,
+                            input=input[obs.name[det_idx]],
+                            input_type=input_type,
+                            dtype=dtype,
+                        )
+                        block_input.append(resized_input)
+                    else:
+                        block_input.append(input[obs.name[det_idx]])
+            else:
+                # if input is an array or a list, it will be taken as same for all the detectors available in the observation
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    if obs.n_samples < len(input):
+                        resized_input = self._resize_power_spectrum(
+                            new_size=obs.n_samples,
+                            input=input,
+                            input_type=input_type,
+                            dtype=dtype,
+                        )
+                        block_input.append(resized_input)
+                    else:
+                        block_input.append(input)
 
         super(LBSim_InvNoiseCovLO_Circulant, self).__init__(
             InvNoiseCovLO_Circulant,
@@ -83,3 +110,12 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             input_type=input_type,
             dtype=dtype,
         )
+
+    def _resize_power_spectrum(self, new_size, input, input_type, dtype):
+        if input_type == "covariance":
+            input = input[:new_size]
+            return input
+        elif input_type == "power_spectrum":
+            input = np.fft.ifft(input)[:new_size]
+            input = np.fft.fft(input).real.astype(dtype=dtype, copy=False)
+            return input
