@@ -191,6 +191,12 @@ class ProcessTimeSamples(object):
             noise_weights,
         )
 
+        MPI_RAISE_EXCEPTION(
+            condition=(self.new_npix == 0),
+            exception=ValueError,
+            message="All pixels were found to be pathological. The map-making cannot be done. Please ensure that the inputs are consistent!",
+        )
+
         self._repixelization()
         self._flag_bad_pixel_samples()
 
