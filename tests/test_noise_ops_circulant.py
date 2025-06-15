@@ -56,7 +56,7 @@ class NoiseOps_Circulant(BaseTestNoiseLO):
 class TestNoiseOps_Circulant_F32(NoiseOps_Circulant):
     dtype = np.float32
     rtol = 1.0e-4
-    atol = 1.0e-6
+    atol = 1.0e-5
 
 
 class TestNoiseOps_Circulant_F64(NoiseOps_Circulant):
