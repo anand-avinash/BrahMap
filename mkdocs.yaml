@@ -132,8 +132,6 @@ nav:
       - PointingLO: api_reference/core/PointingLO.md
       - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
       - InvNoiseCovLO_Diagonal: api_reference/core/InvNoiseCovLO_Diagonal.md
-      - ToeplitzLO: api_reference/core/ToeplitzLO.md
-      - BlockLO: api_reference/core/BlockLO.md
       - GLSParameters: api_reference/core/GLSParameters.md
       - compute_GLS_maps_from_PTS: api_reference/core/compute_GLS_maps_from_PTS.md
       - compute_GLS_maps: api_reference/core/compute_GLS_maps.md

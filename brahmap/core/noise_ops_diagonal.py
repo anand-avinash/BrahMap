@@ -3,7 +3,6 @@ import warnings
 from numbers import Number
 from typing import List, Union
 
-from ..base import LinearOperator
 
 from ..utilities import TypeChangeWarning
 
@@ -166,57 +165,3 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         )
 
         return prod
-
-
-class ToeplitzLO(LinearOperator):
-    r"""
-    Derived Class from a LinearOperator. It exploit the symmetries of an ``dim x dim``
-    Toeplitz matrix.
-    This particular kind of matrices satisfy the following relation:
-
-    .. math::
-
-        A_{i,j}=A_{i+1,j+1}=a_{i-j}
-
-    Therefore, it is enough to initialize ``A`` by mean of an array ``a`` of ``size = dim``.
-
-    **Parameters**
-
-    - ``a`` : {array, list}
-        the array which resembles all the elements of the Toeplitz matrix;
-    - ``size`` : {int}
-        size of the block.
-
-    """
-
-    def mult(self, v):
-        """
-        Performs the product of a Toeplitz matrix with a vector ``x``.
-
-        """
-        val = self.array[0]
-        y = val * v
-        for i in range(1, len(self.array)):
-            val = self.array[i]
-            temp = val * v
-            y[:-i] += temp[i:]
-            y[i:] += temp[:-i]
-
-        return y
-
-    def __init__(self, a, size, dtype=None):
-        if dtype is None:
-            dtype = np.float64
-        else:
-            dtype = dtype
-
-        self.__size = size
-
-        super(ToeplitzLO, self).__init__(
-            nargin=self.__size,
-            nargout=self.__size,
-            matvec=self.mult,
-            symmetric=True,
-            dtype=dtype,
-        )
-        self.array = a

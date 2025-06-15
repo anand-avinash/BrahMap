@@ -6,7 +6,6 @@ from .linearoperators import (
 )
 
 from .noise_ops_diagonal import (
-    ToeplitzLO,
     InvNoiseCovLO_Diagonal,
     NoiseCovLO_Diagonal,
 )
@@ -14,6 +13,11 @@ from .noise_ops_diagonal import (
 from .noise_ops_circulant import (
     NoiseCovLO_Circulant,
     InvNoiseCovLO_Circulant,
+)
+
+from .noise_ops_toeplitz import (
+    NoiseCovLO_Toeplitz01,
+    InvNoiseCovLO_Toeplitz01,
 )
 
 from .noise_ops_block_diag import (
@@ -28,7 +32,6 @@ from typing import Union
 DTypeNoiseCov = Union[
     DiagonalOperator,
     InvNoiseCovLO_Diagonal,
-    ToeplitzLO,
 ]
 
 from .GLS import (  # noqa: E402
@@ -48,12 +51,14 @@ __all__ = [
     "PointingLO",
     "BlockDiagonalPreconditionerLO",
     # noise_ops_diagonal.py
-    "ToeplitzLO",
     "InvNoiseCovLO_Diagonal",
     "NoiseCovLO_Diagonal",
     # noise_ops_circulant.py
     "NoiseCovLO_Circulant",
     "InvNoiseCovLO_Circulant",
+    # noise_ops_toeplitz.py
+    "NoiseCovLO_Toeplitz01",
+    "InvNoiseCovLO_Toeplitz01",
     # noise_ops_block_diag.py
     "BlockDiagNoiseCovLO",
     "BlockDiagInvNoiseCovLO",

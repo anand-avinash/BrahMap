@@ -13,7 +13,6 @@
 ## Noise covariance (and their inverse) operators
 
 - [`InvNoiseCovLO_Diagonal`](InvNoiseCovLO_Diagonal.md)
-- [`ToeplitzLO`](ToeplitzLO.md)
 
 ## GLS map-making functions and tools
 
