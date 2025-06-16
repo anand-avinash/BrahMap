@@ -47,6 +47,8 @@ if find_spec("litebird_sim") is not None:
     from .lbsim import (
         LBSimProcessTimeSamples,
         LBSim_InvNoiseCovLO_UnCorr,
+        LBSim_InvNoiseCovLO_Circulant,
+        LBSim_InvNoiseCovLO_Toeplitz,
         LBSimGLSParameters,
         LBSimGLSResult,
         LBSim_compute_GLS_maps,
@@ -56,6 +58,8 @@ if find_spec("litebird_sim") is not None:
         "lbsim",
         "LBSimProcessTimeSamples",
         "LBSim_InvNoiseCovLO_UnCorr",
+        "LBSim_InvNoiseCovLO_Circulant",
+        "LBSim_InvNoiseCovLO_Toeplitz",
         "LBSimGLSParameters",
         "LBSimGLSResult",
         "LBSim_compute_GLS_maps",
