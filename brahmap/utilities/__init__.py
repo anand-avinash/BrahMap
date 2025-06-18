@@ -14,6 +14,8 @@ from .tools import (
     output_profile,
 )
 
+from .visualizations import plot_LinearOperator
+
 
 __all__ = [
     # tools.py
@@ -25,4 +27,6 @@ __all__ = [
     "ShapeError",
     "profile_run",
     "output_profile",
+    # visualizations.py
+    "plot_LinearOperator",
 ]

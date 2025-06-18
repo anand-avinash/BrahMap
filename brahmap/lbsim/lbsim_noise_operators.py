@@ -111,6 +111,13 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Circulant class
             # automatically
+
+            # Slicing the input array here is probably not the best choice as
+            # it breaks the symmetry of the covariance and renders it
+            # non-circulant. Same goes for slicing the covariance computed
+            # through power spectrum. The best solution would be to create per
+            # observation, per detector operators independently and supply them
+            # to `BlockDiagInvNoiseCovLO`
             return input[:new_size]
         elif input_type == "power_spectrum":
             input_size = len(input)
