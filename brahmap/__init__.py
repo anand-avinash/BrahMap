@@ -47,7 +47,6 @@ from .utilities import (  # noqa: E402
     LowerTypeCastWarning,
     modify_numpy_context,
     ShapeError,
-    plot_LinearOperator,
 )
 
 if find_spec("litebird_sim") is not None:
@@ -108,7 +107,6 @@ __all__ = __all__ + [
     "LowerTypeCastWarning",
     "modify_numpy_context",
     "ShapeError",
-    "plot_LinearOperator",
     # ./math/
     "math",
 ]

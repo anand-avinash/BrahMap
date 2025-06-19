@@ -3,6 +3,8 @@ This module contains the utilities functions strictly related to the computation
 
 """
 
+from importlib.util import find_spec
+
 from .tools import (
     bash_colors,
     modify_numpy_context,
@@ -14,10 +16,17 @@ from .tools import (
     output_profile,
 )
 
-from .visualizations import plot_LinearOperator
+if find_spec("matplotlib") is not None:
+    from .visualizations import plot_LinearOperator
+
+    __all__ = [
+        "plot_LinearOperator",
+    ]
+else:
+    __all__ = []
 
 
-__all__ = [
+__all__ = __all__ + [
     # tools.py
     "bash_colors",
     "modify_numpy_context",
@@ -27,6 +36,4 @@ __all__ = [
     "ShapeError",
     "profile_run",
     "output_profile",
-    # visualizations.py
-    "plot_LinearOperator",
 ]
