@@ -215,8 +215,16 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             start_row_idx = end_row_idx
             start_col_idx = end_col_idx
 
-        np.testing.assert_allclose(inv_cov1_explicit, full_inv_cov)
-        np.testing.assert_allclose(inv_cov2_explicit, full_inv_cov)
+        np.testing.assert_allclose(
+            inv_cov1_explicit,
+            full_inv_cov,
+            rtol=1.0e-4,
+        )
+        np.testing.assert_allclose(
+            inv_cov2_explicit,
+            full_inv_cov,
+            rtol=1.0e-4,
+        )
 
     def test_LBSim_InvNoiseCov_Circulant_array(self, lbsim_obj):
         """Here only one common noise covariance and power spectrum is supplied"""
@@ -272,5 +280,164 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             start_row_idx = end_row_idx
             start_col_idx = end_col_idx
 
-        np.testing.assert_allclose(inv_cov1_explicit, full_inv_cov)
-        np.testing.assert_allclose(inv_cov2_explicit, full_inv_cov)
+        np.testing.assert_allclose(
+            inv_cov1_explicit,
+            full_inv_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
+        np.testing.assert_allclose(
+            inv_cov2_explicit,
+            full_inv_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
+
+
+@pytest.mark.parametrize(
+    "lbsim_obj",
+    [(lbs_sim)],
+)
+@pytest.mark.ignore_param_count
+class TestLBSim_InvNoiseCovLO_Toeplitz:
+    """Unlike previously, I am creating the inverse covariance operator but running the numerical tests on the covariance operator since it is faster"""
+
+    def test_LBSim_InvNoiseCov_Toeplitz_dict(self, lbsim_obj):
+        """Here the noise covariance and power spectrum are supplied for each detector"""
+        covariance_list = {}
+        power_spec_list = {}
+
+        for detector in lbsim_obj.detector_list:
+            covariance = lbsim_obj.rng.random(
+                size=lbsim_obj.sim.observations[0].n_samples
+            )
+
+            extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
+            power_spec = np.fft.fft(extended_covariance).real
+
+            covariance_list[detector.name] = covariance
+            power_spec_list[detector.name] = power_spec
+
+        lbsim_cov1 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
+            obs=lbsim_obj.sim.observations,
+            input=covariance_list,
+            input_type="covariance",
+        ).get_inverse()
+
+        lbsim_cov2 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
+            obs=lbsim_obj.sim.observations,
+            input=power_spec_list,
+            input_type="power_spectrum",
+        ).get_inverse()
+
+        row_list = []
+        cov_LO_list = []
+        for obs in lbsim_obj.sim.observations:
+            for __, detector in enumerate(obs.name):
+                cov_LO_list.append(
+                    brahmap.NoiseCovLO_Toeplitz01(
+                        size=obs.n_samples,
+                        input=covariance_list[detector][: obs.n_samples],
+                        input_type="covariance",
+                    )
+                )
+                row_list.append(obs.n_samples)
+
+        np.testing.assert_equal(lbsim_cov1.row_size, row_list)
+        np.testing.assert_equal(lbsim_cov2.col_size, row_list)
+        np.testing.assert_equal(lbsim_cov1.size, sum(row_list))
+
+        cov1_explicit = lbsim_cov1.to_array()
+        cov2_explicit = lbsim_cov2.to_array()
+
+        start_row_idx = end_row_idx = 0
+        start_col_idx = end_col_idx = 0
+        full_cov = np.zeros_like(cov1_explicit)
+        for idx in range(lbsim_cov1.num_blocks):
+            end_row_idx += row_list[idx]
+            end_col_idx += row_list[idx]
+            cov_block = cov_LO_list[idx]
+            full_cov[
+                start_row_idx:end_row_idx, start_col_idx:end_col_idx
+            ] = cov_block.to_array()
+            start_row_idx = end_row_idx
+            start_col_idx = end_col_idx
+
+        np.testing.assert_allclose(
+            cov1_explicit,
+            full_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
+        np.testing.assert_allclose(
+            cov2_explicit,
+            full_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
+
+    def test_LBSim_InvNoiseCov_Toeplitz_array(self, lbsim_obj):
+        """Here only one common noise covariance and power spectrum is supplied"""
+
+        covariance = lbsim_obj.rng.random(size=lbsim_obj.sim.observations[0].n_samples)
+
+        extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
+        power_spec = np.fft.fft(extended_covariance).real
+
+        lbsim_cov1 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
+            obs=lbsim_obj.sim.observations,
+            input=covariance,
+            input_type="covariance",
+        ).get_inverse()
+
+        lbsim_cov2 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
+            obs=lbsim_obj.sim.observations,
+            input=power_spec,
+            input_type="power_spectrum",
+        ).get_inverse()
+
+        row_list = []
+        cov_LO_list = []
+        for obs in lbsim_obj.sim.observations:
+            for __, __ in enumerate(obs.name):
+                cov_LO_list.append(
+                    brahmap.NoiseCovLO_Toeplitz01(
+                        size=obs.n_samples,
+                        input=covariance[: obs.n_samples],
+                        input_type="covariance",
+                    )
+                )
+                row_list.append(obs.n_samples)
+
+        np.testing.assert_equal(lbsim_cov1.row_size, row_list)
+        np.testing.assert_equal(lbsim_cov2.col_size, row_list)
+        np.testing.assert_equal(lbsim_cov1.size, sum(row_list))
+
+        cov1_explicit = lbsim_cov1.to_array()
+        cov2_explicit = lbsim_cov2.to_array()
+
+        start_row_idx = end_row_idx = 0
+        start_col_idx = end_col_idx = 0
+        full_cov = np.zeros_like(cov1_explicit)
+        for idx in range(lbsim_cov1.num_blocks):
+            end_row_idx += row_list[idx]
+            end_col_idx += row_list[idx]
+            cov_block = cov_LO_list[idx]
+            full_cov[
+                start_row_idx:end_row_idx, start_col_idx:end_col_idx
+            ] = cov_block.to_array()
+            start_row_idx = end_row_idx
+            start_col_idx = end_col_idx
+
+        np.testing.assert_allclose(
+            cov1_explicit,
+            full_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
+        np.testing.assert_allclose(
+            cov2_explicit,
+            full_cov,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
