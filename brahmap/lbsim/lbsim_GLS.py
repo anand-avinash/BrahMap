@@ -71,7 +71,7 @@ def LBSim_compute_GLS_maps(
         **asdict(gls_result),
     )
 
-    if LBSim_gls_parameters.return_processed_samples is True:
+    if LBSim_gls_parameters.return_processed_samples:
         return processed_samples, gls_result
     else:
         del processed_samples

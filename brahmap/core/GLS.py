@@ -142,7 +142,7 @@ def compute_GLS_maps_from_PTS(
         map_vector=map_vector, processed_samples=processed_samples
     )
 
-    if gls_parameters.return_hit_map is True:
+    if gls_parameters.return_hit_map:
         hit_map = processed_samples.get_hit_counts()
     else:
         hit_map = None
@@ -211,7 +211,7 @@ def compute_GLS_maps(
         gls_parameters=gls_parameters,
     )
 
-    if gls_parameters.return_processed_samples is True:
+    if gls_parameters.return_processed_samples:
         return processed_samples, gls_result
     else:
         del processed_samples
