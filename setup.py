@@ -1,4 +1,5 @@
 import os
+import subprocess
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 from setuptools._distutils.ccompiler import new_compiler
@@ -108,6 +109,27 @@ def check_flag(compiler: Any, flag: str) -> bool:
             return flag
         except Exception:
             return None
+
+
+###############################################################
+### function to update the git hash in brahmap/_git_hash.py ###
+###############################################################
+
+
+def update_git_hash():
+    try:
+        git_hash = (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+            .decode()
+            .strip()
+        )
+    except Exception:
+        git_hash = "unknown"
+
+    with open("brahmap/_git_hash.py", "w") as f:
+        f.write(f"__git_hash__ = '{git_hash}'\n")
+
+    return
 
 
 ##############################################
@@ -258,6 +280,9 @@ ext6 = Extension(
     define_macros=None,
     extra_link_args=linker_so_args,
 )
+
+# updating the git hash
+update_git_hash()
 
 setup(
     ext_modules=[ext1, ext2, ext3, ext4, ext5, ext6],

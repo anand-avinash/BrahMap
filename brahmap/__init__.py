@@ -3,6 +3,13 @@ import atexit
 
 from importlib.util import find_spec
 
+try:
+    from ._git_hash import __git_hash__
+except ModuleNotFoundError:
+    __git_hash__ = "unknown"
+
+__all__ = ["__git_hash__"]
+
 mpi4py.rc.initialize = False
 
 from mpi4py import MPI  # noqa: E402
@@ -55,7 +62,7 @@ if find_spec("litebird_sim") is not None:
         LBSim_compute_GLS_maps,
     )
 
-    __all__ = [
+    __all__ = __all__ + [
         "lbsim",
         "LBSimProcessTimeSamples",
         "LBSim_InvNoiseCovLO_UnCorr",
@@ -65,8 +72,6 @@ if find_spec("litebird_sim") is not None:
         "LBSimGLSResult",
         "LBSim_compute_GLS_maps",
     ]
-else:
-    __all__ = []
 
 
 __all__ = __all__ + [
