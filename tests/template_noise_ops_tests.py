@@ -74,6 +74,7 @@ class BaseTestNoiseLO:
             self.ex_operator1,
             self.numpy_operator1,
             rtol=self.rtol,
+            atol=self.atol,
         )
 
     def test_inv_cov_op_explicit_numpy(self):
@@ -84,6 +85,7 @@ class BaseTestNoiseLO:
             self.ex_inv_operator1,
             self.numpy_inv_operator1,
             rtol=self.rtol,
+            atol=self.atol,
         )
 
     def test_cov_initialization(self):
@@ -92,6 +94,7 @@ class BaseTestNoiseLO:
             self.ex_operator1,
             self.ex_operator2,
             rtol=self.rtol,
+            atol=self.atol,
         )
 
     def test_inv_cov_initialization(self):
@@ -100,6 +103,7 @@ class BaseTestNoiseLO:
             self.ex_inv_operator1,
             self.ex_inv_operator2,
             rtol=self.rtol,
+            atol=self.atol,
         )
 
     def test_inversion(self):

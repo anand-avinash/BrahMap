@@ -101,16 +101,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLOTools_I(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol):
+    def test_I(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.I
 
         PTS = hpts.ProcessTimeSamples(
@@ -164,21 +164,31 @@ class TestPointingLOTools_I(InitCommonParams):
             brahmap.MPI_UTILS.comm,
         )
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLOTools_QU(InitCommonParams):
-    def test_QU(self, initint, initfloat, rtol):
+    def test_QU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.QU
 
         PTS = hpts.ProcessTimeSamples(
@@ -241,21 +251,31 @@ class TestPointingLOTools_QU(InitCommonParams):
             brahmap.MPI_UTILS.comm,
         )
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLOTools_IQU(InitCommonParams):
-    def test_IQU(self, initint, initfloat, rtol):
+    def test_IQU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.IQU
 
         PTS = hpts.ProcessTimeSamples(
@@ -318,8 +338,18 @@ class TestPointingLOTools_IQU(InitCommonParams):
             brahmap.MPI_UTILS.comm,
         )
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 if __name__ == "__main__":

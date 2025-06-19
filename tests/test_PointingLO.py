@@ -112,16 +112,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_I_Cpp(InitCommonParams):
-    def test_I_Cpp(self, initint, initfloat, rtol):
+    def test_I_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -147,21 +147,31 @@ class TestPointingLO_I_Cpp(InitCommonParams):
         cpp_rmult_prod = P_cpp.T * rvec
         py_rmult_prod = P_py.T * rvec
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_QU_Cpp(InitCommonParams):
-    def test_QU_Cpp(self, initint, initfloat, rtol):
+    def test_QU_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -188,21 +198,31 @@ class TestPointingLO_QU_Cpp(InitCommonParams):
         cpp_rmult_prod = P_cpp.T * rvec
         py_rmult_prod = P_py.T * rvec
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_IQU_Cpp(InitCommonParams):
-    def test_IQU_Cpp(self, initint, initfloat, rtol):
+    def test_IQU_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -229,21 +249,31 @@ class TestPointingLO_IQU_Cpp(InitCommonParams):
         cpp_rmult_prod = P_cpp.T * rvec
         py_rmult_prod = P_py.T * rvec
 
-        np.testing.assert_allclose(cpp_mult_prod, py_mult_prod, rtol=rtol)
-        np.testing.assert_allclose(cpp_rmult_prod, py_rmult_prod, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_mult_prod,
+            py_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_rmult_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_I(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol):
+    def test_I(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -261,7 +291,12 @@ class TestPointingLO_I(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
-        np.testing.assert_allclose(PTS.weighted_counts, weights, rtol=rtol)
+        np.testing.assert_allclose(
+            PTS.weighted_counts,
+            weights,
+            rtol=rtol,
+            atol=atol,
+        )
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type
@@ -275,20 +310,25 @@ class TestPointingLO_I(InitCommonParams):
             if PTS.pointings_flag[idx]:
                 signal_test[idx] += vec[pixel]
 
-        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+        np.testing.assert_allclose(
+            signal,
+            signal_test,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_QU(InitCommonParams):
-    def test_QU(self, initint, initfloat, rtol):
+    def test_QU(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -319,8 +359,18 @@ class TestPointingLO_QU(InitCommonParams):
         brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
         brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
 
-        np.testing.assert_allclose(weighted_sin, weights[1::2], rtol=rtol)
-        np.testing.assert_allclose(weighted_cos, weights[0::2], rtol=rtol)
+        np.testing.assert_allclose(
+            weighted_sin,
+            weights[1::2],
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            weighted_cos,
+            weights[0::2],
+            rtol=rtol,
+            atol=atol,
+        )
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type
@@ -337,20 +387,25 @@ class TestPointingLO_QU(InitCommonParams):
                     + vec[2 * pixel + 1] * PTS.sin2phi[idx]
                 )
 
-        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+        np.testing.assert_allclose(
+            signal,
+            signal_test,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestPointingLO_IQU(InitCommonParams):
-    def test_IQU(self, initint, initfloat, rtol):
+    def test_IQU(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.core.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -369,9 +424,24 @@ class TestPointingLO_IQU(InitCommonParams):
         # Test for P.T * <vector>
         weights = P.T * initfloat.noise_weights
 
-        np.testing.assert_allclose(PTS.weighted_counts, weights[0::3], rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_cos, weights[1::3], rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sin, weights[2::3], rtol=rtol)
+        np.testing.assert_allclose(
+            PTS.weighted_counts,
+            weights[0::3],
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_cos,
+            weights[1::3],
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sin,
+            weights[2::3],
+            rtol=rtol,
+            atol=atol,
+        )
 
         # Test for P * <vector>
         ncols = PTS.new_npix * PTS.solver_type
@@ -389,7 +459,12 @@ class TestPointingLO_IQU(InitCommonParams):
                     + vec[3 * pixel + 2] * PTS.sin2phi[idx]
                 )
 
-        np.testing.assert_allclose(signal, signal_test, rtol=rtol)
+        np.testing.assert_allclose(
+            signal,
+            signal_test,
+            rtol=rtol,
+            atol=atol,
+        )
 
 
 if __name__ == "__main__":

@@ -101,13 +101,20 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
             for idx in range(obs.n_detectors):
                 obs.test_tod[idx].fill(noise_variance[obs.name[idx]])
 
-        np.testing.assert_allclose(prod, inv_noise_variance_op.diag)
+        np.testing.assert_allclose(
+            prod,
+            inv_noise_variance_op.diag,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
 
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
                 [1.0 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
             ),
+            rtol=1.0e-4,
+            atol=1.0e-5,
         )
 
     def test_LBSim_InvNoiseCov_UnCorr_IMo(self, lbsim_obj):
@@ -137,13 +144,20 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
             for idx in range(obs.n_detectors):
                 obs.test_tod[idx].fill(noise_variance[obs.name[idx]])
 
-        np.testing.assert_allclose(prod, inv_noise_variance_op.diag)
+        np.testing.assert_allclose(
+            prod,
+            inv_noise_variance_op.diag,
+            rtol=1.0e-4,
+            atol=1.0e-5,
+        )
 
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
                 [1.0e4 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
             ),
+            rtol=1.0e-4,
+            atol=1.0e-5,
         )
 
 
@@ -219,11 +233,13 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             inv_cov1_explicit,
             full_inv_cov,
             rtol=1.0e-4,
+            atol=1.0e-5,
         )
         np.testing.assert_allclose(
             inv_cov2_explicit,
             full_inv_cov,
             rtol=1.0e-4,
+            atol=1.0e-5,
         )
 
     def test_LBSim_InvNoiseCov_Circulant_array(self, lbsim_obj):

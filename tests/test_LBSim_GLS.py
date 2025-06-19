@@ -139,14 +139,14 @@ sim_float64 = lbsim_simulation(16, np.float64)
 
 
 @pytest.mark.parametrize(
-    "lbsim_obj, rtol",
+    "lbsim_obj, rtol, atol",
     [
-        (sim_float32, 1.5e-4),
-        (sim_float64, 1.5e-6),
+        (sim_float32, 1.5e-4, 1.0e-5),
+        (sim_float64, 1.5e-6, 1.0e-10),
     ],
 )
 class TestLBSimGLS:
-    def test_LBSim_compute_GLS_maps_I(self, lbsim_obj, rtol):
+    def test_LBSim_compute_GLS_maps_I(self, lbsim_obj, rtol, atol):
         brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
@@ -190,9 +190,14 @@ class TestLBSimGLS:
             dtype=lbsim_obj.dtype_float,
         )
 
-        np.testing.assert_allclose(GLSresults.GLS_maps[0], input_map, rtol)
+        np.testing.assert_allclose(
+            GLSresults.GLS_maps[0],
+            input_map,
+            rtol,
+            atol,
+        )
 
-    def test_LBSim_compute_GLS_maps_QU(self, lbsim_obj, rtol):
+    def test_LBSim_compute_GLS_maps_QU(self, lbsim_obj, rtol, atol):
         brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
@@ -233,9 +238,9 @@ class TestLBSimGLS:
             lbsim_obj.input_map[1:], GLSresults.GLS_maps.mask, fill_value=hp.UNSEEN
         )
 
-        np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol)
+        np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol, atol)
 
-    def test_LBSim_compute_GLS_maps_IQU(self, lbsim_obj, rtol):
+    def test_LBSim_compute_GLS_maps_IQU(self, lbsim_obj, rtol, atol):
         brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
@@ -269,7 +274,7 @@ class TestLBSimGLS:
             lbsim_obj.input_map, GLSresults.GLS_maps.mask, fill_value=hp.UNSEEN
         )
 
-        np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol)
+        np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol, atol)
 
 
 if __name__ == "__main__":

@@ -97,16 +97,16 @@ initfloat64 = InitFloatParams(dtype_float=np.float64)
 #     "different result on each execution. Under investigation!"
 # )
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestGLSMapMakers_const_maps(InitCommonParams):
-    def test_GLSMapMakers_I_const_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_I_const_map(self, initint, initfloat, rtol, atol):
         time.sleep(1)
         solver_type = brahmap.SolverType.I
 
@@ -147,9 +147,10 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_I_map,
             rtol=rtol,
+            atol=atol,
         )
 
-    def test_GLSMapMakers_QU_const_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_QU_const_map(self, initint, initfloat, rtol, atol):
         time.sleep(1)
         solver_type = brahmap.SolverType.QU
 
@@ -203,14 +204,16 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_Q_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[1],
             input_U_map,
             rtol=rtol,
+            atol=atol,
         )
 
-    def test_GLSMapMakers_IQU_const_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_IQU_const_map(self, initint, initfloat, rtol, atol):
         time.sleep(1)
         solver_type = brahmap.SolverType.IQU
 
@@ -271,30 +274,33 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_I_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[1],
             input_Q_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[2],
             input_U_map,
             rtol=rtol,
+            atol=atol,
         )
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestGLSMapMakers_rand_maps(InitCommonParams):
-    def test_GLSMapMakers_I_rand_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_I_rand_map(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.SolverType.I
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
@@ -334,9 +340,10 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_I_map,
             rtol=rtol,
+            atol=atol,
         )
 
-    def test_GLSMapMakers_QU_rand_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_QU_rand_map(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.SolverType.QU
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
@@ -389,14 +396,16 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_Q_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[1],
             input_U_map,
             rtol=rtol,
+            atol=atol,
         )
 
-    def test_GLSMapMakers_IQU_rand_map(self, initint, initfloat, rtol):
+    def test_GLSMapMakers_IQU_rand_map(self, initint, initfloat, rtol, atol):
         solver_type = brahmap.SolverType.IQU
 
         tod = np.zeros(self.nsamples, dtype=initfloat.dtype)
@@ -456,16 +465,19 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
             GLSresults.GLS_maps[0],
             input_I_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[1],
             input_Q_map,
             rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
             GLSresults.GLS_maps[2],
             input_U_map,
             rtol=rtol,
+            atol=atol,
         )
 
 

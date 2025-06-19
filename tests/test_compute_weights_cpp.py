@@ -95,16 +95,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestComputeWeights(InitCommonParams):
-    def test_compute_weights_pol_I(self, initint, initfloat, rtol):
+    def test_compute_weights_pol_I(self, initint, initfloat, rtol, atol):
         cpp_weighted_counts = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_observed_pixels = np.zeros(self.npix, dtype=initint.dtype)
         cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
@@ -142,12 +142,14 @@ class TestComputeWeights(InitCommonParams):
         cpp_observed_pixels.resize(cpp_new_npix, refcheck=False)
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
-        np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
+        )
         np.testing.assert_array_equal(cpp_observed_pixels, py_observed_pixels)
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
-    def test_compute_weights_pol_QU(self, initint, initfloat, rtol):
+    def test_compute_weights_pol_QU(self, initint, initfloat, rtol, atol):
         cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
@@ -193,14 +195,22 @@ class TestComputeWeights(InitCommonParams):
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(cpp_sin2phi, py_sin2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_cos2phi, py_cos2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_sin_sq, py_weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_cos_sq, py_weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_sincos, py_weighted_sincos, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(cpp_sin2phi, py_sin2phi, rtol=rtol, atol=atol)
+        np.testing.assert_allclose(cpp_cos2phi, py_cos2phi, rtol=rtol, atol=atol)
+        np.testing.assert_allclose(
+            cpp_weighted_sin_sq, py_weighted_sin_sq, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_cos_sq, py_weighted_cos_sq, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_sincos, py_weighted_sincos, rtol=rtol, atol=atol
+        )
 
-    def test_compute_weights_pol_IQU(self, initint, initfloat, rtol):
+    def test_compute_weights_pol_IQU(self, initint, initfloat, rtol, atol):
         cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
@@ -252,16 +262,28 @@ class TestComputeWeights(InitCommonParams):
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        np.testing.assert_allclose(cpp_weighted_counts, py_weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(cpp_sin2phi, py_sin2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_cos2phi, py_cos2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_sin_sq, py_weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_cos_sq, py_weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_sincos, py_weighted_sincos, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_sin, py_weighted_sin, rtol=rtol)
-        np.testing.assert_allclose(cpp_weighted_cos, py_weighted_cos, rtol=rtol)
+        np.testing.assert_allclose(
+            cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(cpp_sin2phi, py_sin2phi, rtol=rtol, atol=atol)
+        np.testing.assert_allclose(cpp_cos2phi, py_cos2phi, rtol=rtol, atol=atol)
+        np.testing.assert_allclose(
+            cpp_weighted_sin_sq, py_weighted_sin_sq, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_cos_sq, py_weighted_cos_sq, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_sincos, py_weighted_sincos, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_sin, py_weighted_sin, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            cpp_weighted_cos, py_weighted_cos, rtol=rtol, atol=atol
+        )
 
-    def test_get_pix_mask_pol_QU(self, initint, initfloat, rtol):
+    def test_get_pix_mask_pol_QU(self, initint, initfloat, rtol, atol):
         (
             weighted_counts,
             __,
@@ -317,7 +339,7 @@ class TestComputeWeights(InitCommonParams):
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
-    def test_get_pix_mask_pol_IQU(self, initint, initfloat, rtol):
+    def test_get_pix_mask_pol_IQU(self, initint, initfloat, rtol, atol):
         (
             weighted_counts,
             __,

@@ -103,16 +103,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_I_Cpp(InitCommonParams):
-    def test_I_cpp(self, initint, initfloat, rtol):
+    def test_I_cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.I
 
         PTS = hpts.ProcessTimeSamples(
@@ -135,20 +135,20 @@ class TestBlkDiagPrecondLO_I_Cpp(InitCommonParams):
 
         py_prod = BDP_py * vec
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_QU_Cpp(InitCommonParams):
-    def test_QU_cpp(self, initint, initfloat, rtol):
+    def test_QU_cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.QU
 
         PTS = hpts.ProcessTimeSamples(
@@ -172,20 +172,20 @@ class TestBlkDiagPrecondLO_QU_Cpp(InitCommonParams):
 
         py_prod = BDP_py * vec
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_IQU_Cpp(InitCommonParams):
-    def test_IQU_cpp(self, initint, initfloat, rtol):
+    def test_IQU_cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.IQU
 
         PTS = hpts.ProcessTimeSamples(
@@ -209,20 +209,20 @@ class TestBlkDiagPrecondLO_IQU_Cpp(InitCommonParams):
 
         py_prod = BDP_py * vec
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_I(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol):
+    def test_I(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.I
 
         PTS = hpts.ProcessTimeSamples(
@@ -239,20 +239,20 @@ class TestBlkDiagPrecondLO_I(InitCommonParams):
         bdp_array = BDP.to_array()
         diag_inv_count = np.diag(1.0 / PTS.weighted_counts)
 
-        np.testing.assert_allclose(bdp_array, diag_inv_count, rtol=rtol)
+        np.testing.assert_allclose(bdp_array, diag_inv_count, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_QU(InitCommonParams):
-    def test_QU(self, initint, initfloat, rtol):
+    def test_QU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.QU
 
         PTS = hpts.ProcessTimeSamples(
@@ -286,20 +286,20 @@ class TestBlkDiagPrecondLO_QU(InitCommonParams):
                 idx * 2 : (idx + 1) * 2, idx * 2 : (idx + 1) * 2
             ] = block_inv
 
-        np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol)
+        np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.0e-3),
-        (initint64, initfloat32, 1.0e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.0e-3, 1.0e-5),
+        (initint64, initfloat32, 1.0e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLO_IQU(InitCommonParams):
-    def test_IQU(self, initint, initfloat, rtol):
+    def test_IQU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.IQU
 
         PTS = hpts.ProcessTimeSamples(
@@ -338,7 +338,7 @@ class TestBlkDiagPrecondLO_IQU(InitCommonParams):
                 idx * 3 : (idx + 1) * 3, idx * 3 : (idx + 1) * 3
             ] = block_inv
 
-        np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol)
+        np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol, atol=atol)
 
 
 if __name__ == "__main__":

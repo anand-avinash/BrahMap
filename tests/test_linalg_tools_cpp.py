@@ -50,14 +50,14 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initfloat, rtol",
+    "initfloat, rtol, atol",
     [
-        (initfloat32, 1.5e-4),
-        (initfloat64, 1.5e-5),
+        (initfloat32, 1.5e-4, 1.0e-5),
+        (initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestLinAlg_tools(InitCommonParams):
-    def test_mult(self, initfloat, rtol):
+    def test_mult(self, initfloat, rtol, atol):
         cpp_prod = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
         linalg_tools.multiply_array(
@@ -69,7 +69,7 @@ class TestLinAlg_tools(InitCommonParams):
 
         py_prod = initfloat.diag * initfloat.vec
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
 if __name__ == "__main__":

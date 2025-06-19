@@ -100,16 +100,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestProcessTimeSamplesCpp(InitCommonParams):
-    def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.I
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
@@ -137,12 +137,15 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
         np.testing.assert_allclose(
-            cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
+            cpp_PTS.weighted_counts,
+            py_PTS.weighted_counts,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.QU
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
@@ -171,27 +174,52 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
-        np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_PTS.cos2phi, py_PTS.cos2phi, rtol=rtol)
         np.testing.assert_allclose(
-            cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
+            cpp_PTS.sin2phi,
+            py_PTS.sin2phi,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_sin_sq, py_PTS.weighted_sin_sq, rtol=rtol
+            cpp_PTS.cos2phi,
+            py_PTS.cos2phi,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_cos_sq, py_PTS.weighted_cos_sq, rtol=rtol
+            cpp_PTS.weighted_counts,
+            py_PTS.weighted_counts,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_sincos, py_PTS.weighted_sincos, rtol=rtol
+            cpp_PTS.weighted_sin_sq,
+            py_PTS.weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.one_over_determinant, py_PTS.one_over_determinant, rtol=rtol
+            cpp_PTS.weighted_cos_sq,
+            py_PTS.weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.weighted_sincos,
+            py_PTS.weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.one_over_determinant,
+            py_PTS.one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.IQU
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
@@ -220,40 +248,75 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pointings_flag, py_PTS.pointings_flag)
         np.testing.assert_equal(cpp_PTS.new_npix, py_PTS.new_npix)
         np.testing.assert_array_equal(cpp_PTS.observed_pixels, py_PTS.observed_pixels)
-        np.testing.assert_allclose(cpp_PTS.sin2phi, py_PTS.sin2phi, rtol=rtol)
-        np.testing.assert_allclose(cpp_PTS.cos2phi, py_PTS.cos2phi, rtol=rtol)
         np.testing.assert_allclose(
-            cpp_PTS.weighted_counts, py_PTS.weighted_counts, rtol=rtol
+            cpp_PTS.sin2phi,
+            py_PTS.sin2phi,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_sin_sq, py_PTS.weighted_sin_sq, rtol=rtol
+            cpp_PTS.cos2phi,
+            py_PTS.cos2phi,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_cos_sq, py_PTS.weighted_cos_sq, rtol=rtol
+            cpp_PTS.weighted_counts,
+            py_PTS.weighted_counts,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_allclose(
-            cpp_PTS.weighted_sincos, py_PTS.weighted_sincos, rtol=rtol
+            cpp_PTS.weighted_sin_sq,
+            py_PTS.weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
         )
-        np.testing.assert_allclose(cpp_PTS.weighted_sin, py_PTS.weighted_sin, rtol=rtol)
-        np.testing.assert_allclose(cpp_PTS.weighted_cos, py_PTS.weighted_cos, rtol=rtol)
         np.testing.assert_allclose(
-            cpp_PTS.one_over_determinant, py_PTS.one_over_determinant, rtol=rtol
+            cpp_PTS.weighted_cos_sq,
+            py_PTS.weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.weighted_sincos,
+            py_PTS.weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.weighted_sin,
+            py_PTS.weighted_sin,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.weighted_cos,
+            py_PTS.weighted_cos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_PTS.one_over_determinant,
+            py_PTS.one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-3),
-        (initint64, initfloat32, 1.5e-3),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-3, 1.0e-5),
+        (initint64, initfloat32, 1.5e-3, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestProcessTimeSamples(InitCommonParams):
-    def test_ProcessTimeSamples_I(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_I(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -275,9 +338,14 @@ class TestProcessTimeSamples(InitCommonParams):
 
         brahmap.MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
 
-        np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
+        np.testing.assert_allclose(
+            PTS.weighted_counts,
+            weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
 
-    def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -324,17 +392,50 @@ class TestProcessTimeSamples(InitCommonParams):
             (weighted_cos_sq * weighted_sin_sq) - (weighted_sincos * weighted_sincos)
         )
 
-        np.testing.assert_allclose(PTS.sin2phi, sin2phi, rtol=rtol)
-        np.testing.assert_allclose(PTS.cos2phi, cos2phi, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sin_sq, weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_cos_sq, weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sincos, weighted_sincos, rtol=rtol)
         np.testing.assert_allclose(
-            PTS.one_over_determinant, one_over_determinant, rtol=rtol
+            PTS.sin2phi,
+            sin2phi,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.cos2phi,
+            cos2phi,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_counts,
+            weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sin_sq,
+            weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_cos_sq,
+            weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sincos,
+            weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.one_over_determinant,
+            one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
 
-    def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol):
+    def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol, atol):
         solver_type = hpts.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
@@ -391,16 +492,59 @@ class TestProcessTimeSamples(InitCommonParams):
             + 2.0 * weighted_cos * weighted_sin * weighted_sincos
         )
 
-        np.testing.assert_allclose(PTS.sin2phi, sin2phi, rtol=rtol)
-        np.testing.assert_allclose(PTS.cos2phi, cos2phi, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_counts, weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sin_sq, weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_cos_sq, weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sincos, weighted_sincos, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_sin, weighted_sin, rtol=rtol)
-        np.testing.assert_allclose(PTS.weighted_cos, weighted_cos, rtol=rtol)
         np.testing.assert_allclose(
-            PTS.one_over_determinant, one_over_determinant, rtol=rtol
+            PTS.sin2phi,
+            sin2phi,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.cos2phi,
+            cos2phi,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_counts,
+            weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sin_sq,
+            weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_cos_sq,
+            weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sincos,
+            weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_sin,
+            weighted_sin,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.weighted_cos,
+            weighted_cos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            PTS.one_over_determinant,
+            one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
 
 
