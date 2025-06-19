@@ -3,48 +3,37 @@ This module contains the utilities functions strictly related to the computation
 
 """
 
-from .utilities_functions import (
-    is_sorted,
-    bash_colors,
-    filter_warnings,
-    profile_run,
-    output_profile,
-    rescalepixels,
-    angles_gen,
-    pairs_gen,
-    checking_output,
-    noise_val,
-    subscan_resize,
-    system_setup,
-)
+from importlib.util import find_spec
 
 from .tools import (
+    bash_colors,
+    modify_numpy_context,
     TypeChangeWarning,
     LowerTypeCastWarning,
-    parallel_norm,
-    modify_numpy_context,
+    filter_warnings,
+    ShapeError,
+    profile_run,
+    output_profile,
 )
 
-from .process_time_samples import ProcessTimeSamples, SolverType
+if find_spec("matplotlib") is not None:
+    from .visualizations import plot_LinearOperator
+
+    __all__ = [
+        "plot_LinearOperator",
+    ]
+else:
+    __all__ = []
 
 
-__all__ = [
-    "is_sorted",
+__all__ = __all__ + [
+    # tools.py
     "bash_colors",
-    "filter_warnings",
-    "profile_run",
-    "output_profile",
-    "rescalepixels",
-    "angles_gen",
-    "pairs_gen",
-    "checking_output",
-    "noise_val",
-    "subscan_resize",
-    "system_setup",
-    "ProcessTimeSamples",
-    "SolverType",
+    "modify_numpy_context",
     "TypeChangeWarning",
     "LowerTypeCastWarning",
-    "parallel_norm",
-    "modify_numpy_context",
+    "filter_warnings",
+    "ShapeError",
+    "profile_run",
+    "output_profile",
 ]

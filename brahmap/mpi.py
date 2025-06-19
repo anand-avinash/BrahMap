@@ -54,9 +54,9 @@ def Finalize() -> None:
 
 
 def MPI_RAISE_EXCEPTION(
-    condition,
-    exception,
-    message,
+    condition: bool,
+    exception: Exception,
+    message: str,
 ):
     """Will raise `exception` with `message` if the `condition` is `True`.
 
@@ -71,7 +71,7 @@ def MPI_RAISE_EXCEPTION(
     """
 
     if brahmap.MPI_UTILS.raise_exception_per_process:
-        if condition is True:
+        if condition:
             error_str = f"Exception raised by MPI rank {brahmap.MPI_UTILS.rank}\n"
             raise exception(error_str + message)
     else:

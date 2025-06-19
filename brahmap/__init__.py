@@ -3,6 +3,13 @@ import atexit
 
 from importlib.util import find_spec
 
+try:
+    from ._git_hash import __git_hash__
+except ModuleNotFoundError:
+    __git_hash__ = "unknown"
+
+__all__ = ["__git_hash__"]
+
 mpi4py.rc.initialize = False
 
 from mpi4py import MPI  # noqa: E402
@@ -13,60 +20,95 @@ if MPI.Is_initialized() is False:
 
 from .mpi import MPI_UTILS, Finalize, MPI_RAISE_EXCEPTION  # noqa: E402
 
-from . import linop, _extensions, interfaces, utilities, mapmakers, math  # noqa: E402
+from . import base, _extensions, core, utilities, math  # noqa: E402
 
-from .utilities import SolverType, ProcessTimeSamples  # noqa: E402
-
-from .interfaces import (  # noqa: E402
+from .core import (  # noqa: E402
+    SolverType,
+    ProcessTimeSamples,
     PointingLO,
-    InvNoiseCovLO_Uncorrelated,
     BlockDiagonalPreconditionerLO,
-)
-
-from .mapmakers import (  # noqa: E402
+    NoiseCovLO_Diagonal,
+    InvNoiseCovLO_Diagonal,
+    NoiseCovLO_Circulant,
+    InvNoiseCovLO_Circulant,
+    NoiseCovLO_Toeplitz01,
+    InvNoiseCovLO_Toeplitz01,
+    BlockDiagNoiseCovLO,
+    BlockDiagInvNoiseCovLO,
     GLSParameters,
+    GLSResult,
     separate_map_vectors,
     compute_GLS_maps_from_PTS,
     compute_GLS_maps,
 )
 
+from .utilities import (  # noqa: E402
+    TypeChangeWarning,
+    LowerTypeCastWarning,
+    modify_numpy_context,
+    ShapeError,
+)
+
 if find_spec("litebird_sim") is not None:
-    from .mapmakers import (
-        LBSimGLSParameters,
-        LBSim_InvNoiseCovLO_UnCorr,
+    from . import lbsim
+    from .lbsim import (
         LBSimProcessTimeSamples,
+        LBSim_InvNoiseCovLO_UnCorr,
+        LBSim_InvNoiseCovLO_Circulant,
+        LBSim_InvNoiseCovLO_Toeplitz,
+        LBSimGLSParameters,
+        LBSimGLSResult,
         LBSim_compute_GLS_maps,
     )
 
-    __all__ = [
-        "LBSimGLSParameters",
-        "LBSim_InvNoiseCovLO_UnCorr",
+    __all__ = __all__ + [
+        "lbsim",
         "LBSimProcessTimeSamples",
+        "LBSim_InvNoiseCovLO_UnCorr",
+        "LBSim_InvNoiseCovLO_Circulant",
+        "LBSim_InvNoiseCovLO_Toeplitz",
+        "LBSimGLSParameters",
+        "LBSimGLSResult",
         "LBSim_compute_GLS_maps",
     ]
-else:
-    __all__ = []
 
 
 __all__ = __all__ + [
+    # ./mpi.py
     "MPI_UTILS",
     "Finalize",
     "MPI_RAISE_EXCEPTION",
-    "linop",
+    # ./base/
+    "base",
+    # ./_extensions/
     "_extensions",
-    "interfaces",
-    "utilities",
-    "mapmakers",
-    "math",
+    # ./core/
+    "core",
     "SolverType",
     "ProcessTimeSamples",
     "PointingLO",
-    "InvNoiseCovLO_Uncorrelated",
     "BlockDiagonalPreconditionerLO",
+    "NoiseCovLO_Diagonal",
+    "InvNoiseCovLO_Diagonal",
+    "NoiseCovLO_Circulant",
+    "InvNoiseCovLO_Circulant",
+    "NoiseCovLO_Toeplitz01",
+    "InvNoiseCovLO_Toeplitz01",
+    "BlockDiagNoiseCovLO",
+    "BlockDiagInvNoiseCovLO",
     "GLSParameters",
+    "GLSResult",
     "separate_map_vectors",
     "compute_GLS_maps_from_PTS",
     "compute_GLS_maps",
+    # ./utilities/
+    "utilities",
+    "TypeChangeWarning",
+    "LowerTypeCastWarning",
+    "modify_numpy_context",
+    "ShapeError",
+    # ./math/
+    "math",
 ]
 
 atexit.register(Finalize)

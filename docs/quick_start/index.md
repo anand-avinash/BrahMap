@@ -18,9 +18,11 @@ A generic map-making using `BrahMap` roughly involve four steps:
 
     ```python
     # Creating the inverse white noise covariance operator
-    inv_cov = brahmap.InvNoiseCovLO_Uncorrelated(
-        diag=[...],         # Diagonal elements of the inverse of white noise
-                            # covariance matrix
+    inv_cov = brahmap.InvNoiseCovLO_Diagonal(
+        size=nsamples,      # Size of the inverse noise covariance operator
+
+        input=[...],        # Noise covariance (variance for stationary white 
+                            # noise) array
 
         dtype=np.float64,   # Numerical precision of the operator
     )
@@ -83,9 +85,11 @@ A generic map-making using `BrahMap` roughly involve four steps:
 
 ```python
 # Creating the inverse white noise covariance operator
-inv_cov = brahmap.InvNoiseCovLO_Uncorrelated(
-    diag=[...],         # Diagonal elements of the inverse of white noise covariance
-                        # matrix
+inv_cov = brahmap.InvNoiseCovLO_Diagonal(
+    size=nsamples,      # Size of the inverse noise covariance operator
+
+    input=[...],        # Noise covariance (variance for stationary white 
+                        # noise) array
 
     dtype=np.float64,   # Numerical precision of the operator
 )
@@ -130,11 +134,13 @@ function with `litebird_sim` data:
 
 ```python
 # Creating the inverse white noise covariance operator
-inv_cov = brahmap.InvNoiseCovLO_Uncorrelated(
-    diag=[...],       # Diagonal elements of the inverse of white noise covariance
-                      # matrix
+inv_cov = brahmap.InvNoiseCovLO_Diagonal(
+    size=nsamples,      # Size of the inverse noise covariance operator
 
-    dtype=np.float64, # Numerical precision of the operator
+    input=[...],        # Noise covariance (variance for stationary white 
+                        # noise) array
+
+    dtype=np.float64,   # Numerical precision of the operator
 )
 
 # Performing the GLS map-making

@@ -1,4 +1,22 @@
-# BrahMap
+<!-- markdownlint-disable MD033 -->
+<p align="center"> <!-- markdownlint-disable-line -->
+  <h1 align="center">BrahMap</h1>
+
+  <h3 align="center">
+  A scalable and modular map-making framework for the CMB experiments
+  </h3>
+  
+  <p align="center">
+  <strong>
+      <a href="https://anand-avinash.github.io/BrahMap/">Documentation</a> |
+      <a href="https://anand-avinash.github.io/BrahMap/quick_start/">
+      Quick Start</a> |
+      <a href="https://github.com/anand-avinash/BrahMap/tree/main/examples">
+      Examples</a>
+  </strong>
+  </p>
+</p>
+<!-- markdownlint-enable MD033 -->
 
 <!-- markdownlint-disable MD013 -->
 ![BrahMap testsuite](https://github.com/anand-avinash/BrahMap/actions/workflows/tests.yaml/badge.svg)
@@ -18,10 +36,10 @@ a wrapper for Generalized Least Squares (GLS) map-making using the
 Preconditioned Conjugate Gradient (PCG) solver. `BrahMap` is also integrated
 with `litebird_sim` through dedicated wrappers.
 
-For a quick introduction to map-making with BrahMap, refer to the
+For a quick introduction to map-making with `BrahMap`, refer to the
 [quick start guide](https://anand-avinash.github.io/BrahMap/quick_start/).
 For a complete reference of the `BrahMap` API, refer to the
-[API reference](https://anand-avinash.github.io/BrahMap/api_references/).
+[API reference](https://anand-avinash.github.io/BrahMap/api_reference/).
 Complete example notebooks and scripts can be
 [found here](./examples).
 

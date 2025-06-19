@@ -29,6 +29,8 @@ copyright: Copyright &copy; 2024-present | Avinash Anand, Giuseppe Puglisi
 
 theme:
   name: "material"
+  font:
+    code: Roboto Mono
   icon:
     repo: fontawesome/brands/github
   features:
@@ -123,37 +125,39 @@ nav:
   - API Reference:
     - api_reference/index.md
 
-    - Interfaces:
-      - api_reference/interfaces/index.md
-      - PointingLO: api_reference/interfaces/PointingLO.md
-      - InvNoiseCovLO_Uncorrelated: api_reference/interfaces/InvNoiseCovLO_Uncorrelated.md
-      - BlockDiagonalPreconditionerLO: api_reference/interfaces/BlockDiagonalPreconditionerLO.md
+    - Core Interface:
+      - api_reference/core/index.md
+      - SolverType: api_reference/core/SolverType.md
+      - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
+      - PointingLO: api_reference/core/PointingLO.md
+      - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
+      - InvNoiseCovLO_Diagonal: api_reference/core/InvNoiseCovLO_Diagonal.md
+      - GLSParameters: api_reference/core/GLSParameters.md
+      - compute_GLS_maps_from_PTS: api_reference/core/compute_GLS_maps_from_PTS.md
+      - compute_GLS_maps: api_reference/core/compute_GLS_maps.md
+      - separate_map_vectors: api_reference/core/separate_map_vectors.md
+      - GLSResult: api_reference/core/GLSResult.md
+      
+    - litebird_sim Interface:
+      - api_reference/lbsim/index.md
+      - LBSimProcessTimeSamples: api_reference/lbsim/LBSimProcessTimeSamples.md      
+      - LBSim_InvNoiseCovLO_UnCorr: api_reference/lbsim/LBSim_InvNoiseCovLO_UnCorr.md
+      - LBSimGLSParameters: api_reference/lbsim/LBSimGLSParameters.md
+      - LBSim_compute_GLS_maps: api_reference/lbsim/LBSim_compute_GLS_maps.md
+      - LBSimGLSResult: api_reference/lbsim/LBSimGLSResult.md      
     
     - Utilities:
       - api_reference/utilities/index.md
-      - ProcessTimeSamples: api_reference/utilities/ProcessTimeSamples.md
-      - parallel_norm: api_reference/utilities/parallel_norm.md
       - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
       - TypeChangeWarning: api_reference/utilities/TypeChangeWarning.md
       - LowerTypeCastWarning: api_reference/utilities/LowerTypeCastWarning.md
-      
-    - Map-makers:
-      - api_reference/map_makers/index.md
-      - GLSParameters: api_reference/map_makers/GLSParameters.md
-      - compute_GLS_maps_from_PTS: api_reference/map_makers/compute_GLS_maps_from_PTS.md
-      - compute_GLS_maps: api_reference/map_makers/compute_GLS_maps.md
-      - GLSResult: api_reference/map_makers/GLSResult.md
-      - separate_map_vectors: api_reference/map_makers/separate_map_vectors.md
+      - ShapeError: api_reference/utilities/ShapeError.md
     
-      - LBSimGLSParameters: api_reference/map_makers/LBSimGLSParameters.md
-      - LBSim_InvNoiseCovLO_UnCorr: api_reference/map_makers/LBSim_InvNoiseCovLO_UnCorr.md
-      - LBSimProcessTimeSamples: api_reference/map_makers/LBSimProcessTimeSamples.md
-      - LBSim_compute_GLS_maps: api_reference/map_makers/LBSim_compute_GLS_maps.md
-      - LBSimGLSResult: api_reference/map_makers/LBSimGLSResult.md
-
-    - Math functions: api_reference/math_functions/index.md
-    - linop package: api_reference/linop/index.md
-    - C++ extensions: api_reference/cpp_extensions/index.md
+    - Base Operators: api_reference/base_operators/index.md
+    - Math Functions:
+      - api_reference/math_functions/index.md
+      - parallel_norm: api_reference/math_functions/parallel_norm.md
+    - C++ Extensions: api_reference/cpp_extensions/index.md
   
   - Development:
     - development/index.md

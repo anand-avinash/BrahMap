@@ -1,3 +1,0 @@
-# `GLSResult`
-
-::: brahmap.mapmakers.GLSResult

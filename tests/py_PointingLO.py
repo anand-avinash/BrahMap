@@ -1,14 +1,19 @@
 import numpy as np
 import warnings
 
-from brahmap import linop as lp
-from brahmap.utilities import TypeChangeWarning
-from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, ProcessTimeSamples
+from brahmap import (
+    MPI_UTILS,
+    MPI_RAISE_EXCEPTION,
+    ProcessTimeSamples,
+    TypeChangeWarning,
+)
+
+from brahmap.base import LinearOperator
 
 import py_PointingLO_tools as hplo_tools
 
 
-class PointingLO(lp.LinearOperator):
+class PointingLO(LinearOperator):
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,

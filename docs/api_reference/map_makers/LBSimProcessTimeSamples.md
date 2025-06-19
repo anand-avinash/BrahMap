@@ -1,3 +1,0 @@
-# `LBSimProcessTimeSamples`
-
-::: brahmap.mapmakers.LBSimProcessTimeSamples

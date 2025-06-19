@@ -6,6 +6,16 @@ test_param_counts = {}
 forced_skipped_tests = set()
 
 
+def pytest_configure(config):
+    # By default, pytest
+    config.addinivalue_line(
+        "markers",
+        "ignore_param_count: Marker for the parameterized test "
+        "functions/classes that are to be excluded from the test count "
+        "filtering",
+    )
+
+
 def get_base_nodeid(nodeid):
     """Strips the parameter id from the nodeid and returns the rest
 
@@ -21,9 +31,10 @@ def get_base_nodeid(nodeid):
 
 
 def pytest_collection_modifyitems(items):
-    """This function counts the number of parameters for a parameterized test"""
+    """This function counts the number of parameters for a parameterized
+    test"""
     for item in items:
-        if "parametrize" in item.keywords:
+        if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
             base_nodeid = get_base_nodeid(item.nodeid)
             if base_nodeid not in test_param_counts:
                 test_param_counts[base_nodeid] = 0
@@ -32,12 +43,13 @@ def pytest_collection_modifyitems(items):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
-    """This function stores the status of a parameterized test for each parameter"""
+    """This function stores the status of a parameterized test for each
+    parameter"""
     # Execute the test
     outcome = yield
 
     # Only process parametrized tests
-    if "parametrize" in item.keywords:
+    if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
         base_nodeid = get_base_nodeid(item.nodeid)
 
         # Initialize the list for this test function if not already done
@@ -53,7 +65,10 @@ def pytest_runtest_call(item):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    """This hook function marks the test to pass if at least half of the parameterized tests are passed. It also issues warning if the test is not passed by all parameters."""
+    """This hook function marks the test to pass if at least half of the
+    parameterized tests are passed. It also issues warning if the test is not
+    passed by all parameters. A test is excluded from this filtering if it is
+    marked with `@pytest.mark.ignore_param_count`."""
     for base_nodeid in list(test_results_status.keys()):
         passed_count = test_results_status[base_nodeid].count(True)
         params_count = test_param_counts[base_nodeid]
@@ -74,7 +89,11 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # Print a summary of forced skipped tests
     if forced_skipped_tests:
         terminalreporter.section(
-            "forced skipped tests summary", cyan=True, blink=True, bold=True, sep="="
+            "forced skipped tests summary",
+            cyan=True,
+            blink=True,
+            bold=True,
+            sep="=",
         )
         terminalreporter.write("See the test report for more details.\n")
         for base_nodeid in forced_skipped_tests:
@@ -92,6 +111,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
 def pytest_sessionfinish(session, exitstatus):
     """
-    Called after the whole test run finished, right before returning the exit status to the system.
+    Called after the whole test run finished, right before returning the exit
+    status to the system.
     """
     pass

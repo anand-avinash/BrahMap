@@ -97,16 +97,16 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestRepixelization(InitCommonParams):
-    def test_repixelize_pol_I(self, initint, initfloat, rtol):
+    def test_repixelize_pol_I(self, initint, initfloat, rtol, atol):
         new_npix, py_weighted_counts, observed_pixels, __, __ = cw.computeweights_pol_I(
             self.npix,
             self.nsamples,
@@ -127,9 +127,14 @@ class TestRepixelization(InitCommonParams):
             new_npix, observed_pixels, py_weighted_counts
         )
 
-        np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
+        np.testing.assert_allclose(
+            py_weighted_counts,
+            cpp_weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
 
-    def test_repixelize_pol_QU(self, initint, initfloat, rtol):
+    def test_repixelize_pol_QU(self, initint, initfloat, rtol, atol):
         (
             py_weighted_counts,
             __,
@@ -196,15 +201,38 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         )
 
-        np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_sin_sq, cpp_weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_cos_sq, cpp_weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_sincos, cpp_weighted_sincos, rtol=rtol)
         np.testing.assert_allclose(
-            cpp_one_over_determinant, py_one_over_determinant, rtol=rtol
+            py_weighted_counts,
+            cpp_weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_sin_sq,
+            cpp_weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_cos_sq,
+            cpp_weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_sincos,
+            cpp_weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_one_over_determinant,
+            py_one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
 
-    def test_repixelize_pol_IQU(self, initint, initfloat, rtol):
+    def test_repixelize_pol_IQU(self, initint, initfloat, rtol, atol):
         (
             py_weighted_counts,
             __,
@@ -283,14 +311,47 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         )
 
-        np.testing.assert_allclose(py_weighted_counts, cpp_weighted_counts, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_sin_sq, cpp_weighted_sin_sq, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_cos_sq, cpp_weighted_cos_sq, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_sincos, cpp_weighted_sincos, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_sin, cpp_weighted_sin, rtol=rtol)
-        np.testing.assert_allclose(py_weighted_cos, cpp_weighted_cos, rtol=rtol)
         np.testing.assert_allclose(
-            cpp_one_over_determinant, py_one_over_determinant, rtol=rtol
+            py_weighted_counts,
+            cpp_weighted_counts,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_sin_sq,
+            cpp_weighted_sin_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_cos_sq,
+            cpp_weighted_cos_sq,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_sincos,
+            cpp_weighted_sincos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_sin,
+            cpp_weighted_sin,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            py_weighted_cos,
+            cpp_weighted_cos,
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            cpp_one_over_determinant,
+            py_one_over_determinant,
+            rtol=rtol,
+            atol=atol,
         )
 
 

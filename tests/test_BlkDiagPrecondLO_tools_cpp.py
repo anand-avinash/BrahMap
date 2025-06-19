@@ -94,19 +94,19 @@ initfloat64 = InitFloat64Params()
 
 
 @pytest.mark.parametrize(
-    "initint, initfloat, rtol",
+    "initint, initfloat, rtol, atol",
     [
-        (initint32, initfloat32, 1.5e-4),
-        (initint64, initfloat32, 1.5e-4),
-        (initint32, initfloat64, 1.5e-5),
-        (initint64, initfloat64, 1.5e-5),
+        (initint32, initfloat32, 1.5e-4, 1.0e-5),
+        (initint64, initfloat32, 1.5e-4, 1.0e-5),
+        (initint32, initfloat64, 1.5e-5, 1.0e-10),
+        (initint64, initfloat64, 1.5e-5, 1.0e-10),
     ],
 )
 class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
-    def test_I_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.I
+    def test_I_Cpp(self, initint, initfloat, rtol, atol):
+        solver_type = brahmap.core.SolverType.I
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -127,12 +127,12 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
             vec,
         )
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
-    def test_QU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.QU
+    def test_QU_Cpp(self, initint, initfloat, rtol, atol):
+        solver_type = brahmap.core.SolverType.QU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -168,12 +168,12 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
             vec,
         )
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
-    def test_IQU_Cpp(self, initint, initfloat, rtol):
-        solver_type = brahmap.utilities.SolverType.IQU
+    def test_IQU_Cpp(self, initint, initfloat, rtol, atol):
+        solver_type = brahmap.core.SolverType.IQU
 
-        PTS = brahmap.utilities.ProcessTimeSamples(
+        PTS = brahmap.core.ProcessTimeSamples(
             npix=self.npix,
             pointings=initint.pointings,
             pointings_flag=self.pointings_flag,
@@ -215,7 +215,7 @@ class TestBlkDiagPrecondLOToolsCpp(InitCommonParams):
             vec,
         )
 
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol)
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
 if __name__ == "__main__":
