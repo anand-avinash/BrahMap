@@ -22,9 +22,9 @@ from ..math import cg, DTypeFloat
 @dataclass
 class GLSParameters:
     solver_type: SolverType = SolverType.IQU
-    use_preconditioner: bool = True
-    preconditioner_threshold: float = 1.0e-12
-    preconditioner_max_iterations: int = 100
+    use_iterative_solver: bool = True
+    isolver_threshold: float = 1.0e-12
+    isolver_max_iterations: int = 100
     callback_function: Callable = None
     return_processed_samples: bool = False
     return_hit_map: bool = False
@@ -116,7 +116,7 @@ def compute_GLS_maps_from_PTS(
     b = pointing_operator.T * inv_noise_cov_operator * time_ordered_data
 
     num_iterations = 0
-    if gls_parameters.use_preconditioner:
+    if gls_parameters.use_iterative_solver:
 
         def callback_function(x, r, norm_residual):
             nonlocal num_iterations
@@ -129,8 +129,8 @@ def compute_GLS_maps_from_PTS(
         map_vector, pcg_status = cg(
             A=A,
             b=b,
-            atol=gls_parameters.preconditioner_threshold,
-            maxiter=gls_parameters.preconditioner_max_iterations,
+            atol=gls_parameters.isolver_threshold,
+            maxiter=gls_parameters.isolver_max_iterations,
             M=blockdiagprecond_operator,
             callback=callback_function,
         )

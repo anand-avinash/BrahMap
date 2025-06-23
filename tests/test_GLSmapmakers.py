@@ -118,7 +118,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
@@ -168,7 +168,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
@@ -232,7 +232,7 @@ class TestGLSMapMakers_const_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
@@ -311,7 +311,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
@@ -360,7 +360,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
@@ -423,7 +423,7 @@ class TestGLSMapMakers_rand_maps(InitCommonParams):
 
         GLSparams = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            preconditioner_max_iterations=5,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=True,
         )
