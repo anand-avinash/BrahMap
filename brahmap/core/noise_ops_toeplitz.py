@@ -96,9 +96,9 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
 
         prod = np.fft.ifft(prod)
         prod = prod * self.__input
-        prod = np.real(np.fft.fft(prod))
+        prod = np.fft.fft(prod)[: self.size]
 
-        return prod[: self.size]
+        return prod.real.astype(dtype=self.dtype, copy=False)
 
 
 class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
