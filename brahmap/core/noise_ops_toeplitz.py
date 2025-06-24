@@ -134,10 +134,10 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             dtype=dtype,
         )
 
-    # @property
-    # def diag(self) -> np.ndarray:
-    #     factor = 1.0
-    #     return factor * np.ones(self.size, dtype=self.dtype)
+    @property
+    def diag(self) -> np.ndarray:
+        factor = 1.0
+        return factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self):
         return self.__toeplitz_op
