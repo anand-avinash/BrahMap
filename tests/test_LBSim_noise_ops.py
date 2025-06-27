@@ -77,7 +77,7 @@ lbs_sim = lbsim_simulation()
 class TestLBSim_InvNoiseCovLO_UnCorr:
     def test_LBSim_InvNoiseCov_UnCorr_explicit(self, lbsim_obj):
         """Here the noise variances are specified explicitly"""
-        # Assigning the key values same as their `det_idx`
+        # Assigning the key values
         noise_variance = {
             "det1": 1.5,
             # "det2", # the operator should set it to 1.0 by default
@@ -95,7 +95,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
 
         prod = inv_noise_variance_op * vec
 
-        # filling the `test_tod` for each detector with its `det_idx`. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
+        # filling the `test_tod` for each detector with its noise variance. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
         for obs in lbsim_obj.sim.observations:
             obs.test_tod = np.empty_like(obs.tod)
             for idx in range(obs.n_detectors):
@@ -138,7 +138,7 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
             )
         )
 
-        # filling the `test_tod` for each detector with its `det_idx`. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
+        # filling the `test_tod` for each detector with its noise variance. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
         for obs in lbsim_obj.sim.observations:
             obs.test_tod = np.empty_like(obs.tod)
             for idx in range(obs.n_detectors):
