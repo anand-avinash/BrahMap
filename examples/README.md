@@ -56,3 +56,24 @@ script.
   a typical parallel simulation from *LiteBIRD* simulation framework. The
   example uses the dedicated wrapper function for GLS map-making from
   `litebid_sim` simulations.
+
+## Noise covariances and their inverse
+
+In all the examples above, we have used white noise covariance for map-making.
+BrahMap offers multiple types of noise covariances, all of which can replace
+the white noise covariance used in these examples. The following example
+notebooks provide an overview of the available noise covariances and
+demonstrate various methods for creating them.
+
+- [`basic_noise_covariances.ipynb`](basic_noise_covariances.ipynb)  
+  This notebook contains the examples related to the basic noise covariance
+  operators.
+
+- [`block_diagonal_noise_covariances.ipynb`](block_diagonal_noise_covariances.ipynb) <!-- markdownlint-disable MD013 -->  
+  This notebook contains the examples for the block-diagonal noise covariances
+  that corresponds to a noise time-stream made up of multiple stationary but
+  mutually uncorrelated sections.
+
+- [`lbsim_noise_covariances.ipynb`](lbsim_noise_covariances.ipynb)  
+  This notebook contains the examples for the noise covariance operators for
+  the BrahMap's interface to `litebird_sim`.
