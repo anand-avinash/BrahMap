@@ -117,6 +117,7 @@ class ProcessTimeSamples(object):
         if self.solver_type == SolverType.I:
             (
                 self.new_npix,
+                self.hit_counts,
                 self.weighted_counts,
                 self.observed_pixels,
                 self.__old2new_pixel,
@@ -134,6 +135,7 @@ class ProcessTimeSamples(object):
         else:
             if self.solver_type == SolverType.QU:
                 (
+                    self.hit_counts,
                     self.weighted_counts,
                     self.sin2phi,
                     self.cos2phi,
@@ -154,6 +156,7 @@ class ProcessTimeSamples(object):
 
             elif self.solver_type == SolverType.IQU:
                 (
+                    self.hit_counts,
                     self.weighted_counts,
                     self.sin2phi,
                     self.cos2phi,
@@ -183,21 +186,23 @@ class ProcessTimeSamples(object):
                 npix=self.npix,
                 solver_type=self.solver_type,
                 threshold=self.threshold,
-                weighted_counts=self.weighted_counts,
+                hit_counts=self.hit_counts,
                 one_over_determinant=self.one_over_determinant,
                 dtype_int=self.pointings.dtype,
             )
 
     def _repixelization(self):
         if self.solver_type == SolverType.I:
-            self.weighted_counts = rp.repixelize_pol_I(
+            self.hit_counts, self.weighted_counts = rp.repixelize_pol_I(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
             )
 
         elif self.solver_type == SolverType.QU:
             (
+                self.hit_counts,
                 self.weighted_counts,
                 self.weighted_sin_sq,
                 self.weighted_cos_sq,
@@ -206,6 +211,7 @@ class ProcessTimeSamples(object):
             ) = rp.repixelize_pol_QU(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
@@ -215,6 +221,7 @@ class ProcessTimeSamples(object):
 
         elif self.solver_type == SolverType.IQU:
             (
+                self.hit_counts,
                 self.weighted_counts,
                 self.weighted_sin_sq,
                 self.weighted_cos_sq,
@@ -225,6 +232,7 @@ class ProcessTimeSamples(object):
             ) = rp.repixelize_pol_IQU(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
