@@ -105,6 +105,7 @@ initfloat64 = InitFloat64Params()
 )
 class TestComputeWeights(InitCommonParams):
     def test_compute_weights_pol_I(self, initint, initfloat, rtol, atol):
+        cpp_hit_counts = np.zeros(self.npix, dtype=initint.dtype)
         cpp_weighted_counts = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_observed_pixels = np.zeros(self.npix, dtype=initint.dtype)
         cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
@@ -116,6 +117,7 @@ class TestComputeWeights(InitCommonParams):
             initint.pointings,
             self.pointings_flag,
             initfloat.noise_weights,
+            cpp_hit_counts,
             cpp_weighted_counts,
             cpp_observed_pixels,
             cpp_old2new_pixel,
@@ -125,6 +127,7 @@ class TestComputeWeights(InitCommonParams):
 
         (
             py_new_npix,
+            py_hit_counts,
             py_weighted_counts,
             py_observed_pixels,
             py_old2new_pixel,
@@ -142,6 +145,7 @@ class TestComputeWeights(InitCommonParams):
         cpp_observed_pixels.resize(cpp_new_npix, refcheck=False)
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
+        np.testing.assert_array_equal(cpp_hit_counts, py_hit_counts)
         np.testing.assert_allclose(
             cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
         )
@@ -153,6 +157,7 @@ class TestComputeWeights(InitCommonParams):
         cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        cpp_hit_counts = np.zeros(self.npix, dtype=initint.dtype)
         cpp_weighted_counts = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_sin_sq = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_cos_sq = np.zeros(self.npix, dtype=initfloat.dtype)
@@ -166,6 +171,7 @@ class TestComputeWeights(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
+            cpp_hit_counts,
             cpp_weighted_counts,
             cpp_sin2phi,
             cpp_cos2phi,
@@ -177,6 +183,7 @@ class TestComputeWeights(InitCommonParams):
         )
 
         (
+            py_hit_counts,
             py_weighted_counts,
             py_sin2phi,
             py_cos2phi,
@@ -195,6 +202,7 @@ class TestComputeWeights(InitCommonParams):
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        np.testing.assert_array_equal(cpp_hit_counts, py_hit_counts)
         np.testing.assert_allclose(
             cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
         )
@@ -214,6 +222,7 @@ class TestComputeWeights(InitCommonParams):
         cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
 
+        cpp_hit_counts = np.zeros(self.npix, dtype=initint.dtype)
         cpp_weighted_counts = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_sin_sq = np.zeros(self.npix, dtype=initfloat.dtype)
         cpp_weighted_cos_sq = np.zeros(self.npix, dtype=initfloat.dtype)
@@ -229,6 +238,7 @@ class TestComputeWeights(InitCommonParams):
             self.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
+            cpp_hit_counts,
             cpp_weighted_counts,
             cpp_sin2phi,
             cpp_cos2phi,
@@ -242,6 +252,7 @@ class TestComputeWeights(InitCommonParams):
         )
 
         (
+            py_hit_counts,
             py_weighted_counts,
             py_sin2phi,
             py_cos2phi,
@@ -262,6 +273,7 @@ class TestComputeWeights(InitCommonParams):
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        np.testing.assert_array_equal(cpp_hit_counts, py_hit_counts)
         np.testing.assert_allclose(
             cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
         )
@@ -285,7 +297,8 @@ class TestComputeWeights(InitCommonParams):
 
     def test_get_pix_mask_pol_QU(self, initint, initfloat, rtol, atol):
         (
-            weighted_counts,
+            hit_counts,
+            __,
             __,
             __,
             __,
@@ -307,11 +320,13 @@ class TestComputeWeights(InitCommonParams):
         cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
         cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
 
+        hit_counts = hit_counts.astype(dtype=initint.dtype)
+
         cpp_new_npix = compute_weights.get_pixel_mask_pol(
             2,
             self.npix,
             1.0e3,
-            weighted_counts,
+            hit_counts,
             one_over_determinant,
             cpp_observed_pixels,
             cpp_old2new_pixel,
@@ -329,7 +344,7 @@ class TestComputeWeights(InitCommonParams):
             self.npix,
             2,
             1.0e3,
-            weighted_counts,
+            hit_counts,
             one_over_determinant,
             dtype_int=initint.dtype,
         )
@@ -341,7 +356,8 @@ class TestComputeWeights(InitCommonParams):
 
     def test_get_pix_mask_pol_IQU(self, initint, initfloat, rtol, atol):
         (
-            weighted_counts,
+            hit_counts,
+            __,
             __,
             __,
             __,
@@ -365,11 +381,13 @@ class TestComputeWeights(InitCommonParams):
         cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
         cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
 
+        hit_counts = hit_counts.astype(dtype=initint.dtype)
+
         cpp_new_npix = compute_weights.get_pixel_mask_pol(
             3,
             self.npix,
             1.0e3,
-            weighted_counts,
+            hit_counts,
             one_over_determinant,
             cpp_observed_pixels,
             cpp_old2new_pixel,
@@ -387,7 +405,7 @@ class TestComputeWeights(InitCommonParams):
             self.npix,
             3,
             1.0e3,
-            weighted_counts,
+            hit_counts,
             one_over_determinant,
             dtype_int=initint.dtype,
         )

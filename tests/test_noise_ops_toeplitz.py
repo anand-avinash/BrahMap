@@ -75,22 +75,22 @@ class NoiseOps_Toeplitz(BaseTestNoiseLO):
         [
             ("operator1", "numpy_operator1"),
             ("operator2", "numpy_operator1"),
-            pytest.param(
-                "inv_operator1",
-                "numpy_inv_operator1",
-                marks=pytest.mark.xfail(
-                    raises=NotImplementedError,
-                    reason=".diag() method is not implemented yet",
-                ),
-            ),
-            pytest.param(
-                "inv_operator2",
-                "numpy_inv_operator1",
-                marks=pytest.mark.xfail(
-                    raises=NotImplementedError,
-                    reason=".diag() method is not implemented yet",
-                ),
-            ),
+            # pytest.param(
+            #     "inv_operator1",
+            #     "numpy_inv_operator1",
+            #     marks=pytest.mark.xfail(
+            #         raises=NotImplementedError,
+            #         reason=".diag() method is not implemented yet",
+            #     ),
+            # ),
+            # pytest.param(
+            #     "inv_operator2",
+            #     "numpy_inv_operator1",
+            #     marks=pytest.mark.xfail(
+            #         raises=NotImplementedError,
+            #         reason=".diag() method is not implemented yet",
+            #     ),
+            # ),
         ],
     )
     def test_diagonal(self, operator, numpy_operator):
@@ -101,6 +101,7 @@ class NoiseOps_Toeplitz(BaseTestNoiseLO):
         np_op = getattr(self, numpy_operator)
 
         op_diag = op.diag
+        print(op, operator)
         np_diag = np.diagonal(np_op)
         np.testing.assert_allclose(
             op_diag,
