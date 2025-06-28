@@ -19,6 +19,7 @@ dint compute_weights_pol_I(                 //
     const dint *__restrict pointings,       //
     const bool *__restrict pointings_flag,  //
     const dfloat *__restrict noise_weights, //
+    dint *__restrict hit_counts,            //
     dfloat *__restrict weighted_counts,     //
     dint *__restrict observed_pixels,       //
     dint *__restrict __old2new_pixel,       //
@@ -32,16 +33,20 @@ dint compute_weights_pol_I(                 //
     dfloat weight = pointings_flag[idx] * noise_weights[idx];
 
 #pragma omp atomic update
+    hit_counts[pixel] += pointings_flag[idx];
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
 
   } // for
 
+  MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
+                comm);
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
 
   dint new_npix = 0;
   for (ssize_t idx = 0; idx < npix; ++idx) {
-    if (weighted_counts[idx] > 0) {
+    if (hit_counts[idx] > 0) {
       observed_pixels[new_npix] = idx;
       __old2new_pixel[idx] = new_npix;
       pixel_flag[idx] = true;
@@ -61,6 +66,7 @@ void compute_weights_pol_QU(                 //
     const bool *__restrict pointings_flag,   //
     const dfloat *__restrict noise_weights,  //
     const dfloat *__restrict pol_angles,     //
+    dint *__restrict hit_counts,             //
     dfloat *__restrict weighted_counts,      //
     dfloat *__restrict sin2phi,              //
     dfloat *__restrict cos2phi,              //
@@ -88,6 +94,8 @@ void compute_weights_pol_QU(                 //
     dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
 
 #pragma omp atomic update
+    hit_counts[pixel] += pointings_flag[idx];
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
 #pragma omp atomic update
     weighted_sin_sq[pixel] += wsin_sq;
@@ -98,6 +106,8 @@ void compute_weights_pol_QU(                 //
 
   } // for
 
+  MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
+                comm);
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
   MPI_Allreduce(MPI_IN_PLACE, weighted_sin_sq, npix, mpi_get_type<dfloat>(),
@@ -127,6 +137,7 @@ void compute_weights_pol_IQU(                //
     const bool *__restrict pointings_flag,   //
     const dfloat *__restrict noise_weights,  //
     const dfloat *__restrict pol_angles,     //
+    dint *__restrict hit_counts,             //
     dfloat *__restrict weighted_counts,      //
     dfloat *__restrict sin2phi,              //
     dfloat *__restrict cos2phi,              //
@@ -158,6 +169,8 @@ void compute_weights_pol_IQU(                //
     dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
 
 #pragma omp atomic update
+    hit_counts[pixel] += pointings_flag[idx];
+#pragma omp atomic update
     weighted_counts[pixel] += weight;
 #pragma omp atomic update
     weighted_sin[pixel] += wsin;
@@ -172,6 +185,8 @@ void compute_weights_pol_IQU(                //
 
   } // for
 
+  MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
+                comm);
   MPI_Allreduce(MPI_IN_PLACE, weighted_counts, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
   MPI_Allreduce(MPI_IN_PLACE, weighted_sin, npix, mpi_get_type<dfloat>(),
@@ -206,22 +221,22 @@ dint get_pixel_mask_pol(                           //
     const int solver_type,                         //
     const ssize_t npix,                            //
     const dfloat threshold,                        //
-    const dfloat *__restrict weighted_counts,      //
+    const dint *__restrict hit_counts,             //
     const dfloat *__restrict one_over_determinant, //
     dint *__restrict observed_pixels,              //
     dint *__restrict __old2new_pixel,              //
     bool *__restrict pixel_flag                    //
 ) {
 
-  dfloat weight_threshold = (dfloat)(solver_type - 1);
+  int hit_threshold = solver_type - 1;
 
   dint new_npix = 0;
   for (ssize_t idx = 0; idx < npix; ++idx) {
 
-    dfloat weight = weighted_counts[idx];
+    dint hits = hit_counts[idx];
     dfloat determinant = one_over_determinant[idx];
 
-    if ((determinant > threshold) && (weight > weight_threshold)) {
+    if ((abs(determinant) > threshold) && (hits > hit_threshold)) {
       observed_pixels[new_npix] = idx;
       __old2new_pixel[idx] = new_npix;
       pixel_flag[idx] = true;
@@ -243,6 +258,7 @@ std::function<dint(                       //
     const buffer_t<dint> pointings,       //
     const buffer_t<bool> pointings_flag,  //
     const buffer_t<dfloat> noise_weights, //
+    buffer_t<dint> hit_counts,            //
     buffer_t<dfloat> weighted_counts,     //
     buffer_t<dint> observed_pixels,       //
     buffer_t<dint> __old2new_pixel,       //
@@ -255,6 +271,7 @@ std::function<dint(                       //
        const py::buffer pointings,      //
        const py::buffer pointings_flag, //
        const py::buffer noise_weights,  //
+       py::buffer hit_counts,           //
        py::buffer weighted_counts,      //
        py::buffer observed_pixels,      //
        py::buffer __old2new_pixel,      //
@@ -264,6 +281,7 @@ std::function<dint(                       //
   py::buffer_info pointings_info = pointings.request();
   py::buffer_info pointings_flags_info = pointings_flag.request();
   py::buffer_info noise_weights_info = noise_weights.request();
+  py::buffer_info hit_counts_info = hit_counts.request();
   py::buffer_info weighted_counts_info = weighted_counts.request();
   py::buffer_info observed_pixels_info = observed_pixels.request();
   py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
@@ -275,6 +293,7 @@ std::function<dint(                       //
       reinterpret_cast<const bool *>(pointings_flags_info.ptr);
   const dfloat *noise_weights_ptr =
       reinterpret_cast<const dfloat *>(noise_weights_info.ptr);
+  dint *hit_counts_ptr = reinterpret_cast<dint *>(hit_counts_info.ptr);
   dfloat *weighted_counts_ptr =
       reinterpret_cast<dfloat *>(weighted_counts_info.ptr);
   dint *observed_pixels_ptr =
@@ -292,6 +311,7 @@ std::function<dint(                       //
       pointings_ptr,                     //
       pointings_flags_ptr,               //
       noise_weights_ptr,                 //
+      hit_counts_ptr,                    //
       weighted_counts_ptr,               //
       observed_pixels_ptr,               //
       __old2new_pixel_ptr,               //
@@ -311,6 +331,7 @@ std::function<void(                        //
     const buffer_t<bool> pointings_flag,   //
     const buffer_t<dfloat> noise_weights,  //
     const buffer_t<dfloat> pol_angles,     //
+    buffer_t<dint> hit_counts,             //
     buffer_t<dfloat> weighted_counts,      //
     buffer_t<dfloat> sin2phi,              //
     buffer_t<dfloat> cos2phi,              //
@@ -327,6 +348,7 @@ std::function<void(                        //
        const py::buffer pointings_flag, //
        const py::buffer noise_weights,  //
        const py::buffer pol_angles,     //
+       py::buffer hit_counts,           //
        py::buffer weighted_counts,      //
        py::buffer sin2phi,              //
        py::buffer cos2phi,              //
@@ -340,6 +362,7 @@ std::function<void(                        //
       py::buffer_info pointings_flag_info = pointings_flag.request();
       py::buffer_info noise_weights_info = noise_weights.request();
       py::buffer_info pol_angles_info = pol_angles.request();
+      py::buffer_info hit_counts_info = hit_counts.request();
       py::buffer_info weighted_counts_info = weighted_counts.request();
       py::buffer_info sin2phi_info = sin2phi.request();
       py::buffer_info cos2phi_info = cos2phi.request();
@@ -357,6 +380,7 @@ std::function<void(                        //
           reinterpret_cast<const dfloat *>(noise_weights_info.ptr);
       const dfloat *pol_angles_ptr =
           reinterpret_cast<const dfloat *>(pol_angles_info.ptr);
+      dint *hit_counts_ptr = reinterpret_cast<dint *>(hit_counts_info.ptr);
       dfloat *weighted_counts_ptr =
           reinterpret_cast<dfloat *>(weighted_counts_info.ptr);
       dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
@@ -381,6 +405,7 @@ std::function<void(                        //
           pointings_flag_ptr,       //
           noise_weights_ptr,        //
           pol_angles_ptr,           //
+          hit_counts_ptr,           //
           weighted_counts_ptr,      //
           sin2phi_ptr,              //
           cos2phi_ptr,              //
@@ -404,6 +429,7 @@ std::function<void(                        //
     const buffer_t<bool> pointings_flag,   //
     const buffer_t<dfloat> noise_weights,  //
     const buffer_t<dfloat> pol_angles,     //
+    buffer_t<dint> hit_counts,             //
     buffer_t<dfloat> weighted_counts,      //
     buffer_t<dfloat> sin2phi,              //
     buffer_t<dfloat> cos2phi,              //
@@ -422,6 +448,7 @@ std::function<void(                        //
        const py::buffer pointings_flag,  //
        const py::buffer noise_weights,   //
        const py::buffer pol_angles,      //
+       py::buffer hit_counts,            //
        py::buffer weighted_counts,       //
        py::buffer sin2phi,               //
        py::buffer cos2phi,               //
@@ -437,6 +464,7 @@ std::function<void(                        //
       py::buffer_info pointings_flag_info = pointings_flag.request();
       py::buffer_info noise_weights_info = noise_weights.request();
       py::buffer_info pol_angles_info = pol_angles.request();
+      py::buffer_info hit_counts_info = hit_counts.request();
       py::buffer_info weighted_counts_info = weighted_counts.request();
       py::buffer_info sin2phi_info = sin2phi.request();
       py::buffer_info cos2phi_info = cos2phi.request();
@@ -456,6 +484,7 @@ std::function<void(                        //
           reinterpret_cast<const dfloat *>(noise_weights_info.ptr);
       const dfloat *pol_angles_ptr =
           reinterpret_cast<const dfloat *>(pol_angles_info.ptr);
+      dint *hit_counts_ptr = reinterpret_cast<dint *>(hit_counts_info.ptr);
       dfloat *weighted_counts_ptr =
           reinterpret_cast<dfloat *>(weighted_counts_info.ptr);
       dfloat *sin2phi_ptr = reinterpret_cast<dfloat *>(sin2phi_info.ptr);
@@ -484,6 +513,7 @@ std::function<void(                        //
           pointings_flag_ptr,       //
           noise_weights_ptr,        //
           pol_angles_ptr,           //
+          hit_counts_ptr,           //
           weighted_counts_ptr,      //
           sin2phi_ptr,              //
           cos2phi_ptr,              //
@@ -506,7 +536,7 @@ std::function<dint(                              //
     const int solver_type,                       //
     const ssize_t npix,                          //
     const dfloat threshold,                      //
-    const buffer_t<dfloat> weighted_counts,      //
+    const buffer_t<dint> hit_counts,             //
     const buffer_t<dfloat> one_over_determinant, //
     buffer_t<dint> observed_pixels,              //
     buffer_t<dint> __old2new_pixel,              //
@@ -516,20 +546,20 @@ std::function<dint(                              //
     [](const int solver_type,                 //
        const ssize_t npix,                    //
        const dfloat threshold,                //
-       const py::buffer weighted_counts,      //
+       const py::buffer hit_counts,           //
        const py::buffer one_over_determinant, //
        py::buffer observed_pixels,            //
        py::buffer __old2new_pixel,            //
        py::buffer pixel_flag                  //
        ) -> dint {
-  py::buffer_info weighted_counts_info = weighted_counts.request();
+  py::buffer_info hit_counts_info = hit_counts.request();
   py::buffer_info one_over_determinant_info = one_over_determinant.request();
   py::buffer_info observed_pixels_info = observed_pixels.request();
   py::buffer_info __old2new_pixel_info = __old2new_pixel.request();
   py::buffer_info pixel_flag_info = pixel_flag.request();
 
-  const dfloat *weighted_counts_ptr =
-      reinterpret_cast<const dfloat *>(weighted_counts_info.ptr);
+  const dint *hit_counts_ptr =
+      reinterpret_cast<const dint *>(hit_counts_info.ptr);
   const dfloat *one_over_determinant_ptr =
       reinterpret_cast<const dfloat *>(one_over_determinant_info.ptr);
   dint *observed_pixels_ptr =
@@ -542,7 +572,7 @@ std::function<dint(                              //
       solver_type,                    //
       npix,                           //
       threshold,                      //
-      weighted_counts_ptr,            //
+      hit_counts_ptr,                 //
       one_over_determinant_ptr,       //
       observed_pixels_ptr,            //
       __old2new_pixel_ptr,            //
@@ -561,6 +591,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings").noconvert(),       //
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
+        py::arg("hit_counts").noconvert(),      //
         py::arg("weighted_counts").noconvert(), //
         py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
@@ -574,6 +605,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings").noconvert(),       //
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
+        py::arg("hit_counts").noconvert(),      //
         py::arg("weighted_counts").noconvert(), //
         py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
@@ -587,6 +619,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings").noconvert(),       //
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
+        py::arg("hit_counts").noconvert(),      //
         py::arg("weighted_counts").noconvert(), //
         py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
@@ -600,6 +633,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings").noconvert(),       //
         py::arg("pointings_flag").noconvert(),  //
         py::arg("noise_weights").noconvert(),   //
+        py::arg("hit_counts").noconvert(),      //
         py::arg("weighted_counts").noconvert(), //
         py::arg("observed_pixels").noconvert(), //
         py::arg("__old2new_pixel").noconvert(), //
@@ -615,6 +649,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -633,6 +668,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -651,6 +687,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -669,6 +706,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -687,6 +725,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -707,6 +746,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -727,6 +767,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -747,6 +788,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("pointings_flag").noconvert(),       //
         py::arg("noise_weights").noconvert(),        //
         py::arg("pol_angles").noconvert(),           //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("weighted_counts").noconvert(),      //
         py::arg("sin2phi").noconvert(),              //
         py::arg("cos2phi").noconvert(),              //
@@ -764,7 +806,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
-        py::arg("weighted_counts").noconvert(),      //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("one_over_determinant").noconvert(), //
         py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
@@ -775,7 +817,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
-        py::arg("weighted_counts").noconvert(),      //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("one_over_determinant").noconvert(), //
         py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
@@ -786,7 +828,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
-        py::arg("weighted_counts").noconvert(),      //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("one_over_determinant").noconvert(), //
         py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //
@@ -797,7 +839,7 @@ PYBIND11_MODULE(compute_weights, m) {
         py::arg("solver_type"),                      //
         py::arg("npix"),                             //
         py::arg("threshold"),                        //
-        py::arg("weighted_counts").noconvert(),      //
+        py::arg("hit_counts").noconvert(),           //
         py::arg("one_over_determinant").noconvert(), //
         py::arg("observed_pixels").noconvert(),      //
         py::arg("__old2new_pixel").noconvert(),      //

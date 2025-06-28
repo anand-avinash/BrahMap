@@ -285,6 +285,7 @@ class ProcessTimeSamples(object):
         return hit_counts
 
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
+        self.hit_counts = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
         self.observed_pixels = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.__old2new_pixel = np.zeros(self.npix, dtype=self.pointings.dtype)
@@ -297,6 +298,7 @@ class ProcessTimeSamples(object):
                 pointings=self.pointings,
                 pointings_flag=self.pointings_flag,
                 noise_weights=noise_weights,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
@@ -322,6 +324,7 @@ class ProcessTimeSamples(object):
                     pointings_flag=self.pointings_flag,
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
+                    hit_counts=self.hit_counts,
                     weighted_counts=self.weighted_counts,
                     sin2phi=self.sin2phi,
                     cos2phi=self.cos2phi,
@@ -343,6 +346,7 @@ class ProcessTimeSamples(object):
                     pointings_flag=self.pointings_flag,
                     noise_weights=noise_weights,
                     pol_angles=pol_angles,
+                    hit_counts=self.hit_counts,
                     weighted_counts=self.weighted_counts,
                     sin2phi=self.sin2phi,
                     cos2phi=self.cos2phi,
@@ -359,7 +363,7 @@ class ProcessTimeSamples(object):
                 solver_type=self.solver_type,
                 npix=self.npix,
                 threshold=self.threshold,
-                weighted_counts=self.weighted_counts,
+                hit_counts=self.hit_counts,
                 one_over_determinant=self.one_over_determinant,
                 observed_pixels=self.observed_pixels,
                 __old2new_pixel=self.__old2new_pixel,
@@ -373,15 +377,18 @@ class ProcessTimeSamples(object):
             repixelize.repixelize_pol_I(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
             )
 
+            self.hit_counts.resize(self.new_npix, refcheck=False)
             self.weighted_counts.resize(self.new_npix, refcheck=False)
 
         elif self.solver_type == SolverType.QU:
             repixelize.repixelize_pol_QU(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
@@ -389,6 +396,7 @@ class ProcessTimeSamples(object):
                 one_over_determinant=self.one_over_determinant,
             )
 
+            self.hit_counts.resize(self.new_npix, refcheck=False)
             self.weighted_counts.resize(self.new_npix, refcheck=False)
             self.weighted_sin_sq.resize(self.new_npix, refcheck=False)
             self.weighted_cos_sq.resize(self.new_npix, refcheck=False)
@@ -399,6 +407,7 @@ class ProcessTimeSamples(object):
             repixelize.repixelize_pol_IQU(
                 new_npix=self.new_npix,
                 observed_pixels=self.observed_pixels,
+                hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 weighted_sin_sq=self.weighted_sin_sq,
                 weighted_cos_sq=self.weighted_cos_sq,
@@ -408,6 +417,7 @@ class ProcessTimeSamples(object):
                 one_over_determinant=self.one_over_determinant,
             )
 
+            self.hit_counts.resize(self.new_npix, refcheck=False)
             self.weighted_counts.resize(self.new_npix, refcheck=False)
             self.weighted_sin_sq.resize(self.new_npix, refcheck=False)
             self.weighted_cos_sq.resize(self.new_npix, refcheck=False)
