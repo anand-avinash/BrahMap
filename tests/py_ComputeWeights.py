@@ -13,17 +13,20 @@ def computeweights_pol_I(
     dtype_float,
     comm,
 ):
+    hit_counts = np.zeros(npix, dtype=int)
     weighted_counts = np.zeros(npix, dtype=dtype_float)
 
     for idx in range(nsamples):
         pixel = pointings[idx]
 
         if pointings_flag[idx]:
+            hit_counts[pixel] += 1
             weighted_counts[pixel] += noise_weights[idx]
 
+    comm.Allreduce(MPI.IN_PLACE, hit_counts, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
 
-    observed_pixels = np.where(weighted_counts > 0)[0]
+    observed_pixels = np.where(hit_counts > 0)[0]
 
     new_npix = len(observed_pixels)
 
@@ -37,7 +40,14 @@ def computeweights_pol_I(
             old2new_pixel[idx] = new_idx[0]
             pixel_flag[idx] = True
 
-    return new_npix, weighted_counts, observed_pixels, old2new_pixel, pixel_flag
+    return (
+        new_npix,
+        hit_counts,
+        weighted_counts,
+        observed_pixels,
+        old2new_pixel,
+        pixel_flag,
+    )
 
 
 def computeweights_pol_QU(
@@ -50,6 +60,7 @@ def computeweights_pol_QU(
     dtype_float,
     comm,
 ):
+    hit_counts = np.zeros(npix, dtype=int)
     weighted_counts = np.zeros(npix, dtype=dtype_float)
     weighted_sin_sq = np.zeros(npix, dtype=dtype_float)
     weighted_cos_sq = np.zeros(npix, dtype=dtype_float)
@@ -65,11 +76,13 @@ def computeweights_pol_QU(
         pixel = pointings[idx]
 
         if pointings_flag[idx]:
+            hit_counts[pixel] += 1
             weighted_counts[pixel] += noise_weights[idx]
             weighted_sin_sq[pixel] += noise_weights[idx] * sin2phi[idx] * sin2phi[idx]
             weighted_cos_sq[pixel] += noise_weights[idx] * cos2phi[idx] * cos2phi[idx]
             weighted_sincos[pixel] += noise_weights[idx] * sin2phi[idx] * cos2phi[idx]
 
+    comm.Allreduce(MPI.IN_PLACE, hit_counts, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_sin_sq, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_cos_sq, MPI.SUM)
@@ -80,6 +93,7 @@ def computeweights_pol_QU(
     )
 
     return (
+        hit_counts,
         weighted_counts,
         sin2phi,
         cos2phi,
@@ -100,6 +114,7 @@ def computeweights_pol_IQU(
     dtype_float,
     comm,
 ):
+    hit_counts = np.zeros(npix, dtype=int)
     weighted_counts = np.zeros(npix, dtype=dtype_float)
     weighted_sin_sq = np.zeros(npix, dtype=dtype_float)
     weighted_cos_sq = np.zeros(npix, dtype=dtype_float)
@@ -117,6 +132,7 @@ def computeweights_pol_IQU(
         pixel = pointings[idx]
 
         if pointings_flag[idx]:
+            hit_counts[pixel] += 1
             weighted_counts[pixel] += noise_weights[idx]
             weighted_sin_sq[pixel] += noise_weights[idx] * sin2phi[idx] * sin2phi[idx]
             weighted_cos_sq[pixel] += noise_weights[idx] * cos2phi[idx] * cos2phi[idx]
@@ -124,6 +140,7 @@ def computeweights_pol_IQU(
             weighted_sin[pixel] += noise_weights[idx] * sin2phi[idx]
             weighted_cos[pixel] += noise_weights[idx] * cos2phi[idx]
 
+    comm.Allreduce(MPI.IN_PLACE, hit_counts, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_counts, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_sin, MPI.SUM)
     comm.Allreduce(MPI.IN_PLACE, weighted_cos, MPI.SUM)
@@ -140,6 +157,7 @@ def computeweights_pol_IQU(
     )
 
     return (
+        hit_counts,
         weighted_counts,
         sin2phi,
         cos2phi,
@@ -156,12 +174,12 @@ def get_pix_mask_pol(
     npix: int,
     solver_type: int,
     threshold: float,
-    weighted_counts: np.ndarray,
+    hit_counts: np.ndarray,
     one_over_determinant: np.ndarray,
     dtype_int,
 ):
-    determinant_mask = np.where(one_over_determinant > threshold)[0]
-    count_mask = np.where(weighted_counts > (solver_type - 1))[0]
+    determinant_mask = np.where(abs(one_over_determinant) > threshold)[0]
+    count_mask = np.where(hit_counts > (solver_type - 1))[0]
     observed_pixels = np.intersect1d(count_mask, determinant_mask)
     new_npix = len(observed_pixels)
 

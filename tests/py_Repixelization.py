@@ -2,20 +2,26 @@ import numpy as np
 
 
 def repixelize_pol_I(
-    new_npix: int, observed_pixels: np.ndarray, weighted_counts: np.ndarray
+    new_npix: int,
+    observed_pixels: np.ndarray,
+    hit_counts: np.ndarray,
+    weighted_counts: np.ndarray,
 ):
     for idx in range(new_npix):
         pixel = observed_pixels[idx]
+        hit_counts[idx] = hit_counts[pixel]
         weighted_counts[idx] = weighted_counts[pixel]
 
+    hit_counts.resize(new_npix, refcheck=False)
     weighted_counts.resize(new_npix, refcheck=False)
 
-    return weighted_counts
+    return hit_counts, weighted_counts
 
 
 def repixelize_pol_QU(
     new_npix: int,
     observed_pixels: np.ndarray,
+    hit_counts: np.ndarray,
     weighted_counts: np.ndarray,
     weighted_sin_sq: np.ndarray,
     weighted_cos_sq: np.ndarray,
@@ -24,12 +30,14 @@ def repixelize_pol_QU(
 ):
     for idx in range(new_npix):
         pixel = observed_pixels[idx]
+        hit_counts[idx] = hit_counts[pixel]
         weighted_counts[idx] = weighted_counts[pixel]
         weighted_sin_sq[idx] = weighted_sin_sq[pixel]
         weighted_cos_sq[idx] = weighted_cos_sq[pixel]
         weighted_sincos[idx] = weighted_sincos[pixel]
         one_over_determinant[idx] = 1.0 / one_over_determinant[pixel]
 
+    hit_counts.resize(new_npix, refcheck=False)
     weighted_counts.resize(new_npix, refcheck=False)
     weighted_sin_sq.resize(new_npix, refcheck=False)
     weighted_cos_sq.resize(new_npix, refcheck=False)
@@ -37,6 +45,7 @@ def repixelize_pol_QU(
     one_over_determinant.resize(new_npix, refcheck=False)
 
     return (
+        hit_counts,
         weighted_counts,
         weighted_sin_sq,
         weighted_cos_sq,
@@ -48,6 +57,7 @@ def repixelize_pol_QU(
 def repixelize_pol_IQU(
     new_npix: int,
     observed_pixels: np.ndarray,
+    hit_counts: np.ndarray,
     weighted_counts: np.ndarray,
     weighted_sin_sq: np.ndarray,
     weighted_cos_sq: np.ndarray,
@@ -58,6 +68,7 @@ def repixelize_pol_IQU(
 ):
     for idx in range(new_npix):
         pixel = observed_pixels[idx]
+        hit_counts[idx] = hit_counts[pixel]
         weighted_counts[idx] = weighted_counts[pixel]
         weighted_sin_sq[idx] = weighted_sin_sq[pixel]
         weighted_cos_sq[idx] = weighted_cos_sq[pixel]
@@ -66,6 +77,7 @@ def repixelize_pol_IQU(
         weighted_cos[idx] = weighted_cos[pixel]
         one_over_determinant[idx] = 1.0 / one_over_determinant[pixel]
 
+    hit_counts.resize(new_npix, refcheck=False)
     weighted_counts.resize(new_npix, refcheck=False)
     weighted_sin_sq.resize(new_npix, refcheck=False)
     weighted_cos_sq.resize(new_npix, refcheck=False)
@@ -75,6 +87,7 @@ def repixelize_pol_IQU(
     one_over_determinant.resize(new_npix, refcheck=False)
 
     return (
+        hit_counts,
         weighted_counts,
         weighted_sin_sq,
         weighted_cos_sq,

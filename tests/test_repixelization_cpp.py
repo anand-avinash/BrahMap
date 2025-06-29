@@ -107,7 +107,14 @@ initfloat64 = InitFloat64Params()
 )
 class TestRepixelization(InitCommonParams):
     def test_repixelize_pol_I(self, initint, initfloat, rtol, atol):
-        new_npix, py_weighted_counts, observed_pixels, __, __ = cw.computeweights_pol_I(
+        (
+            new_npix,
+            py_hit_counts,
+            py_weighted_counts,
+            observed_pixels,
+            __,
+            __,
+        ) = cw.computeweights_pol_I(
             self.npix,
             self.nsamples,
             initint.pointings,
@@ -117,16 +124,27 @@ class TestRepixelization(InitCommonParams):
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        cpp_hit_counts = py_hit_counts.astype(dtype=initint.dtype)
         cpp_weighted_counts = py_weighted_counts.copy()
 
-        repixelize.repixelize_pol_I(new_npix, observed_pixels, cpp_weighted_counts)
-
-        cpp_weighted_counts.resize(new_npix, refcheck=False)
-
-        py_weighted_counts = rp.repixelize_pol_I(
-            new_npix, observed_pixels, py_weighted_counts
+        repixelize.repixelize_pol_I(
+            new_npix,
+            observed_pixels,
+            cpp_hit_counts,
+            cpp_weighted_counts,
         )
 
+        cpp_hit_counts.resize(new_npix, refcheck=False)
+        cpp_weighted_counts.resize(new_npix, refcheck=False)
+
+        py_hit_counts, py_weighted_counts = rp.repixelize_pol_I(
+            new_npix,
+            observed_pixels,
+            py_hit_counts,
+            py_weighted_counts,
+        )
+
+        np.testing.assert_array_equal(py_hit_counts, cpp_hit_counts)
         np.testing.assert_allclose(
             py_weighted_counts,
             cpp_weighted_counts,
@@ -136,6 +154,7 @@ class TestRepixelization(InitCommonParams):
 
     def test_repixelize_pol_QU(self, initint, initfloat, rtol, atol):
         (
+            py_hit_counts,
             py_weighted_counts,
             __,
             __,
@@ -158,11 +177,12 @@ class TestRepixelization(InitCommonParams):
             self.npix,
             2,
             1.0e-5,
-            py_weighted_counts,
+            py_hit_counts,
             py_one_over_determinant,
             initint.pointings.dtype,
         )
 
+        cpp_hit_counts = py_hit_counts.astype(dtype=initint.dtype)
         cpp_weighted_counts = py_weighted_counts.copy()
         cpp_weighted_sin_sq = py_weighted_sin_sq.copy()
         cpp_weighted_cos_sq = py_weighted_cos_sq.copy()
@@ -172,6 +192,7 @@ class TestRepixelization(InitCommonParams):
         repixelize.repixelize_pol_QU(
             new_npix,
             observed_pixels,
+            cpp_hit_counts,
             cpp_weighted_counts,
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
@@ -179,6 +200,7 @@ class TestRepixelization(InitCommonParams):
             cpp_one_over_determinant,
         )
 
+        cpp_hit_counts.resize(new_npix, refcheck=False)
         cpp_weighted_counts.resize(new_npix, refcheck=False)
         cpp_weighted_sin_sq.resize(new_npix, refcheck=False)
         cpp_weighted_cos_sq.resize(new_npix, refcheck=False)
@@ -186,6 +208,7 @@ class TestRepixelization(InitCommonParams):
         cpp_one_over_determinant.resize(new_npix, refcheck=False)
 
         (
+            py_hit_counts,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
@@ -194,6 +217,7 @@ class TestRepixelization(InitCommonParams):
         ) = rp.repixelize_pol_QU(
             new_npix,
             observed_pixels,
+            py_hit_counts,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
@@ -201,6 +225,10 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         )
 
+        np.testing.assert_array_equal(
+            py_hit_counts,
+            cpp_hit_counts,
+        )
         np.testing.assert_allclose(
             py_weighted_counts,
             cpp_weighted_counts,
@@ -234,6 +262,7 @@ class TestRepixelization(InitCommonParams):
 
     def test_repixelize_pol_IQU(self, initint, initfloat, rtol, atol):
         (
+            py_hit_counts,
             py_weighted_counts,
             __,
             __,
@@ -258,11 +287,12 @@ class TestRepixelization(InitCommonParams):
             self.npix,
             3,
             1.0e-5,
-            py_weighted_counts,
+            py_hit_counts,
             py_one_over_determinant,
             initint.dtype,
         )
 
+        cpp_hit_counts = py_hit_counts.astype(dtype=initint.dtype)
         cpp_weighted_counts = py_weighted_counts.copy()
         cpp_weighted_sin_sq = py_weighted_sin_sq.copy()
         cpp_weighted_cos_sq = py_weighted_cos_sq.copy()
@@ -274,6 +304,7 @@ class TestRepixelization(InitCommonParams):
         repixelize.repixelize_pol_IQU(
             new_npix,
             observed_pixels,
+            cpp_hit_counts,
             cpp_weighted_counts,
             cpp_weighted_sin_sq,
             cpp_weighted_cos_sq,
@@ -283,6 +314,7 @@ class TestRepixelization(InitCommonParams):
             cpp_one_over_determinant,
         )
 
+        cpp_hit_counts.resize(new_npix, refcheck=False)
         cpp_weighted_counts.resize(new_npix, refcheck=False)
         cpp_weighted_sin_sq.resize(new_npix, refcheck=False)
         cpp_weighted_cos_sq.resize(new_npix, refcheck=False)
@@ -292,6 +324,7 @@ class TestRepixelization(InitCommonParams):
         cpp_one_over_determinant.resize(new_npix, refcheck=False)
 
         (
+            py_hit_counts,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
@@ -302,6 +335,7 @@ class TestRepixelization(InitCommonParams):
         ) = rp.repixelize_pol_IQU(
             new_npix,
             observed_pixels,
+            py_hit_counts,
             py_weighted_counts,
             py_weighted_sin_sq,
             py_weighted_cos_sq,
@@ -311,6 +345,10 @@ class TestRepixelization(InitCommonParams):
             py_one_over_determinant,
         )
 
+        np.testing.assert_array_equal(
+            py_hit_counts,
+            cpp_hit_counts,
+        )
         np.testing.assert_allclose(
             py_weighted_counts,
             cpp_weighted_counts,
@@ -367,12 +405,13 @@ class TestRepixelization(InitCommonParams):
 class TestFlagBadPixelSamples(InitCommonParams):
     def test_flag_bad_pixel_samples(self, initint, initfloat):
         (
-            py_weighted_counts,
+            py_hit_counts,
             __,
             __,
-            py_weighted_sin_sq,
-            py_weighted_cos_sq,
-            py_weighted_sincos,
+            __,
+            __,
+            __,
+            __,
             __,
             __,
             py_one_over_determinant,
@@ -391,7 +430,7 @@ class TestFlagBadPixelSamples(InitCommonParams):
             self.npix,
             3,
             1.0e-5,
-            py_weighted_counts,
+            py_hit_counts,
             py_one_over_determinant,
             initint.dtype,
         )
