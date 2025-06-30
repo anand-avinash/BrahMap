@@ -173,9 +173,13 @@ class TestLBSimGLS:
             return_processed_samples=False,
         )
 
+        for obs in lbsim_obj.sim.observations:
+            obs.tod_new = obs.tod
+
         GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
             observations=lbsim_obj.sim.observations,
+            components=["tod", "tod_new"],
             dtype_float=lbsim_obj.dtype_float,
             LBSim_gls_parameters=GLSparams,
         )
@@ -192,7 +196,7 @@ class TestLBSimGLS:
 
         np.testing.assert_allclose(
             GLSresults.GLS_maps[0],
-            input_map,
+            input_map * 2.0,
             rtol,
             atol,
         )
