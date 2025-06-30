@@ -29,7 +29,7 @@ def LBSim_compute_GLS_maps(
     observations: Union[lbs.Observation, List[lbs.Observation]],
     pointings: Union[np.ndarray, List[np.ndarray], None] = None,
     hwp: Optional[lbs.HWP] = None,
-    component: str = "tod",
+    components: Union[str, List[str]] = "tod",
     pointings_flag: Union[np.ndarray, None] = None,
     inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
     threshold: float = 1.0e-5,
@@ -54,8 +54,19 @@ def LBSim_compute_GLS_maps(
         dtype_float=dtype_float,
     )
 
+    if isinstance(components, str):
+        components = [components]
+
+    if len(components) > 1:
+        lbs.mapmaking.destriper._sum_components_into_obs(
+            obs_list=observations,
+            target=components[0],
+            other_components=components[1:],
+            factor=1.0,
+        )
+
     time_ordered_data = np.concatenate(
-        [getattr(obs, component) for obs in observations], axis=None
+        [getattr(obs, components[0]) for obs in observations], axis=None
     )
 
     gls_result = compute_GLS_maps_from_PTS(
