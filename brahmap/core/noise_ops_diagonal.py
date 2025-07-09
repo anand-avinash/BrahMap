@@ -1,7 +1,7 @@
 import numpy as np
 import warnings
 from numbers import Number
-from typing import List, Union
+from typing import List, Union, Literal
 
 
 from ..utilities import TypeChangeWarning
@@ -20,7 +20,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List, DTypeFloat] = 1.0,
-        input_type="covariance",
+        input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ):
         if isinstance(input, Number) and input_type == "covariance":
@@ -95,7 +95,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List, DTypeFloat] = 1.0,
-        input_type="covariance",
+        input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ):
         if isinstance(input, Number) and input_type == "covariance":

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Literal
 
 import numpy as np
 import litebird_sim as lbs
@@ -63,7 +63,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
         input: Union[dict, Union[np.ndarray, List]],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype=np.float64,
     ):
         if isinstance(obs, lbs.Observation):
@@ -142,7 +142,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
         input: Union[dict, Union[np.ndarray, List]],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         operator=InvNoiseCovLO_Toeplitz01,
         dtype=np.float64,
     ):

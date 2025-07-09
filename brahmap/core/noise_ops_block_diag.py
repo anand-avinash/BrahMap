@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union
+from typing import List, Union, Literal
 
 from ..base import (
     BaseBlockDiagNoiseCovLinearOperator,
@@ -15,7 +15,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         operator,
         block_size: Union[np.ndarray, List],
         block_input: List[Union[np.ndarray, List]],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         MPI_RAISE_EXCEPTION(
@@ -63,7 +63,7 @@ class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
         operator,
         block_size: Union[np.ndarray, List],
         block_input: List[Union[np.ndarray, List]],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         super(BlockDiagInvNoiseCovLO, self).__init__(

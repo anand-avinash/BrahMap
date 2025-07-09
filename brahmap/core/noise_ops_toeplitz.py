@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-from typing import List, Union
+from typing import List, Union, Literal
 
 from ..utilities import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -19,7 +19,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         input = np.asarray(a=input, dtype=dtype)
@@ -108,7 +108,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         precond_op=None,
         precond_maxiter=50,
         precond_atol=1.0e-10,
