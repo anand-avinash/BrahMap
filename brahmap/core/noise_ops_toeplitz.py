@@ -3,11 +3,9 @@ import warnings
 from typing import List, Union, Literal
 
 from ..utilities import TypeChangeWarning
-from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
-from ..math import DTypeFloat
+from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
+from ..math import DTypeFloat, cg
 from ..mpi import MPI_RAISE_EXCEPTION
-
-import scipy.sparse.linalg
 
 from brahmap import MPI_UTILS
 
@@ -109,8 +107,11 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         size: int,
         input: Union[np.ndarray, List],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        precond_op=None,
+        precond_op: Union[
+            LinearOperator, Literal[None, "Strang", "RChan", "TChan", "KK2"]
+        ] = None,
         precond_maxiter=50,
+        precond_rtol=1.0e-10,
         precond_atol=1.0e-10,
         precond_callback=None,
         dtype: DTypeFloat = np.float64,
@@ -122,6 +123,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             dtype=dtype,
         )
 
+        self.__precond_rtol = precond_rtol
         self.__precond_atol = precond_atol
         self.__precond_maxiter = precond_maxiter
         self.__precond_op = precond_op
@@ -157,13 +159,15 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                 )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod, _ = scipy.sparse.linalg.gmres(
+        prod, _ = cg(
             A=self.__toeplitz_op,
             b=vec,
+            rtol=self.__precond_rtol,
             atol=self.__precond_atol,
             maxiter=self.__precond_maxiter,
             M=self.__precond_op,
             callback=self.__precond_callback,
+            parallel=False,
         )
 
         return prod
