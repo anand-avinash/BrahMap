@@ -35,7 +35,7 @@ def cg(
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        norm_function: Callable = scipy.sparse.linalg.norm
+        norm_function: Callable = np.linalg.norm
 
     b_norm = norm_function(b)
 
