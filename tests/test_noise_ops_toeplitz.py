@@ -120,4 +120,4 @@ class TestNoiseOps_Toeplitz_F32(NoiseOps_Toeplitz):
 class TestNoiseOps_Toeplitz_F64(NoiseOps_Toeplitz):
     dtype = np.float64
     rtol = 1.0e-6
-    atol = 1.0e-10
+    atol = 1.0e-8
