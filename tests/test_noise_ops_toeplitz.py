@@ -21,6 +21,10 @@ class NoiseOps_Toeplitz(BaseTestNoiseLO):
 
         covariance = rng.random(size, dtype=dtype)
 
+        self.dtype = dtype
+        self.size = size
+        self.covariance = covariance
+
         extended_covariance1 = np.concatenate([covariance, covariance[1:-1][::-1]])
         power_spec1 = np.fft.fft(extended_covariance1).real.astype(
             dtype
@@ -106,6 +110,31 @@ class NoiseOps_Toeplitz(BaseTestNoiseLO):
         np.testing.assert_allclose(
             op_diag,
             np_diag,
+            rtol=self.rtol,
+            atol=self.atol,
+        )
+
+    @pytest.mark.parametrize(
+        "precond_type", [("Strang"), ("TChan"), ("RChan"), ("KK2"), ("explicit")]
+    )
+    @pytest.mark.ignore_param_count
+    def test_Strang_precond(self, precond_type):
+        if precond_type == "explicit":
+            precond_type = self.ex_inv_operator1
+
+        inv_cov = brahmap.InvNoiseCovLO_Toeplitz01(
+            size=self.size,
+            input=self.covariance,
+            input_type="covariance",
+            precond_op=precond_type,
+            dtype=self.dtype,
+        )
+
+        ex_inv_cov = inv_cov.to_array()
+
+        np.testing.assert_allclose(
+            ex_inv_cov,
+            self.ex_inv_operator1,
             rtol=self.rtol,
             atol=self.atol,
         )
