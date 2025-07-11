@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Literal
 
 from ..base import LinearOperator, BlockDiagonalLinearOperator
 
@@ -12,7 +13,7 @@ class NoiseCovLinearOperator(LinearOperator):
         self,
         nargin: int,
         matvec: int,
-        input_type: str = "covariance",
+        input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
         **kwargs,
     ):
@@ -54,7 +55,7 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
         self,
         nargin: int,
         matvec: int,
-        input_type: str = "covariance",
+        input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
         **kwargs,
     ):

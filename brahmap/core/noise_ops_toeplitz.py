@@ -1,13 +1,12 @@
 import numpy as np
 import warnings
-from typing import List, Union
+from typing import List, Union, Literal
 
 from ..utilities import TypeChangeWarning
-from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
-from ..math import DTypeFloat
+from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
+from ..math import DTypeFloat, cg
 from ..mpi import MPI_RAISE_EXCEPTION
-
-import scipy.sparse.linalg
+from ..core import InvNoiseCovLO_Circulant
 
 from brahmap import MPI_UTILS
 
@@ -19,7 +18,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         input = np.asarray(a=input, dtype=dtype)
@@ -108,9 +107,12 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
-        precond_op=None,
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
+        precond_op: Union[
+            LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
+        ] = None,
         precond_maxiter=50,
+        precond_rtol=1.0e-10,
         precond_atol=1.0e-10,
         precond_callback=None,
         dtype: DTypeFloat = np.float64,
@@ -122,10 +124,60 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             dtype=dtype,
         )
 
+        self.__precond_rtol = precond_rtol
         self.__precond_atol = precond_atol
         self.__precond_maxiter = precond_maxiter
-        self.__precond_op = precond_op
         self.__precond_callback = precond_callback
+
+        if precond_op is None:
+            self.__precond_op = None
+        elif isinstance(precond_op, LinearOperator) or isinstance(
+            precond_op, np.ndarray
+        ):
+            self.__precond_op = precond_op
+        elif precond_op in ["Strang", "TChan", "RChan", "KK2"]:
+            if input_type == "power_spectrum":
+                cov = np.fft.ifft(input).real[:size]
+            else:
+                cov = input[:size]
+
+            if precond_op == "Strang":
+                temp_size = int(np.floor(cov.size / 2))
+                if cov.size % 2 == 0:
+                    new_cov = np.concatenate(
+                        [cov[:temp_size], cov[1 : temp_size + 1][::-1]]
+                    )
+                else:
+                    new_cov = np.concatenate(
+                        [cov[: temp_size + 1], cov[1 : temp_size + 1][::-1]]
+                    )
+            elif precond_op == "TChan":
+                new_cov = np.empty_like(cov)
+                new_cov[0] = cov[0]
+                n = cov.size
+                for idx in range(1, n):
+                    new_cov[idx] = ((n - idx) * cov[idx] + idx * cov[n - idx]) / n
+            elif precond_op == "RChan":
+                new_cov = np.roll(np.flip(cov), 1)
+                new_cov += cov
+                new_cov[0] = cov[0]
+            elif precond_op == "KK2":  # Circulant but not symmetric
+                new_cov = np.roll(np.flip(cov), 1)
+                new_cov[0] = 0
+                new_cov = cov - new_cov
+
+            self.__precond_op = InvNoiseCovLO_Circulant(
+                size=size,
+                input=new_cov,
+                input_type="covariance",
+                dtype=dtype,
+            )
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=True,
+                exception=ValueError,
+                message="Invalid preconditioner operator provided!",
+            )
 
         super(InvNoiseCovLO_Toeplitz01, self).__init__(
             nargin=size,
@@ -157,13 +209,15 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                 )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod, _ = scipy.sparse.linalg.gmres(
+        prod, _ = cg(
             A=self.__toeplitz_op,
             b=vec,
+            rtol=self.__precond_rtol,
             atol=self.__precond_atol,
             maxiter=self.__precond_maxiter,
             M=self.__precond_op,
             callback=self.__precond_callback,
+            parallel=False,
         )
 
         return prod

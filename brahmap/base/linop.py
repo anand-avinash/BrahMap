@@ -39,7 +39,7 @@ __docformat__ = "restructuredtext"
 
 # Default (null) logger.
 null_log = logging.getLogger("linop")
-null_log.setLevel(logging.INFO)
+null_log.setLevel(logging.WARNING)
 null_log.addHandler(logging.NullHandler())
 
 

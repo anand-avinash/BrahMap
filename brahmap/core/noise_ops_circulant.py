@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-from typing import List, Union
+from typing import List, Union, Literal
 
 from ..utilities import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -15,7 +15,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         input = np.asarray(a=input, dtype=dtype)
@@ -84,7 +84,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         self,
         size: int,
         input: Union[np.ndarray, List],
-        input_type: str = "power_spectrum",
+        input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
         input = np.asarray(a=input, dtype=dtype)
