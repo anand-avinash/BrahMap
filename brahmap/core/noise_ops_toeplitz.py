@@ -137,7 +137,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             self.__precond_op = precond_op
         elif precond_op in ["Strang", "TChan", "RChan", "KK2"]:
             if input_type == "power_spectrum":
-                cov = np.fft.ifft(input).real
+                cov = np.fft.ifft(input).real[:size]
             else:
                 cov = input[:size]
 
