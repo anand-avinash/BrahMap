@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Dict, Any
 
 from ..base import (
     BaseBlockDiagNoiseCovLinearOperator,
@@ -17,6 +17,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         block_input: List[Union[np.ndarray, List]],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
+        extra_kwargs: Dict[str, Any] = {},
     ):
         MPI_RAISE_EXCEPTION(
             condition=(len(block_size) != len(block_input)),
@@ -31,6 +32,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
             block_input=block_input,
             input_type=input_type,
             dtype=dtype,
+            extra_kwargs=extra_kwargs,
         )
 
         super(BlockDiagNoiseCovLO, self).__init__(
@@ -44,6 +46,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         block_size,
         input_type,
         dtype,
+        extra_kwargs,
     ):
         block_list = []
         for idx, input in enumerate(block_input):
@@ -52,6 +55,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
                 input=input,
                 input_type=input_type,
                 dtype=dtype,
+                **extra_kwargs,
             )
             block_list.append(block_op)
         return block_list
@@ -65,6 +69,7 @@ class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
         block_input: List[Union[np.ndarray, List]],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
+        extra_kwargs: Dict[str, Any] = {},
     ):
         super(BlockDiagInvNoiseCovLO, self).__init__(
             operator,
@@ -72,4 +77,5 @@ class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
             block_input,
             input_type,
             dtype,
+            extra_kwargs,
         )
