@@ -166,6 +166,7 @@ nav:
     - Math Functions:
       - api_reference/math_functions/index.md
       - parallel_norm: api_reference/math_functions/parallel_norm.md
+      - cg: api_reference/math_functions/cg.md
 
     - Utilities:
       - api_reference/utilities/index.md

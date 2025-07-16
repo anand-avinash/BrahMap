@@ -1,4 +1,4 @@
-# Core Interfaces
+# Core Interface
 
 ## Data pre-processing
 
