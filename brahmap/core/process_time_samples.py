@@ -76,9 +76,9 @@ class ProcessTimeSamples(object):
     weighted_counts : np.ndarray
         Weighted counts
     sin2phi : np.ndarray
-        A 1-d array of `sin(2\phi)`
+        A 1-d array of $sin(2\\phi)$
     cos2phi : np.ndarray
-        A 1-d array of `cos(2\phi)`
+        A 1-d array of $cos(2\\phi)$
     weighted_sin : np.ndarray
         Weighted `sin`
     weighted_cos : np.ndarray

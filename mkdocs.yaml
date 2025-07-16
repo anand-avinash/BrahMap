@@ -42,7 +42,7 @@ theme:
     - search.highlight # highlight the search terms
     - navigation.top
     - navigation.tabs
-    - navigation.expand
+    # - navigation.expand
     - navigation.footer
     - navigation.indexes
     - navigation.path

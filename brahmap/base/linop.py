@@ -57,10 +57,10 @@ null_log.addHandler(logging.NullHandler())
 
 
 class BaseLinearOperator(object):
-    r"""Base class for defining the common interface shared by all linear
+    """Base class for defining the common interface shared by all linear
     operators.
 
-    A linear operator is a linear mapping $x \mapsto A(x)$ such that the size
+    A linear operator is a linear mapping $x \\mapsto A(x)$ such that the size
     of the input vector $x$ is `nargin` and the size of the output vector is
     `nargout`. The linear operator $A$ can be visualized as a matrix of shape
     `(nargout, nargin)`.
@@ -168,8 +168,8 @@ class LinearOperator(BaseLinearOperator):
     A generic linear operator class.
 
     A linear operator constructed from a matrix-vector multiplication `matvec`,
-    $x \mapsto A(x)=Ax$ and possibly with a transposed-matrix-vector
-    operation `rmatvec`, $x \mapsto A(x)=A^T x$. If `symmetric` is `True`,
+    $x \\mapsto A(x)=Ax$ and possibly with a transposed-matrix-vector
+    operation `rmatvec`, $x \\mapsto A(x)=A^T x$. If `symmetric` is `True`,
     `rmatvec` is ignored. All other keyword arguments are passed directly to
     the superclass.
 
@@ -180,10 +180,10 @@ class LinearOperator(BaseLinearOperator):
     nargout : int
         Size of the output vector $A(x)$
     matvec : Callable
-        A function that defines the matrix-vector product $x \mapsto A(x)=Ax$
+        A function that defines the matrix-vector product $x \\mapsto A(x)=Ax$
     rmatvec : Optional[Callable], optional
         A function that defines the transposed-matrix-vector product
-        $x \mapsto A(x)=A^T x$, by default `None`
+        $x \\mapsto A(x)=A^T x$, by default `None`
     **kwargs : Any
         Extra keywords arguments
     """

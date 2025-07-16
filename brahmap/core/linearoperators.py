@@ -17,7 +17,7 @@ from brahmap import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
-    r"""Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
+    """Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
     It constitutes an interface for dealing with the projection operator
     (pointing matrix).
 
@@ -29,7 +29,7 @@ class PointingLO(LinearOperator):
 
     - ``processed_samples``: {:class:`ProcessTimeSamples`}
         the class (instantiated before :class:`PointingLO`)has already computed
-        the :math:`\cos 2\phi` and :math:`\sin 2\phi`, we link the ``cos2phi`` and ``sin2phi``
+        the :math:`\\cos 2\\phi` and :math:`\\sin 2\\phi`, we link the ``cos2phi`` and ``sin2phi``
         attributes of this class to the  :class:`ProcessTimeSamples` ones ;
 
     """
