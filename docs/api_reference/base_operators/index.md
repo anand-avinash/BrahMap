@@ -2,8 +2,20 @@
 
 ## `linop` sub-module
 
-::: brahmap.base.linop
+- [`BaseLinearOperator`](BaseLinearOperator.md)
+- [`LinearOperator`](LinearOperator.md)
+- [`IdentityOperator`](IdentityOperator.md)
+- [`DiagonalOperator`](DiagonalOperator.md)
+- [`MatrixLinearOperator`](MatrixLinearOperator.md)
+- [`ZeroOperator`](ZeroOperator.md)
+- [`InverseLO`](InverseLO.md)
+- [`ReducedLinearOperator`](ReducedLinearOperator.md)
+- [`SymmetricallyReducedLinearOperator`](SymmetricallyReducedLinearOperator.md)
+- [`aslinearoperator`](aslinearoperator.md)
 
 ## `blkop` sub-module
 
-::: brahmap.base.blkop
+- [`BlockLinearOperator`](BlockLinearOperator.md)
+- [`BlockDiagonalLinearOperator`](BlockDiagonalLinearOperator.md)
+- [`BlockHorizontalLinearOperator`](BlockHorizontalLinearOperator.md)
+- [`BlockVerticalLinearOperator`](BlockVerticalLinearOperator.md)

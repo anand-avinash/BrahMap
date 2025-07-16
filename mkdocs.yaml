@@ -105,6 +105,13 @@ plugins:
         python:
           options:
             docstring_style: numpy
+            allow_inspection: true  # import the modules and inspect them
+            # force_inspection: true  # Force import (see if it works for extensions)
+            show_signature: true  # show function signature
+            show_signature_annotations: true  # show signature annotation
+            inherited_members: false
+            # summary: true
+            show_docstring_raises: false
   - search # Enable search
 
 ### Page tree
@@ -153,7 +160,23 @@ nav:
       - LowerTypeCastWarning: api_reference/utilities/LowerTypeCastWarning.md
       - ShapeError: api_reference/utilities/ShapeError.md
     
-    - Base Operators: api_reference/base_operators/index.md
+    - Base Operators:
+      - api_reference/base_operators/index.md
+      - BaseLinearOperator: api_reference/base_operators/BaseLinearOperator.md
+      - LinearOperator: api_reference/base_operators/LinearOperator.md
+      - IdentityOperator: api_reference/base_operators/IdentityOperator.md
+      - DiagonalOperator: api_reference/base_operators/DiagonalOperator.md
+      - MatrixLinearOperator: api_reference/base_operators/MatrixLinearOperator.md
+      - ZeroOperator: api_reference/base_operators/ZeroOperator.md
+      - InverseLO: api_reference/base_operators/InverseLO.md
+      - ReducedLinearOperator: api_reference/base_operators/ReducedLinearOperator.md
+      - SymmetricallyReducedLinearOperator: api_reference/base_operators/SymmetricallyReducedLinearOperator.md
+      - aslinearoperator: api_reference/base_operators/aslinearoperator.md
+      - BlockLinearOperator: api_reference/base_operators/BlockLinearOperator.md
+      - BlockDiagonalLinearOperator: api_reference/base_operators/BlockDiagonalLinearOperator.md
+      - BlockHorizontalLinearOperator: api_reference/base_operators/BlockHorizontalLinearOperator.md
+      - BlockVerticalLinearOperator: api_reference/base_operators/BlockVerticalLinearOperator.md
+    
     - Math Functions:
       - api_reference/math_functions/index.md
       - parallel_norm: api_reference/math_functions/parallel_norm.md
