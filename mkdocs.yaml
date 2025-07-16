@@ -149,7 +149,14 @@ nav:
       - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
       - PointingLO: api_reference/core/PointingLO.md
       - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
+      - NoiseCovLO_Diagonal: api_reference/core/NoiseCovLO_Diagonal.md
+      - NoiseCovLO_Circulant: api_reference/core/NoiseCovLO_Circulant.md
+      - NoiseCovLO_Toeplitz01: api_reference/core/NoiseCovLO_Toeplitz01.md
+      - BlockDiagNoiseCovLO: api_reference/core/BlockDiagNoiseCovLO.md
       - InvNoiseCovLO_Diagonal: api_reference/core/InvNoiseCovLO_Diagonal.md
+      - InvNoiseCovLO_Circulant: api_reference/core/InvNoiseCovLO_Circulant.md
+      - InvNoiseCovLO_Toeplitz01: api_reference/core/InvNoiseCovLO_Toeplitz01.md
+      - BlockDiagInvNoiseCovLO: api_reference/core/BlockDiagInvNoiseCovLO.md
       - GLSParameters: api_reference/core/GLSParameters.md
       - compute_GLS_maps_from_PTS: api_reference/core/compute_GLS_maps_from_PTS.md
       - compute_GLS_maps: api_reference/core/compute_GLS_maps.md
