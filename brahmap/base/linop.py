@@ -41,12 +41,13 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 
+from typing import Callable, Optional, Tuple
+import numbers
 import numpy as np
+import numpy.typing as npt
 import logging
 
 from ..utilities import ShapeError
-
-__docformat__ = "restructuredtext"
 
 
 # Default (null) logger.
@@ -56,23 +57,39 @@ null_log.addHandler(logging.NullHandler())
 
 
 class BaseLinearOperator(object):
+    r"""Base class for defining the common interface shared by all linear
+    operators.
+
+    A linear operator is a linear mapping $x \mapsto A(x)$ such that the size
+    of the input vector $x$ is `nargin` and the size of the output vector is
+    `nargout`. The linear operator $A$ can be visualized as a matrix of shape
+    `(nargout, nargin)`.
+
+    Parameters
+    ----------
+    nargin : int
+        Size of the input vector $x$
+    nargout : int
+        Size of the output vector $A(x)$
+    symmetric : bool, optional
+        A parameter to specify whether the linear operator is symmetric, by
+        default `False`
+    dtype : npt.DTypeLike, optional
+        Data type of the linear operator, by default `np.float64`
+    **kwargs : Any
+        Extra keywords arguments
     """
-    Base class defining the common interface shared by all linear operators.
 
-    A linear operator is a linear mapping x -> A(x) such that the size of the
-    input vector x is `nargin` and the size of the output is `nargout`. It can
-    be visualized as a matrix of shape (`nargout`, `nargin`). Its type is any
-    valid Numpy `dtype`. By default, it has `dtype` `numpy.float` but this can
-    be changed to, e.g., `numpy.complex` via the `dtype` keyword argument and
-    attribute.
-
-    A logger may be attached to the linear operator via the `logger` keyword
-    argument.
-
-    """
+    # A logger may be attached to the linear operator via the `logger` keyword
+    # argument.
 
     def __init__(
-        self, nargin, nargout, symmetric: bool = False, dtype=np.float64, **kwargs
+        self,
+        nargin: int,
+        nargout: int,
+        symmetric: bool = False,
+        dtype: npt.DTypeLike = np.float64,
+        **kwargs,
     ):
         self.__nargin = nargin
         self.__nargout = nargout
@@ -87,13 +104,13 @@ class BaseLinearOperator(object):
         return
 
     @property
-    def nargin(self):
-        """The size of an input vector."""
+    def nargin(self) -> int:
+        """The size of the input vector."""
         return self.__nargin
 
     @property
-    def nargout(self):
-        """The size of an output vector."""
+    def nargout(self) -> int:
+        """The size of the output vector."""
         return self.__nargout
 
     @property
@@ -102,12 +119,12 @@ class BaseLinearOperator(object):
         return self.__symmetric
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         """The shape of the operator."""
         return self.__shape
 
     @property
-    def dtype(self):
+    def dtype(self) -> npt.DTypeLike:
         """The data type of the operator."""
         return self.__dtype
 
@@ -116,13 +133,17 @@ class BaseLinearOperator(object):
         self.__dtype = dtype
 
     @property
-    def nMatvec(self):
+    def nMatvec(self) -> int:
         """The number of products with vectors computed so far."""
         return self._nMatvec
 
     def reset_counters(self):
         """Reset operator/vector product counter to zero."""
         self._nMatvec = 0
+
+    def dot(self, x):
+        """Numpy-like dot() method."""
+        return self.__mul__(x)
 
     def __call__(self, *args, **kwargs):
         # An alias for __mul__.
@@ -131,7 +152,7 @@ class BaseLinearOperator(object):
     def __mul__(self, x):
         raise NotImplementedError("Please subclass to implement __mul__.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.symmetric:
             s = "Symmetric"
         else:
@@ -141,23 +162,45 @@ class BaseLinearOperator(object):
         s += " with shape (%d,%d)" % (self.nargout, self.nargin)
         return s
 
-    def dot(self, x):
-        """Numpy-like dot() method."""
-        return self.__mul__(x)
-
 
 class LinearOperator(BaseLinearOperator):
     """
-    Generic linear operator class.
+    A generic linear operator class.
 
-    A linear operator constructed from a `matvec` and (possibly) a
-    `rmatvec` function. If `symmetric` is `True`, `rmatvec` is
-    ignored. All other keyword arguments are passed directly to the superclass.
+    A linear operator constructed from a matrix-vector multiplication `matvec`,
+    $x \mapsto A(x)=Ax$ and possibly with a transposed-matrix-vector
+    operation `rmatvec`, $x \mapsto A(x)=A^T x$. If `symmetric` is `True`,
+    `rmatvec` is ignored. All other keyword arguments are passed directly to
+    the superclass.
 
+    Parameters
+    ----------
+    nargin : int
+        Size of the input vector $x$
+    nargout : int
+        Size of the output vector $A(x)$
+    matvec : Callable
+        A function that defines the matrix-vector product $x \mapsto A(x)=Ax$
+    rmatvec : Optional[Callable], optional
+        A function that defines the transposed-matrix-vector product
+        $x \mapsto A(x)=A^T x$, by default `None`
+    **kwargs : Any
+        Extra keywords arguments
     """
 
-    def __init__(self, nargin, nargout, matvec, rmatvec=None, **kwargs):
-        super(LinearOperator, self).__init__(nargin, nargout, **kwargs)
+    def __init__(
+        self,
+        nargin: int,
+        nargout: int,
+        matvec: Callable,
+        rmatvec: Optional[Callable] = None,
+        **kwargs,
+    ):
+        super(LinearOperator, self).__init__(
+            nargin,
+            nargout,
+            **kwargs,
+        )
         adjoint_of = kwargs.get("adjoint_of", None) or kwargs.get("transpose_of", None)
         rmatvec = rmatvec or kwargs.get("matvec_transp", None)
 
@@ -184,32 +227,30 @@ class LinearOperator(BaseLinearOperator):
                 if isinstance(adjoint_of, BaseLinearOperator):
                     self.__H = adjoint_of
                 else:
-                    msg = "kwarg adjoint_of / transpose_of must be of type LinearOperator."
+                    msg = (
+                        "kwarg adjoint_of / transpose_of must be of type"
+                        " LinearOperator."
+                    )
                     msg += " Got " + str(adjoint_of.__class__)
                     raise ValueError(msg)
 
     @property
     def T(self):
-        """The transpose operator.
-
-        .. note:: this is an alias to the adjoint operator
-
-        """
+        """The transpose operator"""
         return self.__H
 
     @property
     def H(self):
-        """The adjoint operator."""
+        """The adjoint operator"""
         return self.__H
 
     def matvec(self, x):
         """
         Matrix-vector multiplication.
 
-        The matvec property encapsulates the matvec routine specified at
+        The matvec property encapsulates the `matvec` routine specified at
         construct time, to ensure the consistency of the input and output
         arrays with the operator's shape.
-
         """
         x = np.asanyarray(x)
         M, N = self.shape
@@ -219,7 +260,12 @@ class LinearOperator(BaseLinearOperator):
         try:
             x = x.reshape(N)
         except ValueError:
-            msg = "input array size incompatible with operator dimensions"
+            msg = (
+                "The size of the input array is incompatible with the "
+                "operator dimensions\n"
+                f"size of the input array: {len(x)}\n"
+                f"shape of the operator: {self.shape}"
+            )
             raise ValueError(msg)
 
         y = self.__matvec(x)
@@ -229,12 +275,26 @@ class LinearOperator(BaseLinearOperator):
         try:
             y = y.reshape(M)
         except ValueError:
-            msg = "output array size incompatible with operator dimensions"
+            msg = (
+                "The size of the output array is incompatible with the "
+                "operator dimensions\n"
+                f"size of the output array: {len(y)}\n"
+                f"shape of the operator: {self.shape}"
+            )
             raise ValueError(msg)
 
         return y
 
-    def to_array(self):
+    def to_array(self) -> np.ndarray:
+        """Returns the dense form of the linear operator as a 2D NumPy array
+
+        !!! Warning
+
+            This method first allocates a NumPy array of shape `self.shape`
+            and data-type `self.dtype`, and then fills them with numbers. As
+            such it can occupy an enormous amount of memory. Don't use it
+            unless you understand the risk!
+        """
         n, m = self.shape
         H = np.empty((n, m), dtype=self.dtype)
         ej = np.zeros(m, dtype=self.dtype)
@@ -245,7 +305,7 @@ class LinearOperator(BaseLinearOperator):
         return H
 
     def __mul_scalar(self, x):
-        """Product between a linear operator and a scalar."""
+        # Product between a linear operator and a scalar
         result_type = np.result_type(self.dtype, type(x))
 
         if x != 0:
@@ -268,9 +328,14 @@ class LinearOperator(BaseLinearOperator):
             return ZeroOperator(self.nargin, self.nargout, dtype=result_type)
 
     def __mul_linop(self, op):
-        """Product between two linear operators."""
+        # Product between two linear operators
         if self.nargin != op.nargout:
-            raise ShapeError("Cannot multiply operators together")
+            msg = (
+                "Cannot multiply the two operators together\n"
+                f"shape of the first operator: {self.shape}\n"
+                f"shape of the second operator: {op.shape}"
+            )
+            raise ShapeError(msg)
 
         def matvec(x):
             return self(op(x))
@@ -290,31 +355,38 @@ class LinearOperator(BaseLinearOperator):
         )
 
     def __mul_vector(self, x):
-        """Product between a linear operator and a vector."""
+        # Product between a linear operator and a vector
         self._nMatvec += 1
         result_type = np.result_type(self.dtype, x.dtype)
         return self.matvec(x).astype(result_type, copy=False)
 
     def __mul__(self, x):
-        if np.isscalar(x):
+        # Returns a linear operator if x is a scalar or a linear operator
+        # Returns a vector if x is an array
+        if isinstance(x, numbers.Number):
             return self.__mul_scalar(x)
         elif isinstance(x, BaseLinearOperator):
             return self.__mul_linop(x)
         elif isinstance(x, np.ndarray):
             return self.__mul_vector(x)
         else:
-            raise ValueError("Cannot multiply")
+            raise ValueError("Invalid multiplier! Cannot multiply")
 
     def __rmul__(self, x):
         if np.isscalar(x):
             return self.__mul__(x)
-        raise ValueError("Cannot multiply")
+        raise ValueError("Invalid operation! Cannot multiply")
 
     def __add__(self, other):
         if not isinstance(other, BaseLinearOperator):
-            raise ValueError("Cannot add")
+            raise ValueError("Invalid operation! Cannot add")
         if self.shape != other.shape:
-            raise ShapeError("Cannot add")
+            msg = (
+                "Cannot add the two operators together\n"
+                f"shape of the first operator: {self.shape}\n"
+                f"shape of the second operator: {other.shape}"
+            )
+            raise ShapeError(msg)
 
         def matvec(x):
             return self(x) + other(x)
@@ -338,9 +410,14 @@ class LinearOperator(BaseLinearOperator):
 
     def __sub__(self, other):
         if not isinstance(other, BaseLinearOperator):
-            raise ValueError("Cannot add")
+            raise ValueError("Invalid operation! Cannot subtract")
         if self.shape != other.shape:
-            raise ShapeError("Cannot add")
+            msg = (
+                "Cannot subtract one operator from the other\n"
+                f"shape of the first operator: {self.shape}\n"
+                f"shape of the second operator: {other.shape}"
+            )
+            raise ShapeError(msg)
 
         def matvec(x):
             return self(x) - other(x)
@@ -363,7 +440,7 @@ class LinearOperator(BaseLinearOperator):
         if np.isscalar(other):
             return self * (1 / other)
         else:
-            raise ValueError("Cannot divide")
+            raise ValueError("Invalid operation! Cannot divide")
 
     def __pow__(self, other):
         if not isinstance(other, int):
