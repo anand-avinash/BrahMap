@@ -4,7 +4,7 @@ from numbers import Number
 from typing import List, Union, Literal
 
 
-from ..utilities import TypeChangeWarning
+from ..base import TypeChangeWarning
 
 from ..math import DTypeFloat, linalg_tools
 

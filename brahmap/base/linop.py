@@ -47,7 +47,7 @@ import numpy as np
 import numpy.typing as npt
 import logging
 
-from ..utilities import ShapeError
+from .misc import ShapeError
 
 
 # Default (null) logger.

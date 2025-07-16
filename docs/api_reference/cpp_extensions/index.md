@@ -1,3 +1,0 @@
-# C++ Extensions
-
-Under development!

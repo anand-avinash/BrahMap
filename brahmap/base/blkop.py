@@ -48,7 +48,7 @@ from functools import reduce, partial
 
 from ..base import BaseLinearOperator, LinearOperator
 from ..base import null_log
-from ..utilities import ShapeError, TypeChangeWarning
+from .misc import ShapeError, TypeChangeWarning
 from ..mpi import MPI_RAISE_EXCEPTION
 
 from brahmap import MPI_UTILS

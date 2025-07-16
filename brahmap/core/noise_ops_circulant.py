@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 from typing import List, Union, Literal
 
-from ..utilities import TypeChangeWarning
+from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat
 from ..mpi import MPI_RAISE_EXCEPTION

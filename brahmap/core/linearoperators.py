@@ -6,7 +6,7 @@ from ..base import LinearOperator
 
 from ..core import SolverType, ProcessTimeSamples
 
-from ..utilities import TypeChangeWarning
+from ..base import TypeChangeWarning
 
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools

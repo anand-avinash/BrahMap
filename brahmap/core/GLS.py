@@ -45,6 +45,20 @@ class GLSResult:
 def separate_map_vectors(
     map_vector: np.ndarray, processed_samples: ProcessTimeSamples
 ) -> np.ndarray:
+    """_summary_
+
+    Parameters
+    ----------
+    map_vector : np.ndarray
+        _description_
+    processed_samples : ProcessTimeSamples
+        _description_
+
+    Returns
+    -------
+    np.ndarray
+        _description_
+    """
     try:
         map_vector = np.reshape(
             map_vector,

@@ -40,6 +40,8 @@
 #
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
+from .misc import TypeChangeWarning, LowerTypeCastWarning, filter_warnings, ShapeError
+
 from .linop import (
     BaseLinearOperator,
     LinearOperator,
@@ -71,6 +73,11 @@ from .noise_ops import (
 )
 
 __all__ = [
+    # misc.py
+    "TypeChangeWarning",
+    "LowerTypeCastWarning",
+    "filter_warnings",
+    "ShapeError",
     # linop.py
     "BaseLinearOperator",
     "LinearOperator",
