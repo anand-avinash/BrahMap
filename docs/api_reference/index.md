@@ -7,7 +7,7 @@
 ## Core API
 
 - [Core Map-making Interface](./core/index.md)
-- [Math functions](./math_functions/index.md)
+- [Math Functions](./math_functions/index.md)
 - [Utilities](./utilities/index.md)
 
 ## Base API

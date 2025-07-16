@@ -1,9 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ..base import LinearOperator
+
 
 def plot_LinearOperator(
-    operator: "LinearOperator",  # noqa
+    operator: LinearOperator,
 ):
     plt.figure()
     plt.imshow(operator.to_array())

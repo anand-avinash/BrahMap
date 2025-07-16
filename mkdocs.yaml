@@ -143,7 +143,7 @@ nav:
       - LBSim_compute_GLS_maps: api_reference/lbsim/LBSim_compute_GLS_maps.md
       - LBSimGLSResult: api_reference/lbsim/LBSimGLSResult.md     
 
-    - Core Interface:
+    - Core Map-making Interface:
       - api_reference/core/index.md
       - SolverType: api_reference/core/SolverType.md
       - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
@@ -170,7 +170,9 @@ nav:
 
     - Utilities:
       - api_reference/utilities/index.md
+      - bash_colors: api_reference/utilities/bash_colors.md
       - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
+      - plot_LinearOperator: api_reference/utilities/plot_LinearOperator.md
     
     - Base Operators:
       - api_reference/base_operators/index.md
