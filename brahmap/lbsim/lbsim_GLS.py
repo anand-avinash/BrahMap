@@ -14,12 +14,63 @@ from ..math import DTypeFloat
 
 @dataclass
 class LBSimGLSParameters(GLSParameters):
+    """A class to encapsulate the parameters used for GLS map-making with
+    `litebird_sim` data
+
+    Parameters
+    ----------
+    solver_type : SolverType
+        _description_
+    use_iterative_solver : bool
+        _description_
+    isolver_threshold : float
+        _description_
+    isolver_max_iterations : int
+        _description_
+    callback_function : Callable
+        _description_
+    return_processed_samples : bool
+        _description_
+    return_hit_map : bool
+        _description_
+    return_processed_samples : bool
+        _description_
+    output_coordinate_system : lbs.CoordinateSystem
+        _description_
+    """
+
     return_processed_samples: bool = False
     output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic
 
 
 @dataclass
 class LBSimGLSResult(GLSResult):
+    """A class to store the results of the GLs map-making done with `litebird_sim` data
+
+    Parameters
+    ----------
+    solver_type : SolverType
+        _description_
+    npix : int
+        _description_
+    new_npix : int
+        _description_
+    GLS_maps : np.ndarray
+        _description_
+    hit_map : np.ndarray
+        _description_
+    convergence_status : bool
+        _description_
+    num_iterations : int
+        _description_
+    GLSParameters : GLSParameters
+        _description_
+    nside : int
+        _description_
+    coordinate_system : lbs.CoordinateSystem
+        _description_
+    """
+
     nside: int
     coordinate_system: lbs.CoordinateSystem
 
@@ -30,12 +81,42 @@ def LBSim_compute_GLS_maps(
     pointings: Union[np.ndarray, List[np.ndarray], None] = None,
     hwp: Optional[lbs.HWP] = None,
     components: Union[str, List[str]] = "tod",
-    pointings_flag: Union[np.ndarray, None] = None,
+    pointings_flag: Optional[np.ndarray] = None,
     inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
     threshold: float = 1.0e-5,
-    dtype_float: Union[DTypeFloat, None] = None,
+    dtype_float: Optional[DTypeFloat] = None,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
 ) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:
+    """_summary_
+
+    Parameters
+    ----------
+    nside : int
+        _description_
+    observations : Union[lbs.Observation, List[lbs.Observation]]
+        _description_
+    pointings : Union[np.ndarray, List[np.ndarray], None], optional
+        _description_, by default None
+    hwp : Optional[lbs.HWP], optional
+        _description_, by default None
+    components : Union[str, List[str]], optional
+        _description_, by default "tod"
+    pointings_flag : Optional[np.ndarray], optional
+        _description_, by default None
+    inv_noise_cov_operator : Union[DTypeNoiseCov, DTypeLBSNoiseCov, None], optional
+        _description_, by default None
+    threshold : float, optional
+        _description_, by default 1.0e-5
+    dtype_float : Optional[DTypeFloat], optional
+        _description_, by default None
+    LBSim_gls_parameters : LBSimGLSParameters, optional
+        _description_, by default LBSimGLSParameters()
+
+    Returns
+    -------
+    Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]
+        _description_
+    """
     if inv_noise_cov_operator is None:
         noise_weights = None
     else:

@@ -1,7 +1,9 @@
-from typing import List, Union, Literal, Dict, Any
+from typing import List, Union, Literal, Dict, Any, Optional
 
 import numpy as np
 import litebird_sim as lbs
+
+from ..base import InvNoiseCovLinearOperator
 
 from ..core import (
     InvNoiseCovLO_Diagonal,
@@ -10,18 +12,32 @@ from ..core import (
     BlockDiagInvNoiseCovLO,
 )
 
+from ..math import DTypeFloat
+
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
-    """The assumption is that at a given MPI process, all observations
-    contain same set of detectors"""
+    """_summary_
+
+    The assumption is that at a given MPI process, all observations
+    contain same set of detectors
+
+    Parameters
+    ----------
+    obs : Union[lbs.Observation, List[lbs.Observation]]
+        _description_
+    noise_variance : Optional[dict], optional
+        _description_, by default None
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
 
     # Keep a note of the hard-coded factor of 1e4
 
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        noise_variance: Union[dict, None] = None,
-        dtype=np.float64,
+        noise_variance: Optional[dict] = None,
+        dtype: DTypeFloat = np.float64,
     ):
         if isinstance(obs, lbs.Observation):
             obs_list = [obs]
@@ -59,12 +75,26 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
 
 
 class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
+    """_summary_
+
+    Parameters
+    ----------
+    obs : Union[lbs.Observation, List[lbs.Observation]]
+        _description_
+    input : Union[dict, Union[np.ndarray, List]]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
+
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
         input: Union[dict, Union[np.ndarray, List]],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        dtype=np.float64,
+        dtype: DTypeFloat = np.float64,
     ):
         if isinstance(obs, lbs.Observation):
             obs_list = [obs]
@@ -136,15 +166,33 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
 
 
 class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
-    """Note that the observation length is either n or n-1."""
+    """_summary_
+
+    Note that the observation length is either n or n-1.
+
+    Parameters
+    ----------
+    obs : Union[lbs.Observation, List[lbs.Observation]]
+        _description_
+    input : Union[dict, Union[np.ndarray, List]]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    operator : InvNoiseCovLinearOperator, optional
+        _description_, by default InvNoiseCovLO_Toeplitz01
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    extra_kwargs : Dict[str, Any], optional
+        _description_, by default {}
+    """
 
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
         input: Union[dict, Union[np.ndarray, List]],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        operator=InvNoiseCovLO_Toeplitz01,
-        dtype=np.float64,
+        operator: InvNoiseCovLinearOperator = InvNoiseCovLO_Toeplitz01,
+        dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
     ):
         if isinstance(obs, lbs.Observation):
