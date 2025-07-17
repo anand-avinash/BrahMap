@@ -43,7 +43,7 @@
 import numpy as np
 import itertools
 import warnings
-from typing import List
+from typing import List, Any
 from functools import reduce, partial
 
 from ..base import BaseLinearOperator, LinearOperator
@@ -66,9 +66,22 @@ class BlockLinearOperator(LinearOperator):
     need be specified, e.g., `[[A,B,C], [D,E], [F]]`, and the blocks on the
     diagonal must be square and symmetric.
 
+    Parameters
+    ----------
+    blocks : List[LinearOperator]
+        _description_
+    symmetric : bool, optional
+        _description_, by default False
+    **kwargs: Any
+        _description_
     """
 
-    def __init__(self, blocks, symmetric=False, **kwargs):
+    def __init__(
+        self,
+        blocks: List[LinearOperator],
+        symmetric: bool = False,
+        **kwargs: Any,
+    ):
         # If building a symmetric operator, fill in the blanks.
         # They're just references to existing objects.
         try:
@@ -188,7 +201,21 @@ class BlockLinearOperator(LinearOperator):
 
 
 class BlockDiagonalLinearOperator(LinearOperator):
-    def __init__(self, block_list, **kwargs):
+    """Base class for a block-diagonal linear operator
+
+    Parameters
+    ----------
+    block_list : List[LinearOperator]
+        _description_
+    **kwargs: Any
+        _description_
+    """
+
+    def __init__(
+        self,
+        block_list: List[LinearOperator],
+        **kwargs: Any,
+    ):
         try:
             for block in block_list:
                 __, __ = block.shape
@@ -196,7 +223,7 @@ class BlockDiagonalLinearOperator(LinearOperator):
             MPI_RAISE_EXCEPTION(
                 condition=True,
                 exception=ValueError,
-                message="The `block_list` must be a flat list of linear" "operators",
+                message="The `block_list` must be a flat list of linearoperators",
             )
 
         self.__row_size = np.asarray(
@@ -329,9 +356,19 @@ class BlockHorizontalLinearOperator(BlockLinearOperator):
     Each block must be a linear operator.
     The blocks must be specified as one list, e.g., `[A, B, C]`.
 
+    Parameters
+    ----------
+    blocks : List[LinearOperator]
+        _description_
+    **kwargs: Any
+        _description_
     """
 
-    def __init__(self, blocks, **kwargs):
+    def __init__(
+        self,
+        blocks: List[LinearOperator],
+        **kwargs: Any,
+    ):
         try:
             for block in blocks:
                 __ = block.shape
@@ -352,9 +389,19 @@ class BlockVerticalLinearOperator(BlockLinearOperator):
     Each block must be a linear operator.
     The blocks must be specified as one list, e.g., `[A, B, C]`.
 
+    Parameters
+    ----------
+    blocks : List[LinearOperator]
+        _description_
+    **kwargs: Any
+        _description_
     """
 
-    def __init__(self, blocks, **kwargs):
+    def __init__(
+        self,
+        blocks: List[LinearOperator],
+        **kwargs: Any,
+    ):
         try:
             for block in blocks:
                 __ = block.shape

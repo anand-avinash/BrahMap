@@ -41,7 +41,7 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Any
 import numbers
 import numpy as np
 import numpy.typing as npt
@@ -457,9 +457,17 @@ class LinearOperator(BaseLinearOperator):
 
 
 class IdentityOperator(LinearOperator):
-    """Class representing the identity operator of size `nargin`."""
+    """A linear operator for the identity matrix of size `nargin`
 
-    def __init__(self, nargin, **kwargs):
+    Parameters
+    ----------
+    nargin : int
+        _description_
+    **kwargs: Any
+        _description_
+    """
+
+    def __init__(self, nargin: int, **kwargs: Any):
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -471,16 +479,17 @@ class IdentityOperator(LinearOperator):
 
 
 class DiagonalOperator(LinearOperator):
+    """A linear operator for a diagonal matrix
+
+    Parameters
+    ----------
+    diag : np.ndarray
+        _description_
+    **kwargs: Any
+        _description_
     """
-    Class representing a diagonal operator.
 
-    A diagonal linear operator defined by its diagonal `diag` (a Numpy array.)
-    The type must be specified in the `diag` argument, e.g.,
-    `np.ones(5, dtype=np.complex)` or `np.ones(5).astype(np.complex)`.
-
-    """
-
-    def __init__(self, diag, **kwargs):
+    def __init__(self, diag: np.ndarray, **kwargs: Any):
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -504,18 +513,21 @@ class DiagonalOperator(LinearOperator):
 
 
 class MatrixLinearOperator(LinearOperator):
-    """
-    Class representing a matrix operator.
+    """A linear operator for a numpy matrix
 
     A linear operator wrapping the multiplication with a matrix and its
     transpose (real) or conjugate transpose (complex). The operator's dtype
     is the same as the specified `matrix` argument.
 
-    .. versionadded:: 0.3
-
+    Parameters
+    ----------
+    matrix : np.ndarray
+        _description_
+    **kwargs: Any
+        _description_
     """
 
-    def __init__(self, matrix, **kwargs):
+    def __init__(self, matrix: np.ndarray, **kwargs: Any):
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -555,9 +567,19 @@ class MatrixLinearOperator(LinearOperator):
 
 
 class ZeroOperator(LinearOperator):
-    """Class representing the zero operator of shape `nargout`-by-`nargin`."""
+    """A linear operator for a zero matrix of shape `(nargout, nargin)`
 
-    def __init__(self, nargin, nargout, **kwargs):
+    Parameters
+    ----------
+    nargin : int
+        _description_
+    nargout : int
+        _description_
+    **kwargs: Any
+        _description_
+    """
+
+    def __init__(self, nargin: int, nargout: int, **kwargs: Any):
         if "matvec" in kwargs:
             kwargs.pop("matvec")
         if "rmatvec" in kwargs:
@@ -584,18 +606,27 @@ class ZeroOperator(LinearOperator):
 
 class InverseLO(LinearOperator):
     r"""
-    Construct the inverse operator of a matrix :math:`A`, as a linear operator.
+    Construct the inverse operator of a matrix `A`, as a linear operator.
 
-    **Parameters**
-
-    - ``A`` : {linear operator}
-        the linear operator of the linear system to invert;
-    - ``method`` : {function }
-        the method to compute ``A^-1`` (see below);
-    - ``P`` : {linear operator } (optional)
-        the preconditioner for the computation of the inverse operator.
+    Parameters
+    ----------
+    A : _type_
+        _description_
+    method : _type_, optional
+        _description_, by default None
+    preconditioner : _type_, optional
+        _description_, by default None
 
     """
+
+    def __init__(self, A, method=None, preconditioner=None):
+        super(InverseLO, self).__init__(
+            nargin=A.shape[0], nargout=A.shape[1], matvec=self.mult, symmetric=True
+        )
+        self.A = A
+        self.__method = method
+        self.__preconditioner = preconditioner
+        self.__converged = None
 
     def mult(self, x):
         r"""
@@ -623,15 +654,6 @@ class InverseLO(LinearOperator):
             return True
         else:
             return False
-
-    def __init__(self, A, method=None, preconditioner=None):
-        super(InverseLO, self).__init__(
-            nargin=A.shape[0], nargout=A.shape[1], matvec=self.mult, symmetric=True
-        )
-        self.A = A
-        self.__method = method
-        self.__preconditioner = preconditioner
-        self.__converged = None
 
     @property
     def method(self):
@@ -665,9 +687,9 @@ class InverseLO(LinearOperator):
 
 def ReducedLinearOperator(op, row_indices, col_indices):
     """
-    Implement reduction of a linear operator (non symmetrical).
+    Implements reduction of a linear operator (non symmetrical).
 
-    Reduce a linear operator by limiting its input to `col_indices` and its
+    Reduces a linear operator by limiting its input to `col_indices` and its
     output to `row_indices`.
 
     """
@@ -694,9 +716,9 @@ def ReducedLinearOperator(op, row_indices, col_indices):
 
 def SymmetricallyReducedLinearOperator(op, indices):
     """
-    Implement reduction of a linear operator (symmetrical).
+    Implements reduction of a linear operator (symmetrical).
 
-    Reduce a linear operator symmetrically by reducing boths its input and
+    Reduces a linear operator symmetrically by reducing boths its input and
     output to `indices`.
 
     """
@@ -722,7 +744,7 @@ def SymmetricallyReducedLinearOperator(op, indices):
 
 
 def aslinearoperator(A):
-    """Return A as a LinearOperator.
+    """Returns A as a LinearOperator.
 
     'A' may be any of the following types:
     - linop.LinearOperator
@@ -732,10 +754,7 @@ def aslinearoperator(A):
     - sparse matrix (e.g. csr_matrix, lil_matrix, etc.)
     - any object with .shape and .matvec attributes
 
-    See the :class:`LinearOperator` documentation for additonal information.
-
-    .. versionadded:: 0.4
-
+    See the `LinearOperator` documentation for additonal information.
     """
     if isinstance(A, LinearOperator):
         return A
