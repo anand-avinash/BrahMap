@@ -16,6 +16,20 @@ from brahmap import MPI_UTILS
 
 
 class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
+    """Linear operator for diagonal noise covariance
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List, DTypeFloat], optional
+        _description_, by default 1.0
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "covariance"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
+
     def __init__(
         self,
         size: int,
@@ -91,6 +105,20 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
 
 
 class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
+    """Linear operator for the inverse of diagonal noise covariance
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List, DTypeFloat], optional
+        _description_, by default 1.0
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "covariance"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
+
     def __init__(
         self,
         size: int,

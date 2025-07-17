@@ -11,6 +11,20 @@ from brahmap import MPI_UTILS
 
 
 class NoiseCovLO_Circulant(NoiseCovLinearOperator):
+    """Linear operator for Circulant noise covariance
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
+
     def __init__(
         self,
         size: int,
@@ -80,6 +94,20 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
 
 
 class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
+    """Linear operator for the inverse of Circulant noise covariance
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
+
     def __init__(
         self,
         size: int,

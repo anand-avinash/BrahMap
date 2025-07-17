@@ -1,6 +1,6 @@
 from enum import IntEnum
 import numpy as np
-from typing import Union
+from typing import Optional
 from mpi4py import MPI
 
 
@@ -17,6 +17,8 @@ from brahmap import MPI_UTILS
 
 
 class SolverType(IntEnum):
+    """Map-making level: I, QU, or IQU"""
+
     I = 1  # noqa: E741
     QU = 2
     IQU = 3
@@ -24,28 +26,35 @@ class SolverType(IntEnum):
 
 class ProcessTimeSamples(object):
     """
-    A class to store the pre-processed and pre-computed arrays that can be used later.
+    A class to store the pre-processed and pre-computed arrays that can be
+    used later.
 
     Parameters
     ----------
     npix : int
-        Number of pixels on which the map-making has to be done. Equal to `healpy.nside2npix(nside)` for a healpix map of given `nside`
+        Number of pixels on which the map-making has to be done. Equal to
+        `healpy.nside2npix(nside)` for a healpix map of given `nside`
     pointings : np.ndarray
         A 1-d array of pointing indices
     pointings_flag : np.ndarray
-        A 1-d array of pointing flags. `True` means good pointing, `False` means bad pointing.
+        A 1-d array of pointing flags. `True` means good pointing, `False`
+        means bad pointing.
     solver_type : SolverType
         Map-making level: I or QU or IQU
     pol_angles : np.ndarray | None
         A 1-d array containing the orientation angles of the detectors
     noise_weights : np.ndarray | None
-        A 1-d array of noise weights, or the diagonal elements of the inverse of noise covariance matrix
+        A 1-d array of noise weights, or the diagonal elements of the inverse
+        of noise covariance matrix
     threshold : float
         The threshold to be used to flag pixels in the sky
     dtype_float : boh
         `dtype` of the floating point arrays
     update_pointings_inplace : bool
-        The class does some operations on the pointings array. Do you want to make these operations happen in-place? If yes, you will save a lot of memory. Not recommended if you are willing to use pointing arrays somewhere after doing map-making.
+        The class does some operations on the pointings array. Do you want to
+        make these operations happen in-place? If yes, you will save a lot of
+        memory. Not recommended if you are willing to use pointing arrays
+        somewhere after doing map-making.
 
     Attributes
     ----------
@@ -70,9 +79,11 @@ class ProcessTimeSamples(object):
     observed_pixels : np.ndarray
         Pixel indices that are considered for map-making
     pixel_flag : np.ndarray
-        A 1-d array of size `npix`. `True` indicates that the corresponding pixel index will be dropped in map-making
+        A 1-d array of size `npix`. `True` indicates that the corresponding
+        pixel index will be dropped in map-making
     bad_pixels : np.ndarray
-        A 1-d array that contains all the pixel indices that will be excluded in map-making
+        A 1-d array that contains all the pixel indices that will be excluded
+        in map-making
     weighted_counts : np.ndarray
         Weighted counts
     sin2phi : np.ndarray
@@ -92,7 +103,8 @@ class ProcessTimeSamples(object):
     one_over_determinant : np.ndarray
         Inverse of determinant for each valid pixels
     new_npix : int
-        The number of pixels actually being used in map-making. Equal to `len(observed_pixels)`
+        The number of pixels actually being used in map-making. Equal to
+        `len(observed_pixels)`
 
     """
 
@@ -100,12 +112,12 @@ class ProcessTimeSamples(object):
         self,
         npix: int,
         pointings: np.ndarray,
-        pointings_flag: Union[np.ndarray, None] = None,
+        pointings_flag: Optional[np.ndarray] = None,
         solver_type: SolverType = SolverType.IQU,
-        pol_angles: Union[np.ndarray, None] = None,
-        noise_weights: Union[np.ndarray, None] = None,
+        pol_angles: Optional[np.ndarray] = None,
+        noise_weights: Optional[np.ndarray] = None,
         threshold: float = 1.0e-5,
-        dtype_float: Union[DTypeFloat, None] = None,
+        dtype_float: Optional[DTypeFloat] = None,
         update_pointings_inplace: bool = False,
     ):
         self.__npix = npix
@@ -127,7 +139,10 @@ class ProcessTimeSamples(object):
         MPI_RAISE_EXCEPTION(
             condition=(len(self.pointings_flag) != self.nsamples),
             exception=AssertionError,
-            message=f"Size of `pointings_flag` must be equal to the size of `pointings` array:\nlen(pointings_flag) = {len(self.pointings_flag)}\nlen(pointings) = {self.nsamples}",
+            message="Size of `pointings_flag` must be equal to the size of "
+            "`pointings` array:\n"
+            f"len(pointings_flag) = {len(self.pointings_flag)}\n"
+            f"len(pointings) = {self.nsamples}",
         )
 
         self.__solver_type = solver_type
@@ -136,15 +151,24 @@ class ProcessTimeSamples(object):
         MPI_RAISE_EXCEPTION(
             condition=(self.solver_type not in [1, 2, 3]),
             exception=ValueError,
-            message="Invalid `solver_type`!!!\n`solver_type` must be either SolverType.I, SolverType.QU or SolverType.IQU (equivalently 1, 2 or 3).",
+            message="Invalid `solver_type`!!!\n`solver_type` must be either "
+            "SolverType.I, SolverType.QU or SolverType.IQU "
+            "(equivalently 1, 2 or 3).",
         )
 
-        # setting the dtype for the `float` arrays: if one or both of `noise_weights` and `pol_angles` are supplied, the `dtype_float` will be inferred from them. Otherwise, the it will be set to `np.float64`
+        # setting the dtype for the `float` arrays: if one or both of
+        # `noise_weights` and `pol_angles` are supplied, the `dtype_float`
+        # will be inferred from them. Otherwise, the it will be set to
+        # `np.float64`
         if dtype_float is not None:
             self.__dtype_float = dtype_float
         elif noise_weights is not None and pol_angles is not None:
-            # if both `noise_weights` and `pol_angles` are given, `dtype_float` will be assigned the higher `dtype`
-            self.__dtype_float = np.promote_types(noise_weights.dtype, pol_angles.dtype)
+            # if both `noise_weights` and `pol_angles` are given,
+            # `dtype_float` will be assigned the higher `dtype`
+            self.__dtype_float = np.promote_types(
+                noise_weights.dtype,
+                pol_angles.dtype,
+            )
         elif noise_weights is not None:
             self.__dtype_float = noise_weights.dtype
         elif pol_angles is not None:
@@ -158,7 +182,10 @@ class ProcessTimeSamples(object):
         MPI_RAISE_EXCEPTION(
             condition=(len(noise_weights) != self.nsamples),
             exception=AssertionError,
-            message=f"Size of `noise_weights` must be equal to the size of `pointings` array:\nlen(noise_weigths) = {len(noise_weights)}\nlen(pointings) = {self.nsamples}",
+            message="Size of `noise_weights` must be equal to the size of "
+            "`pointings` array:\n"
+            f"len(noise_weigths) = {len(noise_weights)}\n"
+            f"len(pointings) = {self.nsamples}",
         )
 
         try:
@@ -167,14 +194,19 @@ class ProcessTimeSamples(object):
             )
         except TypeError:
             raise TypeError(
-                f"The `noise_weights` array has higher dtype than `self.dtype_float={self.dtype_float}`. Please called `ProcessTimeSamples` again with `dtype_float={noise_weights.dtype}`"
+                "The `noise_weights` array has higher dtype than "
+                f"`self.dtype_float={self.dtype_float}`. Please call "
+                f"`ProcessTimeSamples` again with `dtype_float={noise_weights.dtype}`"
             )
 
         if self.solver_type != 1:
             MPI_RAISE_EXCEPTION(
                 condition=(len(pol_angles) != self.nsamples),
                 exception=AssertionError,
-                message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
+                message="Size of `pol_angles` must be equal to the size of "
+                "`pointings` array:\n"
+                f"len(pol_angles) = {len(pol_angles)}\n"
+                f"len(pointings) = {self.nsamples}",
             )
 
             try:
@@ -183,7 +215,9 @@ class ProcessTimeSamples(object):
                 )
             except TypeError:
                 raise TypeError(
-                    f"The `pol_angles` array has higher dtype than `self.dtype_float={self.dtype_float}`. Please called `ProcessTimeSamples` again with `dtype_float={pol_angles.dtype}`"
+                    "The `pol_angles` array has higher dtype than "
+                    f"`self.dtype_float={self.dtype_float}`. Please call "
+                    f"`ProcessTimeSamples` again with `dtype_float={pol_angles.dtype}`"
                 )
 
         self._compute_weights(
@@ -194,7 +228,8 @@ class ProcessTimeSamples(object):
         MPI_RAISE_EXCEPTION(
             condition=(self.new_npix == 0),
             exception=ValueError,
-            message="All pixels were found to be pathological. The map-making cannot be done. Please ensure that the inputs are consistent!",
+            message="All pixels were found to be pathological. The map-making "
+            "cannot be done. Please ensure that the inputs are consistent!",
         )
 
         self._repixelization()
@@ -269,20 +304,21 @@ class ProcessTimeSamples(object):
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
-        hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
-        for idx in range(self.nsamples):
-            hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
+        return self.hit_counts
+        # hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
+        # for idx in range(self.nsamples):
+        #     hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
 
-        MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
+        # MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
 
-        hit_counts = np.ma.masked_array(
-            data=np.zeros(self.npix),
-            mask=np.logical_not(self.pixel_flag),
-            fill_value=-1.6375e30,
-        )
+        # hit_counts = np.ma.masked_array(
+        #     data=np.zeros(self.npix),
+        #     mask=np.logical_not(self.pixel_flag),
+        #     fill_value=-1.6375e30,
+        # )
 
-        hit_counts[~hit_counts.mask] = hit_counts_newidx
-        return hit_counts
+        # hit_counts[~hit_counts.mask] = hit_counts_newidx
+        # return hit_counts
 
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.hit_counts = np.zeros(self.npix, dtype=self.pointings.dtype)
