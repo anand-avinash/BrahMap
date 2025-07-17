@@ -1,3 +1,5 @@
+# Original code:
+#
 # Copyright (c) 2008-2013, Dominique Orban <dominique.orban@gerad.ca>
 # All rights reserved.
 #
@@ -27,6 +29,18 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
+#
+#
+# Modified version:
+#
+# Copyright (c) 2023-present, Avinash Anand <avinash.anand@roma2.infn.it>
+# and Giuseppe Puglisi
+#
+# This file is part of BrahMap.
+#
+# Licensed under the MIT License. See the <LICENSE.txt> file for details.
+
+from .misc import TypeChangeWarning, LowerTypeCastWarning, filter_warnings, ShapeError
 
 from .linop import (
     BaseLinearOperator,
@@ -59,6 +73,11 @@ from .noise_ops import (
 )
 
 __all__ = [
+    # misc.py
+    "TypeChangeWarning",
+    "LowerTypeCastWarning",
+    "filter_warnings",
+    "ShapeError",
     # linop.py
     "BaseLinearOperator",
     "LinearOperator",

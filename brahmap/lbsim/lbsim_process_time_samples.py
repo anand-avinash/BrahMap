@@ -5,21 +5,47 @@ import healpy as hp
 import litebird_sim as lbs
 
 from ..core import SolverType, ProcessTimeSamples
+from ..math import DTypeFloat
 
 
 class LBSimProcessTimeSamples(ProcessTimeSamples):
+    """A class to store the pre-processed and pre-computed arrays from `litebird_sim` observations.
+
+    Parameters
+    ----------
+    nside : int
+        Nside of the healpix map
+    observations : Union[lbs.Observation, List[lbs.Observation]]
+        An instance of the `Observation` class or a list of the same
+    pointings : Union[np.ndarray, List[np.ndarray], None], optional
+        _description_, by default None
+    hwp : Optional[lbs.HWP], optional
+        _description_, by default None
+    pointings_flag : Optional[np.ndarray], optional
+        _description_, by default None
+    solver_type : SolverType, optional
+        _description_, by default SolverType.IQU
+    noise_weights : Optional[np.ndarray], optional
+        _description_, by default None
+    output_coordinate_system : lbs.CoordinateSystem, optional
+        _description_, by default lbs.CoordinateSystem.Galactic
+    threshold : float, optional
+        _description_, by default 1.0e-5
+    dtype_float : DTypeFloat, optional
+        _description_, by default np.float64
+    """
     def __init__(
         self,
         nside: int,
         observations: Union[lbs.Observation, List[lbs.Observation]],
         pointings: Union[np.ndarray, List[np.ndarray], None] = None,
         hwp: Optional[lbs.HWP] = None,
-        pointings_flag: Union[np.ndarray, None] = None,
+        pointings_flag: Optional[np.ndarray] = None,
         solver_type: SolverType = SolverType.IQU,
-        noise_weights: Union[np.ndarray, None] = None,
+        noise_weights: Optional[np.ndarray] = None,
         output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
         threshold: float = 1.0e-5,
-        dtype_float=np.float64,
+        dtype_float: DTypeFloat = np.float64,
     ):
         self.__nside = nside
         self.__coordinate_system = output_coordinate_system
@@ -93,12 +119,15 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
 
     @property
     def obs_list(self):
+        """List of the instances of `Observation` class"""
         return self.__obs_list
 
     @property
     def nside(self):
+        """Nside parameter of the healpix map"""
         return self.__nside
 
     @property
     def coordinate_system(self):
+        """Coordinate system used in data-processing"""
         return self.__coordinate_system

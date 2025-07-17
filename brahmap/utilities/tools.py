@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 from ..math import parallel_norm
 
@@ -41,6 +40,8 @@ class bash_colors:
 
 
 class modify_numpy_context(object):
+    """A context manager that replaces `np.linalg.norm` with `parallel_norm`"""
+
     def __init__(self):
         self.parallel_norm = parallel_norm
         self.original_norm = np.linalg.norm
@@ -52,52 +53,13 @@ class modify_numpy_context(object):
         np.linalg.norm = self.original_norm
 
 
-class TypeChangeWarning(Warning):
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
-
-
-class LowerTypeCastWarning(Warning):
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
-
-
-def filter_warnings(wfilter):
-    """
-    wfilter: {string}
-    - "ignore": never print matching warnings;
-    - "always": always print matching warnings
-
-    """
-    warnings.simplefilter(wfilter)
-
-
-class ShapeError(Exception):
-    """
-    Exception class for handling shape mismatch errors.
-
-    Exception raised when defining a linear operator of the wrong shape or
-    multiplying a linear operator with a vector of the wrong shape.
-
-    """
-
-    def __init__(self, value):
-        super(ShapeError, self).__init__()
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
 def profile_run():
-    """
-    Profile the execution with :mod:`cProfile`
+    """Profile the execution with module `cProfile`
+
+    Returns
+    -------
+    _type_
+        _description_
     """
     import cProfile
 
@@ -106,14 +68,12 @@ def profile_run():
 
 
 def output_profile(pr):
-    """
-    Output of the profiling with :func:`profile_run`.
+    """Output of the profiling with `profile_run`.
 
-    **Parameter**
-
-    - ``pr``:
-        instance returned by :func:`profile_run`
-
+    Parameters
+    ----------
+    pr : _type_
+        _description_
     """
     import pstats
     import io

@@ -21,6 +21,26 @@ from ..math import cg, DTypeFloat
 
 @dataclass
 class GLSParameters:
+    """A class to encapsulate the parameters used for GLS map-making
+
+    Attributes
+    ----------
+    solver_type : SolverType
+        _description_
+    use_iterative_solver : bool
+        _description_
+    isolver_threshold : float
+        _description_
+    isolver_max_iterations : int
+        _description_
+    callback_function : Callable
+        _description_
+    return_processed_samples : bool
+        _description_
+    return_hit_map : bool
+        _description_
+    """
+
     solver_type: SolverType = SolverType.IQU
     use_iterative_solver: bool = True
     isolver_threshold: float = 1.0e-12
@@ -32,6 +52,28 @@ class GLSParameters:
 
 @dataclass
 class GLSResult:
+    """A class to store the results of the GLS map-making
+
+    Parameters
+    ----------
+    solver_type : SolverType
+        _description_
+    npix : int
+        _description_
+    new_npix : int
+        _description_
+    GLS_maps : np.ndarray
+        _description_
+    hit_map : np.ndarray
+        _description_
+    convergence_status : bool
+        _description_
+    num_iterations : int
+        _description_
+    GLSParameters : GLSParameters
+        _description_
+    """
+
     solver_type: SolverType
     npix: int
     new_npix: int
@@ -45,6 +87,24 @@ class GLSResult:
 def separate_map_vectors(
     map_vector: np.ndarray, processed_samples: ProcessTimeSamples
 ) -> np.ndarray:
+    """The output maps of the GLS are in the form
+    [I_1, Q_1, U_1, I_2, Q_2, U_2, ...]. Following the typical conventions,
+    the Stokes parameters have to be separated as [I_1, I_2, ...],
+    [Q_1, Q_2, ...] and [U_1, U_2, ...]. This function performs this operation
+    ane returns the maps of different Stokes parameters separately.
+
+    Parameters
+    ----------
+    map_vector : np.ndarray
+        _description_
+    processed_samples : ProcessTimeSamples
+        _description_
+
+    Returns
+    -------
+    np.ndarray
+        _description_
+    """
     try:
         map_vector = np.reshape(
             map_vector,
@@ -79,6 +139,25 @@ def compute_GLS_maps_from_PTS(
     inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
     gls_parameters: GLSParameters = GLSParameters(),
 ) -> GLSResult:
+    """This function computes the GLS maps given an instance of
+    `ProcessTimeSamples`, TOD, and inverse noise covariance operator
+
+    Parameters
+    ----------
+    processed_samples : ProcessTimeSamples
+        _description_
+    time_ordered_data : np.ndarray
+        _description_
+    inv_noise_cov_operator : Union[DTypeNoiseCov, None], optional
+        _description_, by default None
+    gls_parameters : GLSParameters, optional
+        _description_, by default GLSParameters()
+
+    Returns
+    -------
+    GLSResult
+        _description_
+    """
     MPI_RAISE_EXCEPTION(
         condition=(processed_samples.nsamples != len(time_ordered_data)),
         exception=ValueError,
@@ -178,6 +257,36 @@ def compute_GLS_maps(
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
 ) -> Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]:
+    """The function to compute the GLS maps given pointing information and TOD
+
+    Parameters
+    ----------
+    npix : int
+        _description_
+    pointings : np.ndarray
+        _description_
+    time_ordered_data : np.ndarray
+        _description_
+    pointings_flag : Union[np.ndarray, None], optional
+        _description_, by default None
+    pol_angles : Union[np.ndarray, None], optional
+        _description_, by default None
+    inv_noise_cov_operator : Union[DTypeNoiseCov, None], optional
+        _description_, by default None
+    threshold : float, optional
+        _description_, by default 1.0e-5
+    dtype_float : Union[DTypeFloat, None], optional
+        _description_, by default None
+    update_pointings_inplace : bool, optional
+        _description_, by default True
+    gls_parameters : GLSParameters, optional
+        _description_, by default GLSParameters()
+
+    Returns
+    -------
+    Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]
+        _description_
+    """
     if dtype_float is None:
         if pol_angles is None:
             dtype_float = time_ordered_data.dtype

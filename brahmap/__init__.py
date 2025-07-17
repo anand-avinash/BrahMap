@@ -22,6 +22,8 @@ from .mpi import MPI_UTILS, Finalize, MPI_RAISE_EXCEPTION  # noqa: E402
 
 from . import base, _extensions, core, utilities, math  # noqa: E402
 
+from .base import TypeChangeWarning, LowerTypeCastWarning, ShapeError  # noqa: E402
+
 from .core import (  # noqa: E402
     SolverType,
     ProcessTimeSamples,
@@ -43,10 +45,7 @@ from .core import (  # noqa: E402
 )
 
 from .utilities import (  # noqa: E402
-    TypeChangeWarning,
-    LowerTypeCastWarning,
     modify_numpy_context,
-    ShapeError,
 )
 
 if find_spec("litebird_sim") is not None:
@@ -80,6 +79,9 @@ __all__ = __all__ + [
     "MPI_RAISE_EXCEPTION",
     # ./base/
     "base",
+    "TypeChangeWarning",
+    "LowerTypeCastWarning",
+    "ShapeError",
     # ./_extensions/
     "_extensions",
     # ./core/
@@ -103,10 +105,7 @@ __all__ = __all__ + [
     "compute_GLS_maps",
     # ./utilities/
     "utilities",
-    "TypeChangeWarning",
-    "LowerTypeCastWarning",
     "modify_numpy_context",
-    "ShapeError",
     # ./math/
     "math",
 ]

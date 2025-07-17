@@ -1,8 +1,8 @@
 import numpy as np
 import warnings
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Callable
 
-from ..utilities import TypeChangeWarning
+from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat, cg
 from ..mpi import MPI_RAISE_EXCEPTION
@@ -12,7 +12,22 @@ from brahmap import MPI_UTILS
 
 
 class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
-    """The input covariance array must be at least of the size n. The input power spectrum array must be of the size 2n-2 or 2n-1."""
+    """Linear operator for Toeplitz noise covariance
+
+    The input covariance array must be at least of the size n. The input power
+    spectrum array must be of the size 2n-2 or 2n-1.
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
 
     def __init__(
         self,
@@ -101,7 +116,32 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
 
 
 class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
-    """The input covariance array must be at least of the size n. The input power spectrum array must be of the size 2n-2 or 2n-1."""
+    """Linear operator for the inverse of Toeplitz noise covariance
+
+    The input covariance array must be at least of the size n. The input power
+    spectrum array must be of the size 2n-2 or 2n-1.
+
+    Parameters
+    ----------
+    size : int
+        _description_
+    input : Union[np.ndarray, List]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    precond_op : Union[ LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"] ], optional
+        _description_, by default None
+    precond_maxiter : int, optional
+        _description_, by default 50
+    precond_rtol : float, optional
+        _description_, by default 1.0e-10
+    precond_atol : float, optional
+        _description_, by default 1.0e-10
+    precond_callback : Callable, optional
+        _description_, by default None
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    """
 
     def __init__(
         self,
@@ -111,10 +151,10 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         precond_op: Union[
             LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
         ] = None,
-        precond_maxiter=50,
-        precond_rtol=1.0e-10,
-        precond_atol=1.0e-10,
-        precond_callback=None,
+        precond_maxiter: int = 50,
+        precond_rtol: float = 1.0e-10,
+        precond_atol: float = 1.0e-10,
+        precond_callback: Callable = None,
         dtype: DTypeFloat = np.float64,
     ):
         self.__toeplitz_op = NoiseCovLO_Toeplitz01(

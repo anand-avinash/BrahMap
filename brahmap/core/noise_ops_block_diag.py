@@ -10,6 +10,24 @@ from ..mpi import MPI_RAISE_EXCEPTION
 
 
 class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
+    """Linear operator for block-diagonal noise covariance
+
+    Parameters
+    ----------
+    operator : _type_
+        _description_
+    block_size : Union[np.ndarray, List]
+        _description_
+    block_input : List[Union[np.ndarray, List]]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    extra_kwargs : Dict[str, Any], optional
+        _description_, by default {}
+    """
+
     def __init__(
         self,
         operator,
@@ -62,6 +80,24 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
 
 
 class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
+    """Linear operator for block-diagonal inverse noise covariance
+
+    Parameters
+    ----------
+    operator : _type_
+        _description_
+    block_size : Union[np.ndarray, List]
+        _description_
+    block_input : List[Union[np.ndarray, List]]
+        _description_
+    input_type : Literal["covariance", "power_spectrum"], optional
+        _description_, by default "power_spectrum"
+    dtype : DTypeFloat, optional
+        _description_, by default np.float64
+    extra_kwargs : Dict[str, Any], optional
+        _description_, by default {}
+    """
+
     def __init__(
         self,
         operator,

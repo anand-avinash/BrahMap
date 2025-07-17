@@ -6,7 +6,7 @@ from ..base import LinearOperator
 
 from ..core import SolverType, ProcessTimeSamples
 
-from ..utilities import TypeChangeWarning
+from ..base import TypeChangeWarning
 
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
@@ -17,21 +17,16 @@ from brahmap import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
-    r"""Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
+    """Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
     It constitutes an interface for dealing with the projection operator
     (pointing matrix).
 
-    Since this can be represented as a sparse matrix, it is initialized \
-    by an array of observed pixels which resembles the  ``(i,j)`` positions \
-    of the non-null elements of  the matrix,``obs_pixs``.
-
-    **Parameters**
-
-    - ``processed_samples``: {:class:`ProcessTimeSamples`}
-        the class (instantiated before :class:`PointingLO`)has already computed
-        the :math:`\cos 2\phi` and :math:`\sin 2\phi`, we link the ``cos2phi`` and ``sin2phi``
-        attributes of this class to the  :class:`ProcessTimeSamples` ones ;
-
+    Parameters
+    ----------
+    processed_samples : ProcessTimeSamples
+        _description_
+    solver_type : Union[None, SolverType], optional
+        _description_, by default None
     """
 
     def __init__(
@@ -322,26 +317,18 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
     r"""
     Standard preconditioner defined as:
 
-    .. math::
+    $$M_{BD}=( P^T diag(N^{-1}) P)^{-1}$$
 
-        M_{BD}=( A diag(N^{-1}) A^T)^{-1}
-
-    where :math:`A` is the *pointing matrix* (see  :class:`PointingLO`).
+    where $P$ is the *pointing matrix* (see `PointingLO`).
     Such inverse operator  could be easily computed given the structure of the
-    matrix :math:`A`. It could be  sparse in the case of Intensity only analysis (`pol=1`),
-    block-sparse if polarization is included (`pol=3,2`).
+    matrix $P$.
 
-
-    **Parameters**
-
-    - ``n``:{int}
-        the size of the problem, ``npix``;
-    - ``CES``:{:class:`ProcessTimeSamples`}
-        the linear operator related to the data sample processing. Its members (`counts`, `masks`,
-        `sine`, `cosine`, etc... ) are  needed to explicitly compute the inverse of the
-        :math:`n_{pix}` blocks of :math:`M_{BD}`.
-    - ``pol``:{int}
-        the size of each block of the matrix.
+    Parameters
+    ----------
+    processed_samples : ProcessTimeSamples
+        _description_
+    solver_type : Union[None, SolverType], optional
+        _description_, by default None
     """
 
     def __init__(

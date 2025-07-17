@@ -1,19 +1,19 @@
 # API reference
 
+## `litebird_sim` API
+
+- [`litebird_sim` Interface](./lbsim/index.md)
+
 ## Core API
 
-- [Core Interface](./core/index.md)
-- [`litebird_sim` Interface](./lbsim/index.md)
+- [Core Map-making Interface](./core/index.md)
+- [Math Functions](./math_functions/index.md)
 - [Utilities](./utilities/index.md)
 
 ## Base API
 
 - [Base Operators](./base_operators/index.md)
-
-## C++ Extensions
-
-- [Math functions](./math_functions/index.md)
-- [C++ extensions](./cpp_extensions/index.md)
+- [Miscellaneous](./misc/index.md)
 
 ## C++ API
 

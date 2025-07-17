@@ -2,7 +2,9 @@
 
 ## Tools
 
+- [`bash_colors`](bash_colors.md)
 - [`modify_numpy_context`](modify_numpy_context.md)
-- [`TypeChangeWarning`](TypeChangeWarning.md)
-- [`LowerTypeCastWarning`](LowerTypeCastWarning.md)
-- [`ShapeError`](ShapeError.md)
+
+## Visualization
+
+- [`plot_LinearOperator`](plot_LinearOperator.md)
