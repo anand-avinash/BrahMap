@@ -31,7 +31,7 @@ class NoiseCovLinearOperator(LinearOperator):
         matvec: int,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-        **kwargs,
+        **kwargs: Any,
     ):
         MPI_RAISE_EXCEPTION(
             condition=(input_type not in ["covariance", "power_spectrum"]),
@@ -89,7 +89,7 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
         matvec: int,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-        **kwargs,
+        **kwargs: Any,
     ):
         super(InvNoiseCovLinearOperator, self).__init__(
             nargin,
@@ -110,12 +110,12 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
     **kwargs: Any
         _description_
     """
+
     def __init__(
         self,
         block_list: List[NoiseCovLinearOperator],
         **kwargs: Any,
     ):
-        
         super(BaseBlockDiagNoiseCovLinearOperator, self).__init__(block_list, **kwargs)
 
         MPI_RAISE_EXCEPTION(
@@ -148,12 +148,12 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
     **kwargs: Any
         _description_
     """
+
     def __init__(
         self,
         block_list: List[InvNoiseCovLinearOperator],
         **kwargs: Any,
     ):
-        
         super(BaseBlockDiagInvNoiseCovLinearOperator, self).__init__(
             block_list, **kwargs
         )

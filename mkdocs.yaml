@@ -189,6 +189,10 @@ nav:
       - BlockDiagonalLinearOperator: api_reference/base_operators/BlockDiagonalLinearOperator.md
       - BlockHorizontalLinearOperator: api_reference/base_operators/BlockHorizontalLinearOperator.md
       - BlockVerticalLinearOperator: api_reference/base_operators/BlockVerticalLinearOperator.md
+      - NoiseCovLinearOperator: api_reference/base_operators/NoiseCovLinearOperator.md
+      - InvNoiseCovLinearOperator: api_reference/base_operators/InvNoiseCovLinearOperator.md
+      - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagNoiseCovLinearOperator.md
+      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagInvNoiseCovLinearOperator.md      
 
     - Miscellaneous: 
       - api_reference/misc/index.md

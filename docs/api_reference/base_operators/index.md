@@ -19,3 +19,10 @@
 - [`BlockDiagonalLinearOperator`](BlockDiagonalLinearOperator.md)
 - [`BlockHorizontalLinearOperator`](BlockHorizontalLinearOperator.md)
 - [`BlockVerticalLinearOperator`](BlockVerticalLinearOperator.md)
+
+## Base noise covariance (and inverse) operators
+
+- [`NoiseCovLinearOperator`](NoiseCovLinearOperator.md)
+- [`InvNoiseCovLinearOperator`](InvNoiseCovLinearOperator.md)
+- [`BaseBlockDiagNoiseCovLinearOperator`](BaseBlockDiagNoiseCovLinearOperator.md)
+- [`BaseBlockDiagInvNoiseCovLinearOperator`](BaseBlockDiagInvNoiseCovLinearOperator.md)
