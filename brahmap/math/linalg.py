@@ -5,9 +5,23 @@ import scipy.sparse
 import scipy.sparse.linalg
 
 from brahmap import MPI_UTILS
+from ..base import LinearOperator
 
 
-def parallel_norm(x: np.ndarray):
+def parallel_norm(x: np.ndarray) -> float:
+    """A replacement of `np.linalg.norm` to compute 2-norm of a vector
+    distributed among multiple MPI processes
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Input array
+
+    Returns
+    -------
+    float
+        The norm of vector `x`
+    """
     sqnorm = x.dot(x)
     sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
     ret = np.sqrt(sqnorm)
@@ -15,16 +29,46 @@ def parallel_norm(x: np.ndarray):
 
 
 def cg(
-    A,
-    b,
-    x0=None,
-    rtol=1.0e-12,
-    atol=1.0e-12,
-    maxiter=100,
-    M=None,
-    callback=None,
-    parallel=True,
+    A: LinearOperator,
+    b: np.ndarray,
+    x0: np.ndarray = None,
+    rtol: float = 1.0e-12,
+    atol: float = 1.0e-12,
+    maxiter: int = 100,
+    M: LinearOperator = None,
+    callback: Callable = None,
+    parallel: bool = True,
 ):
+    """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
+    replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
+    is set `True`
+
+    Parameters
+    ----------
+    A : LinearOperator
+        _description_
+    b : np.ndarray
+        _description_
+    x0 : np.ndarray, optional
+        _description_, by default None
+    rtol : float, optional
+        _description_, by default 1.0e-12
+    atol : float, optional
+        _description_, by default 1.0e-12
+    maxiter : int, optional
+        _description_, by default 100
+    M : LinearOperator, optional
+        _description_, by default None
+    callback : Callable, optional
+        _description_, by default None
+    parallel : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     A, M, x, b, postprocess = scipy.sparse.linalg._isolve.utils.make_system(
         A,
         M,
