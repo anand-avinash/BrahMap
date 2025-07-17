@@ -40,6 +40,8 @@ class bash_colors:
 
 
 class modify_numpy_context(object):
+    """A context manager that replaces `np.linalg.norm` with `parallel_norm`"""
+
     def __init__(self):
         self.parallel_norm = parallel_norm
         self.original_norm = np.linalg.norm
@@ -52,8 +54,12 @@ class modify_numpy_context(object):
 
 
 def profile_run():
-    """
-    Profile the execution with :mod:`cProfile`
+    """Profile the execution with module `cProfile`
+
+    Returns
+    -------
+    _type_
+        _description_
     """
     import cProfile
 
@@ -62,14 +68,12 @@ def profile_run():
 
 
 def output_profile(pr):
-    """
-    Output of the profiling with :func:`profile_run`.
+    """Output of the profiling with `profile_run`.
 
-    **Parameter**
-
-    - ``pr``:
-        instance returned by :func:`profile_run`
-
+    Parameters
+    ----------
+    pr : _type_
+        _description_
     """
     import pstats
     import io
