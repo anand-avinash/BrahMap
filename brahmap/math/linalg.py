@@ -69,12 +69,22 @@ def cg(
     _type_
         _description_
     """
-    A, M, x, b, postprocess = scipy.sparse.linalg._isolve.utils.make_system(
+    temp_tuple = scipy.sparse.linalg._isolve.utils.make_system(
         A,
         M,
         x0,
         b,
     )
+
+    # Starting from SciPy 1.16.0, `make_system` returns 4 objects instead of 5.
+    # Even in earlier versions, only the first 4 objects were needed for our
+    # use. The following unpacking ensures compatibility across all versions.
+    # This logic can be simplified once support for versions below 1.16.0 is
+    # dropped.
+    A = temp_tuple[0]
+    M = temp_tuple[1]
+    x = temp_tuple[2]
+    b = temp_tuple[3]
 
     if parallel:
         norm_function: Callable = parallel_norm
@@ -91,7 +101,7 @@ def cg(
     )
 
     if b_norm == 0:
-        return postprocess(b), 0
+        return b, 0
 
     dotprod = np.vdot if np.iscomplexobj(x) else np.dot
 
@@ -105,7 +115,7 @@ def cg(
 
     for iteration in range(maxiter):
         if norm_residual < atol:
-            return postprocess(x), 0
+            return x, 0
 
         z = M * r
         rho_cur = dotprod(r, z)
@@ -129,4 +139,4 @@ def cg(
             callback(x, r, norm_residual)
 
     else:
-        return postprocess(x), maxiter
+        return x, maxiter
