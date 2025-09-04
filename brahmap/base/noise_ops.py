@@ -39,6 +39,8 @@ class NoiseCovLinearOperator(LinearOperator):
             message="Please provide only one of `covariance` or `power_spectrum`",
         )
 
+        self.__size = nargin
+
         super(NoiseCovLinearOperator, self).__init__(
             nargin=nargin,
             nargout=nargin,
@@ -48,7 +50,9 @@ class NoiseCovLinearOperator(LinearOperator):
             **kwargs,
         )
 
-        self.size = nargin
+    @property
+    def size(self) -> int:
+        return self.__size
 
     @property
     def diag(self) -> np.ndarray:
@@ -123,7 +127,10 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             exception=ValueError,
             message="The noise (inv-)covariance operators must be symmetric",
         )
-        self.size = sum(self.col_size)
+
+    @property
+    def size(self) -> int:
+        return sum(self.col_size)
 
     @property
     def diag(self) -> np.ndarray:
