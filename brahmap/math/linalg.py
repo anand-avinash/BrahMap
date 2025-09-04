@@ -32,7 +32,6 @@ def cg(
     A: LinearOperator,
     b: np.ndarray,
     x0: np.ndarray = None,
-    rtol: float = 1.0e-12,
     atol: float = 1.0e-12,
     maxiter: int = 100,
     M: LinearOperator = None,
@@ -51,8 +50,6 @@ def cg(
         _description_
     x0 : np.ndarray, optional
         _description_, by default None
-    rtol : float, optional
-        _description_, by default 1.0e-12
     atol : float, optional
         _description_, by default 1.0e-12
     maxiter : int, optional
@@ -92,13 +89,6 @@ def cg(
         norm_function: Callable = np.linalg.norm
 
     b_norm = norm_function(b)
-
-    atol, _ = scipy.sparse.linalg._isolve.iterative._get_atol_rtol(
-        "cg",
-        b_norm,
-        atol,
-        rtol,
-    )
 
     if b_norm == 0:
         return b, 0

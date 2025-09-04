@@ -133,8 +133,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         _description_, by default None
     precond_maxiter : int, optional
         _description_, by default 50
-    precond_rtol : float, optional
-        _description_, by default 1.0e-10
     precond_atol : float, optional
         _description_, by default 1.0e-10
     precond_callback : Callable, optional
@@ -152,7 +150,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
         ] = None,
         precond_maxiter: int = 50,
-        precond_rtol: float = 1.0e-10,
         precond_atol: float = 1.0e-10,
         precond_callback: Callable = None,
         dtype: DTypeFloat = np.float64,
@@ -164,7 +161,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             dtype=dtype,
         )
 
-        self.__precond_rtol = precond_rtol
         self.__precond_atol = precond_atol
         self.__precond_maxiter = precond_maxiter
         self.__precond_callback = precond_callback
@@ -252,7 +248,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         prod, _ = cg(
             A=self.__toeplitz_op,
             b=vec,
-            rtol=self.__precond_rtol,
             atol=self.__precond_atol,
             maxiter=self.__precond_maxiter,
             M=self.__precond_op,
