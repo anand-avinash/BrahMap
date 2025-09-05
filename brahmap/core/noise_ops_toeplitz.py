@@ -165,6 +165,8 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         self.__precond_maxiter = precond_maxiter
         self.__precond_callback = precond_callback
 
+        self.__last_num_iterations = 0
+
         if precond_op is None:
             self.__precond_op = None
         elif isinstance(precond_op, LinearOperator) or isinstance(
@@ -227,8 +229,17 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         factor = 1.0
         return factor * np.ones(self.size, dtype=self.dtype)
 
+    @property
+    def get_last_num_iterations(self) -> int:
+        return self.__last_num_iterations
+
     def get_inverse(self):
         return self.__toeplitz_op
+
+    def __callback(self, x, r, norm_residual):
+        self.__last_num_iterations += 1
+        if self.__precond_callback is not None:
+            self.__precond_callback(x, r, norm_residual)
 
     def _mult(self, vec: np.ndarray):
         MPI_RAISE_EXCEPTION(
@@ -236,6 +247,8 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             exception=ValueError,
             message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Toeplitz` instance.\nShape of `InvNoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}",
         )
+
+        self.__last_num_iterations = 0
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -251,7 +264,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             atol=self.__precond_atol,
             maxiter=self.__precond_maxiter,
             M=self.__precond_op,
-            callback=self.__precond_callback,
+            callback=self.__callback,
             parallel=False,
         )
 
