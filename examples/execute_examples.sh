@@ -5,6 +5,9 @@ ipynb_filename=("rectangular_I_map_explicit.ipynb"
     "healpix_QU_map_wrapper.ipynb"
     "lbsim_IQU_map_explicit.ipynb"
     "lbsim_IQU_map_wrapper.ipynb"
+    "basic_noise_covariances.ipynb"
+    "block_diagonal_noise_covariances.ipynb"
+    "lbsim_noise_covariances.ipynb"
 )
 
 py_filename=("rectangular_I_map_wrapper.py"
