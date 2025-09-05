@@ -1,4 +1,5 @@
-from typing import List, Union, Literal, Dict, Any, Optional
+from typing import List, Union, Literal, Dict, Any
+import numbers
 
 import numpy as np
 import litebird_sim as lbs
@@ -14,6 +15,8 @@ from ..core import (
 
 from ..math import DTypeFloat
 
+from ..mpi import MPI_RAISE_EXCEPTION
+
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     """_summary_
@@ -25,7 +28,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     ----------
     obs : Union[lbs.Observation, List[lbs.Observation]]
         _description_
-    noise_variance : Optional[dict], optional
+    noise_variance : Union[dict, DTypeFloat, None], optional
         _description_, by default None
     dtype : DTypeFloat, optional
         _description_, by default np.float64
@@ -36,7 +39,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        noise_variance: Optional[dict] = None,
+        noise_variance: Union[dict, DTypeFloat, None] = None,
         dtype: DTypeFloat = np.float64,
     ):
         if isinstance(obs, lbs.Observation):
@@ -51,6 +54,13 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
                     lbs.mapmaking.common.get_map_making_weights(obs_list[0]) / 1.0e4,
                 )
             )
+        elif isinstance(noise_variance, numbers.Number):
+            noise_variance = dict(
+                zip(
+                    obs_list[0].name,
+                    [noise_variance] * len(obs_list[0].name),
+                )
+            )
 
         # setting the `noise_variance` to 1 for the detectors whose noise variance is not provided in the dictionary
         det_no_variance = np.setdiff1d(obs_list[0].name, list(noise_variance.keys()))
@@ -58,12 +68,21 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
             noise_variance[detector] = 1.0
 
         block_size = []
-        block_input = []
 
-        for obs in obs_list:
-            for det_idx in range(obs.n_detectors):
-                block_size.append(obs.n_samples)
-                block_input.append(noise_variance[obs.name[det_idx]])
+        if len(set(noise_variance.values())) == 1:
+            # That is, when all values in noise variance is the same
+            block_input = {}
+            for obs in obs_list:
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    if obs.n_samples not in block_input.keys():
+                        block_input[obs.n_samples] = noise_variance[obs.name[0]]
+        else:
+            block_input = []
+            for obs in obs_list:
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    block_input.append(noise_variance[obs.name[det_idx]])
 
         super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(
             InvNoiseCovLO_Diagonal,
@@ -102,31 +121,47 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             obs_list = obs
 
         block_size = []
-        block_input = []
 
-        for obs in obs_list:
-            if isinstance(input, dict):
+        if isinstance(input, dict):
+            block_input = []
+
+            for obs in obs_list:
                 # if input is a dict
                 for det_idx in range(obs.n_detectors):
                     block_size.append(obs.n_samples)
-                    resized_input = self._resize_input(
+
+                    resized_input = self.__resize_input(
                         new_size=obs.n_samples,
                         input=input[obs.name[det_idx]],
                         input_type=input_type,
                         dtype=dtype,
                     )
+
                     block_input.append(resized_input)
-            else:
+
+        elif isinstance(input, (np.ndarray, list)):
+            block_input = {}
+
+            for obs in obs_list:
                 for det_idx in range(obs.n_detectors):
                     # if input is an array or a list, it will be taken as same for all the detectors available in the observation
                     block_size.append(obs.n_samples)
-                    resized_input = self._resize_input(
-                        new_size=obs.n_samples,
-                        input=input,
-                        input_type=input_type,
-                        dtype=dtype,
-                    )
-                    block_input.append(resized_input)
+
+                    if obs.n_samples not in block_input.keys():
+                        resized_input = self.__resize_input(
+                            new_size=obs.n_samples,
+                            input=input,
+                            input_type=input_type,
+                            dtype=dtype,
+                        )
+
+                        block_input[obs.n_samples] = resized_input
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=True,
+                exception=ValueError,
+                message="The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum",
+            )
 
         super(LBSim_InvNoiseCovLO_Circulant, self).__init__(
             InvNoiseCovLO_Circulant,
@@ -136,7 +171,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             dtype=dtype,
         )
 
-    def _resize_input(self, new_size, input, input_type, dtype):
+    def __resize_input(self, new_size, input, input_type, dtype):
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Circulant class
@@ -201,31 +236,47 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
             obs_list = obs
 
         block_size = []
-        block_input = []
 
-        for obs in obs_list:
-            if isinstance(input, dict):
+        if isinstance(input, dict):
+            block_input = []
+
+            for obs in obs_list:
                 # if input is a dict
                 for det_idx in range(obs.n_detectors):
                     block_size.append(obs.n_samples)
-                    resized_input = self._resize_input(
+
+                    resized_input = self.__resize_input(
                         new_size=obs.n_samples,
                         input=input[obs.name[det_idx]],
                         input_type=input_type,
                         dtype=dtype,
                     )
+
                     block_input.append(resized_input)
-            else:
-                # if input is an array or a list, it will be taken as same for all the detectors available in the observation
+
+        elif isinstance(input, (np.ndarray, list)):
+            block_input = {}
+
+            for obs in obs_list:
                 for det_idx in range(obs.n_detectors):
+                    # if input is an array or a list, it will be taken as same for all the detectors available in the observation
                     block_size.append(obs.n_samples)
-                    resized_input = self._resize_input(
-                        new_size=obs.n_samples,
-                        input=input,
-                        input_type=input_type,
-                        dtype=dtype,
-                    )
-                    block_input.append(resized_input)
+
+                    if obs.n_samples not in block_input.keys():
+                        resized_input = self.__resize_input(
+                            new_size=obs.n_samples,
+                            input=input,
+                            input_type=input_type,
+                            dtype=dtype,
+                        )
+
+                        block_input[obs.n_samples] = resized_input
+        else:
+            MPI_RAISE_EXCEPTION(
+                condition=True,
+                exception=ValueError,
+                message="The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum",
+            )
 
         super(LBSim_InvNoiseCovLO_Toeplitz, self).__init__(
             operator,
@@ -236,7 +287,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
             extra_kwargs=extra_kwargs,
         )
 
-    def _resize_input(self, new_size, input, input_type, dtype):
+    def __resize_input(self, new_size, input, input_type, dtype):
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Toeplitz0x class
