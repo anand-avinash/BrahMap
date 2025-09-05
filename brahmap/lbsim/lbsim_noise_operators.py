@@ -1,4 +1,5 @@
-from typing import List, Union, Literal, Dict, Any, Optional
+from typing import List, Union, Literal, Dict, Any
+import numbers
 
 import numpy as np
 import litebird_sim as lbs
@@ -25,7 +26,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     ----------
     obs : Union[lbs.Observation, List[lbs.Observation]]
         _description_
-    noise_variance : Optional[dict], optional
+    noise_variance : Union[dict, DTypeFloat, None], optional
         _description_, by default None
     dtype : DTypeFloat, optional
         _description_, by default np.float64
@@ -36,7 +37,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: Union[lbs.Observation, List[lbs.Observation]],
-        noise_variance: Optional[dict] = None,
+        noise_variance: Union[dict, DTypeFloat, None] = None,
         dtype: DTypeFloat = np.float64,
     ):
         if isinstance(obs, lbs.Observation):
@@ -51,6 +52,13 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
                     lbs.mapmaking.common.get_map_making_weights(obs_list[0]) / 1.0e4,
                 )
             )
+        elif isinstance(noise_variance, numbers.Number):
+            noise_variance = dict(
+                zip(
+                    obs_list[0].name,
+                    [noise_variance] * len(obs_list[0].name),
+                )
+            )
 
         # setting the `noise_variance` to 1 for the detectors whose noise variance is not provided in the dictionary
         det_no_variance = np.setdiff1d(obs_list[0].name, list(noise_variance.keys()))
@@ -58,12 +66,21 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
             noise_variance[detector] = 1.0
 
         block_size = []
-        block_input = []
 
-        for obs in obs_list:
-            for det_idx in range(obs.n_detectors):
-                block_size.append(obs.n_samples)
-                block_input.append(noise_variance[obs.name[det_idx]])
+        if len(set(noise_variance.values())) == 1:
+            # That is, when all values in noise variance is the same
+            block_input = {}
+            for obs in obs_list:
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    if obs.n_samples not in block_input.keys():
+                        block_input[obs.n_samples] = noise_variance[obs.name[0]]
+        else:
+            block_input = []
+            for obs in obs_list:
+                for det_idx in range(obs.n_detectors):
+                    block_size.append(obs.n_samples)
+                    block_input.append(noise_variance[obs.name[det_idx]])
 
         super(LBSim_InvNoiseCovLO_UnCorr, self).__init__(
             InvNoiseCovLO_Diagonal,
