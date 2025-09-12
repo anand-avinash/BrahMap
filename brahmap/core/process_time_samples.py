@@ -304,21 +304,14 @@ class ProcessTimeSamples(object):
 
     def get_hit_counts(self):
         """Returns hit counts of the pixel indices"""
-        return self.hit_counts
-        # hit_counts_newidx = np.zeros(self.new_npix, dtype=int)
-        # for idx in range(self.nsamples):
-        #     hit_counts_newidx[self.pointings[idx]] += self.pointings_flag[idx]
+        hit_counts = np.ma.masked_array(
+            data=np.zeros(self.npix),
+            mask=np.logical_not(self.pixel_flag),
+            fill_value=-1.6375e30,
+        )
 
-        # MPI_UTILS.comm.Allreduce(MPI.IN_PLACE, hit_counts_newidx, MPI.SUM)
-
-        # hit_counts = np.ma.masked_array(
-        #     data=np.zeros(self.npix),
-        #     mask=np.logical_not(self.pixel_flag),
-        #     fill_value=-1.6375e30,
-        # )
-
-        # hit_counts[~hit_counts.mask] = hit_counts_newidx
-        # return hit_counts
+        hit_counts[~hit_counts.mask] = self.hit_counts
+        return hit_counts
 
     def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
         self.hit_counts = np.zeros(self.npix, dtype=self.pointings.dtype)
