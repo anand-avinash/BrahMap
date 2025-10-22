@@ -95,16 +95,19 @@ class lbsim_simulation:
         if comm_size == 2:
             n_block_det = 2
             n_block_time = 1
+            num_of_obs_per_detector = 1
         elif comm_size == 4:
             n_block_det = 2
             n_block_time = 2
+            num_of_obs_per_detector = 3
         else:
             n_block_det = 1
             n_block_time = self.comm.Get_size()
+            num_of_obs_per_detector = 2
 
         self.sim.create_observations(
             detectors=dets,
-            num_of_obs_per_detector=3,
+            num_of_obs_per_detector=num_of_obs_per_detector,
             n_blocks_det=n_block_det,
             n_blocks_time=n_block_time,
             split_list_over_processes=False,
