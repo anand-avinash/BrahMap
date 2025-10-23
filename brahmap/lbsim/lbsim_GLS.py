@@ -140,14 +140,14 @@ def LBSim_compute_GLS_maps(
 
     if len(components) > 1:
         lbs.mapmaking.destriper._sum_components_into_obs(
-            obs_list=observations,
+            obs_list=processed_samples.obs_list,
             target=components[0],
             other_components=components[1:],
             factor=1.0,
         )
 
     time_ordered_data = np.concatenate(
-        [getattr(obs, components[0]) for obs in observations], axis=None
+        [getattr(obs, components[0]) for obs in processed_samples.obs_list], axis=None
     )
 
     gls_result = compute_GLS_maps_from_PTS(
