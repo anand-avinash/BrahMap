@@ -25,6 +25,7 @@ class lbsim_simulation:
     def __init__(self):
         self.comm = lbs.MPI_COMM_WORLD
         tmp_dir = tempfile.TemporaryDirectory()
+        imo = lbs.Imo(flatfile_location=lbs.PTEP_IMO_LOCATION)
 
         self.sim = lbs.Simulation(
             base_path=tmp_dir.name,
@@ -32,6 +33,7 @@ class lbsim_simulation:
             duration_s=71,  # Do not increase this number
             random_seed=65454,
             mpi_comm=self.comm,
+            imo=imo,
         )
 
         self.detector_list = [
