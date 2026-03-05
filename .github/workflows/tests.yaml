@@ -15,25 +15,20 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
         mpi: ["mpich", "openmpi"]
-        # Excluding the following because it is failing and remains stalled, without any useful error message
-        exclude:
-          - os: ubuntu-latest
-            mpi: mpich
-            python-version: "3.9"
 
     steps:
       - name: Checkout BrahMap repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           submodules: true
 
       - name: Install MPI - ${{ matrix.mpi }}
-        uses: mpi4py/setup-mpi@v1.3.5
+        uses: mpi4py/setup-mpi@v1.4.2
         with:
           mpi: ${{ matrix.mpi }}
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
 

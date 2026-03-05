@@ -106,37 +106,24 @@ ch_info.append(n_ch_info)
 
 
 ### Producing the input CMB maps
-mbs_params = lbs.MbsParameters(
-    make_cmb=True,
-    make_fg=False,
-    seed_cmb=1,
-    gaussian_smooth=True,
-    bandpass_int=False,
+sky_params = lbs.SkyGenerationParams(
     nside=nside,
-    units="uK_CMB",
-    maps_in_ecliptic=False,
-    output_string="mbs_cmb_lens",
+    make_cmb=True,
+    seed_cmb=1,
 )
 
-mbs_obj = lbs.Mbs(
-    simulation=sim,
-    parameters=mbs_params,
-    channel_list=ch_info,
+sky_gen = lbs.SkyGenerator(
+    parameters=sky_params,
+    channels=ch_info,
 )
 
-if comm.rank == 0:
-    input_maps = mbs_obj.run_all()
-else:
-    input_maps = None
-
-# Distributing the maps to all MPI processes
-input_maps = lbs.MPI_COMM_WORLD.bcast(input_maps, 0)
+input_maps = sky_gen.execute()
 
 
 ### Scanning the sky
 lbs.scan_map_in_observations(
     sim.observations,
-    maps=input_maps[0][channel],
+    maps=input_maps[channel],
 )
 
 
@@ -190,4 +177,4 @@ gls_result = brahmap.LBSim_compute_GLS_maps(
 ### Validating the results ###
 ##############################
 
-np.testing.assert_allclose(input_maps[0][channel], gls_result.GLS_maps)
+np.testing.assert_allclose(input_maps[channel].values, gls_result.GLS_maps)
