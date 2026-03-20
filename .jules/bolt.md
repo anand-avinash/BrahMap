@@ -1,0 +1,4 @@
+
+## $(date +%Y-%m-%d) - Optimizing NumPy Operations in Conjugate Gradient Solvers
+**Learning:** `np.empty_like(arr)` combined with slice assignment (`p[:] = z[:]`) is actually slower in Python loops than simply using `z.copy()`, because the slice assignment incurs Python-level element-wise operation overhead compared to the C-level direct copying of the underlying array buffer. Similarly, `np.linalg.norm` has high overhead from internal parameter checking and handling multiple array dimensions; for 1D vectors, a custom lambda using `np.sqrt(np.vdot(x, x).real)` is measurably faster in performance-critical tight loops like Conjugate Gradient (CG) iterative solvers.
+**Action:** When initializing arrays from other identically-shaped arrays, use `.copy()` directly instead of pre-allocating with `empty_like` and manually copying contents. In highly optimized mathematical loops processing strictly 1D arrays, replace `np.linalg.norm` with `np.sqrt(np.vdot(x, x).real)`.

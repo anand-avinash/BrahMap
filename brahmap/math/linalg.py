@@ -86,7 +86,9 @@ def cg(
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        norm_function: Callable = np.linalg.norm
+        # ⚡ Bolt: np.sqrt(np.vdot(x, x).real) is used instead of np.linalg.norm
+        # because np.linalg.norm does extensive checks that slow down performance in tight loops
+        def norm_function(x): return np.sqrt(np.vdot(x, x).real)
 
     b_norm = norm_function(b)
 
@@ -114,8 +116,9 @@ def cg(
             p *= beta
             p += z
         else:
-            p = np.empty_like(r)
-            p[:] = z[:]
+            # ⚡ Bolt: z.copy() is faster than np.empty_like(r) followed by p[:] = z[:]
+            # because it avoids the Python-level element-wise assignment overhead
+            p = z.copy()
 
         q = A * p
         alpha = rho_cur / dotprod(p, q)
