@@ -86,7 +86,11 @@ def cg(
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        norm_function: Callable = np.linalg.norm
+        # ⚡ Bolt: Use `vdot` for fast 1D vector norm calculations in performance-critical loops
+        # This avoids `np.linalg.norm`'s internal parameter and dimensionality checking overhead.
+        def _fast_norm(x: np.ndarray) -> float:
+            return float(np.sqrt(np.vdot(x, x).real))
+        norm_function: Callable = _fast_norm
 
     b_norm = norm_function(b)
 
@@ -114,8 +118,9 @@ def cg(
             p *= beta
             p += z
         else:
-            p = np.empty_like(r)
-            p[:] = z[:]
+            # ⚡ Bolt: Prefer `array.copy()` over `np.empty_like()` combined with slice assignment (`p[:] = z[:]`)
+            # to avoid Python-level element-wise operation overhead.
+            p = z.copy()
 
         q = A * p
         alpha = rho_cur / dotprod(p, q)
