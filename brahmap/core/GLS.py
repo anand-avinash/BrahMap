@@ -138,6 +138,7 @@ def compute_GLS_maps_from_PTS(
     time_ordered_data: np.ndarray,
     inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
     gls_parameters: GLSParameters = GLSParameters(),
+    x0: Union[np.ndarray, None] = None,
 ) -> GLSResult:
     """This function computes the GLS maps given an instance of
     `ProcessTimeSamples`, TOD, and inverse noise covariance operator
@@ -152,6 +153,9 @@ def compute_GLS_maps_from_PTS(
         _description_, by default None
     gls_parameters : GLSParameters, optional
         _description_, by default GLSParameters()
+    x0 : np.ndarray, optional
+        Initial guess for GLS solution in the form 
+        [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
 
     Returns
     -------
@@ -208,6 +212,7 @@ def compute_GLS_maps_from_PTS(
         map_vector, pcg_status = cg(
             A=A,
             b=b,
+            x0=x0,
             atol=gls_parameters.isolver_threshold,
             maxiter=gls_parameters.isolver_max_iterations,
             M=blockdiagprecond_operator,
@@ -257,6 +262,7 @@ def compute_GLS_maps(
     dtype_float: Union[DTypeFloat, None] = None,
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
+    x0: Union[np.ndarray, None] = None,
 ) -> Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]:
     """The function to compute the GLS maps given pointing information and TOD
 
@@ -282,6 +288,9 @@ def compute_GLS_maps(
         _description_, by default True
     gls_parameters : GLSParameters, optional
         _description_, by default GLSParameters()
+    x0 : np.ndarray, optional
+        Initial guess for GLS solution in the form 
+        [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
 
     Returns
     -------
@@ -319,6 +328,7 @@ def compute_GLS_maps(
         time_ordered_data=time_ordered_data.astype(dtype=dtype_float, copy=False),
         inv_noise_cov_operator=inv_noise_cov_operator,
         gls_parameters=gls_parameters,
+        x0=x0,
     )
 
     if gls_parameters.return_processed_samples:
