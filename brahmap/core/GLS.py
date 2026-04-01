@@ -212,6 +212,7 @@ def compute_GLS_maps_from_PTS(
             maxiter=gls_parameters.isolver_max_iterations,
             M=blockdiagprecond_operator,
             callback=callback_function,
+            parallel=False,
         )
     else:
         pcg_status = 0

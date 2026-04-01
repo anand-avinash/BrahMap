@@ -36,7 +36,7 @@ def cg(
     maxiter: int = 100,
     M: LinearOperator = None,
     callback: Callable = None,
-    parallel: bool = True,
+    parallel: bool = False,
 ):
     """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
     replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
@@ -59,7 +59,7 @@ def cg(
     callback : Callable, optional
         _description_, by default None
     parallel : bool, optional
-        _description_, by default True
+        _description_, by default False
 
     Returns
     -------
