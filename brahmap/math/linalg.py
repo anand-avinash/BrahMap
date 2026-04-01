@@ -36,11 +36,11 @@ def cg(
     maxiter: int = 100,
     M: LinearOperator = None,
     callback: Callable = None,
-    parallel: bool = True,
+    parallel: bool = False,
 ):
     """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
     replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
-    is set `True`
+    is set `True`. Also all the matrices and vectors are assumed to be real.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def cg(
     callback : Callable, optional
         _description_, by default None
     parallel : bool, optional
-        _description_, by default True
+        _description_, by default False
 
     Returns
     -------
@@ -86,14 +86,12 @@ def cg(
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        norm_function: Callable = np.linalg.norm
+        def norm_function(x): return np.sqrt(x.dot(x))
 
     b_norm = norm_function(b)
 
     if b_norm == 0:
         return b, 0
-
-    dotprod = np.vdot if np.iscomplexobj(x) else np.dot
 
     # r = b - A@x if x has any non-zero element, otherwise r = b
     r = b - A * x if x.any() else b.copy()
@@ -108,17 +106,16 @@ def cg(
             return x, 0
 
         z = M * r
-        rho_cur = dotprod(r, z)
+        rho_cur = np.dot(r, z)
         if iteration > 0:
             beta = rho_cur / rho_prev
             p *= beta
             p += z
         else:
-            p = np.empty_like(r)
-            p[:] = z[:]
+            p = z.copy()
 
         q = A * p
-        alpha = rho_cur / dotprod(p, q)
+        alpha = rho_cur / np.dot(p, q)
         x += alpha * p
         r -= alpha * q
         rho_prev = rho_cur

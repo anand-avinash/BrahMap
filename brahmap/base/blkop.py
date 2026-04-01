@@ -125,7 +125,7 @@ class BlockLinearOperator(LinearOperator):
                 raise ShapeError("Inconsistent block shapes")
 
         nargin = sum(nargins[0])
-        nargout = sum([out[0] for out in nargouts])
+        nargout = sum(out[0] for out in nargouts)
 
         # Create blocks of transpose operator.
         blocksT = list(map(lambda *row: [blk.T for blk in row], *self._blocks))
@@ -134,7 +134,7 @@ class BlockLinearOperator(LinearOperator):
             nargins = [[blk.shape[-1] for blk in blkrow] for blkrow in blks]
             nargouts = [[blk.shape[0] for blk in blkrow] for blkrow in blks]
             nargin = sum(nargins[0])
-            nargout = sum([out[0] for out in nargouts])
+            nargout = sum(out[0] for out in nargouts)
             nx = len(x)
             self.logger.debug("Multiplying with a vector of size %d" % nx)
             self.logger.debug("nargin=%d, nargout=%d" % (nargin, nargout))
@@ -292,8 +292,8 @@ class BlockDiagonalLinearOperator(LinearOperator):
             return block_range
 
     def _mult(self, vec: np.ndarray, block_list: List, dtype) -> np.ndarray:
-        nrows = sum([block.shape[0] for block in block_list])
-        ncols = sum([block.shape[1] for block in block_list])
+        nrows = sum(block.shape[0] for block in block_list)
+        ncols = sum(block.shape[1] for block in block_list)
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != ncols),
             exception=ValueError,
