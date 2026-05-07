@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg
+import scipy.fft
 import brahmap
 
 from template_noise_ops_tests import BaseTestNoiseLO
@@ -26,12 +27,12 @@ class NoiseOps_Toeplitz(BaseTestNoiseLO):
         self.covariance = covariance
 
         extended_covariance1 = np.concatenate([covariance, covariance[1:-1][::-1]])
-        power_spec1 = np.fft.fft(extended_covariance1).real.astype(
+        power_spec1 = scipy.fft.fft(extended_covariance1).real.astype(
             dtype
         )  # power spectrum of size 2n-2
 
         extended_covariance2 = np.concatenate([covariance, covariance[1:][::-1]])
-        power_spec2 = np.fft.fft(extended_covariance2).real.astype(
+        power_spec2 = scipy.fft.fft(extended_covariance2).real.astype(
             dtype
         )  # power spectrum of size 2n-1
 

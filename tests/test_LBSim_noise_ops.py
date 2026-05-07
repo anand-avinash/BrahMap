@@ -1,6 +1,7 @@
 import tempfile
 import pytest
 import numpy as np
+import scipy.fft
 
 import brahmap
 
@@ -178,10 +179,10 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             covariance = lbsim_obj.rng.random(
                 size=lbsim_obj.sim.observations[0].n_samples
             )
-            power_spec = np.fft.fft(covariance).real
+            power_spec = scipy.fft.fft(covariance).real
 
-            covariance = np.fft.ifft(power_spec).real
-            power_spec = np.fft.fft(covariance).real
+            covariance = scipy.fft.ifft(power_spec).real
+            power_spec = scipy.fft.fft(covariance).real
 
             covariance_list[detector.name] = covariance
             power_spec_list[detector.name] = power_spec
@@ -248,10 +249,10 @@ class TestLBSim_InvNoiseCovLO_Circulant:
         """Here only one common noise covariance and power spectrum is supplied"""
 
         covariance = lbsim_obj.rng.random(size=lbsim_obj.sim.observations[0].n_samples)
-        power_spec = np.fft.fft(covariance).real
+        power_spec = scipy.fft.fft(covariance).real
 
-        covariance = np.fft.ifft(power_spec).real
-        power_spec = np.fft.fft(covariance).real
+        covariance = scipy.fft.ifft(power_spec).real
+        power_spec = scipy.fft.fft(covariance).real
 
         lbsim_inv_cov1 = brahmap.LBSim_InvNoiseCovLO_Circulant(
             obs=lbsim_obj.sim.observations,
@@ -331,7 +332,7 @@ class TestLBSim_InvNoiseCovLO_Toeplitz:
             )
 
             extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
-            power_spec = np.fft.fft(extended_covariance).real
+            power_spec = scipy.fft.fft(extended_covariance).real
 
             covariance_list[detector.name] = covariance
             power_spec_list[detector.name] = power_spec
@@ -400,7 +401,7 @@ class TestLBSim_InvNoiseCovLO_Toeplitz:
         covariance = lbsim_obj.rng.random(size=lbsim_obj.sim.observations[0].n_samples)
 
         extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
-        power_spec = np.fft.fft(extended_covariance).real
+        power_spec = scipy.fft.fft(extended_covariance).real
 
         lbsim_cov1 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
             obs=lbsim_obj.sim.observations,

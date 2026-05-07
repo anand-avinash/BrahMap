@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fft
 import brahmap
 
 
@@ -18,10 +19,10 @@ class NoiseOps_Diagonal(BaseTestNoiseLO):
         size = 3 * (comm_rank + 1)
 
         covariance = rng.random(size, dtype=dtype)
-        power_spec = np.fft.fft(covariance).real.astype(dtype=dtype)
+        power_spec = scipy.fft.fft(covariance).real.astype(dtype=dtype)
 
-        covariance = np.fft.ifft(power_spec).real.astype(dtype=dtype)
-        power_spec = np.fft.fft(covariance).real.astype(dtype=dtype)
+        covariance = scipy.fft.ifft(power_spec).real.astype(dtype=dtype)
+        power_spec = scipy.fft.fft(covariance).real.astype(dtype=dtype)
 
         operator1 = brahmap.core.NoiseCovLO_Diagonal(
             size=size, input=covariance, input_type="covariance", dtype=dtype

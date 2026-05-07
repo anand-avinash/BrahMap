@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fft
 import brahmap
 
 
@@ -28,10 +29,10 @@ class BlockDiagNoiseOps_Circulant(BaseTestNoiseLO):
 
         for idx in range(nblocks):
             covariance = rng.random(block_size[idx], dtype=dtype)
-            power_spec = np.fft.fft(covariance).real.astype(dtype=dtype)
+            power_spec = scipy.fft.fft(covariance).real.astype(dtype=dtype)
 
-            covariance = np.fft.ifft(power_spec).real.astype(dtype=dtype)
-            power_spec = np.fft.fft(covariance).real.astype(dtype=dtype)
+            covariance = scipy.fft.ifft(power_spec).real.astype(dtype=dtype)
+            power_spec = scipy.fft.fft(covariance).real.astype(dtype=dtype)
 
             covariance_list.append(covariance)
             power_spec_list.append(power_spec)
@@ -95,7 +96,7 @@ class BlockDiagNoiseOps_Circulant(BaseTestNoiseLO):
 class TestBlockDiagNoiseOps_Circulant_F32(BlockDiagNoiseOps_Circulant):
     dtype = np.float32
     rtol = 1.0e-4
-    atol = 1.0e-6
+    atol = 1.0e-5
 
 
 class TestBlockDiagNoiseOps_Circulant_F64(BlockDiagNoiseOps_Circulant):

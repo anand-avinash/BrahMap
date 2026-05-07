@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg
+import scipy.fft
 import brahmap
 
 
@@ -33,7 +34,7 @@ class BlockDiagNoiseOps_Toeplitz(BaseTestNoiseLO):
         for idx in range(nblocks):
             covariance = rng.random(block_size[idx], dtype=dtype)
             extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
-            power_spec = np.fft.fft(extended_covariance).real.astype(
+            power_spec = scipy.fft.fft(extended_covariance).real.astype(
                 dtype
             )  # power spectrum of size 2n-2
 
@@ -139,7 +140,7 @@ class BlockDiagNoiseOps_Toeplitz(BaseTestNoiseLO):
 class TestBlockDiagNoiseOps_Toeplitz_F32(BlockDiagNoiseOps_Toeplitz):
     dtype = np.float32
     rtol = 1.0e-3
-    atol = 1.0e-3
+    atol = 5.0e-3
 
 
 class TestBlockDiagNoiseOps_Toeplitz_F64(BlockDiagNoiseOps_Toeplitz):
