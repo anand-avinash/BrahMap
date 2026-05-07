@@ -35,7 +35,7 @@ class _MPI(object):
     @property
     def nthreads_per_process(self):
         if "OMP_NUM_THREADS" in os.environ:
-            value = os.environ.get("OMP_NUM_THREADS")
+            value = int(os.environ.get("OMP_NUM_THREADS"))
         else:
             value = 1
         return value

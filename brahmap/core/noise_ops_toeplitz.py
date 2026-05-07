@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fft
 import warnings
 from typing import List, Union, Literal, Callable
 
@@ -60,12 +61,18 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
                 exception=ValueError,
                 message="The input power spectrum array must be of the size 2n-2 or 2n-1, where n is the size of the linear operator",
             )
-            covariance = np.fft.ifft(input)[:size]
-            covariance = covariance.real.astype(dtype=dtype)
+            covariance = scipy.fft.ifft(
+                input,
+                workers=MPI_UTILS.nthreads_per_process,
+            )[:size]
+            covariance = covariance.real.astype(dtype=dtype, copy=False)
 
         self.__diag_factor = covariance[0]
         self.__input = np.concatenate([covariance, np.roll(covariance[::-1], 1)])
-        self.__input = np.fft.fft(self.__input)
+        self.__input = scipy.fft.rfft(
+            self.__input,
+            workers=MPI_UTILS.nthreads_per_process,
+        )
 
         del covariance
 
@@ -81,8 +88,12 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         return self.__diag_factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self):
-        covariance = np.fft.ifft(self.__input)[: self.size]
-        covariance = covariance.real.astype(dtype=self.dtype)
+        covariance = scipy.fft.irfft(
+            self.__input,
+            n=2 * self.size,
+            workers=MPI_UTILS.nthreads_per_process,
+        )[: self.size]
+        covariance = covariance.astype(dtype=self.dtype)
         inv_noise_cov = InvNoiseCovLO_Toeplitz01(
             size=self.size,
             input=covariance,
@@ -108,11 +119,18 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
 
         prod = np.pad(vec, pad_width=((0, self.size)), mode="constant")
 
-        prod = np.fft.ifft(prod)
+        prod = scipy.fft.rfft(
+            prod,
+            workers=MPI_UTILS.nthreads_per_process,
+        )
         prod = prod * self.__input
-        prod = np.fft.fft(prod)[: self.size]
+        prod = scipy.fft.irfft(
+            prod,
+            n=2 * self.size,
+            workers=MPI_UTILS.nthreads_per_process,
+        )[: self.size]
 
-        return prod.real.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)
 
 
 class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
@@ -182,7 +200,11 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             self.precond_op = precond_op
         elif precond_op in ["Strang", "TChan", "RChan", "KK2"]:
             if input_type == "power_spectrum":
-                cov = np.fft.ifft(input).real[:size]
+                cov = scipy.fft.ifft(
+                    input,
+                    workers=MPI_UTILS.nthreads_per_process,
+                )[:size]
+                cov = cov.real.astype(dtype=dtype, copy=False)
             else:
                 cov = input[:size]
 

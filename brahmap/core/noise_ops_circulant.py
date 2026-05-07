@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fft
 import warnings
 from typing import List, Union, Literal
 
@@ -39,16 +40,24 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
             exception=ValueError,
             message="The `input` array must be a 1-d vector",
         )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != input.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
 
         if input_type == "covariance":
-            self.__input = np.fft.fft(input).real.astype(dtype=dtype, copy=False)
+            MPI_RAISE_EXCEPTION(
+                condition=(size != input.shape[0]),
+                exception=ValueError,
+                message="The input array size must be same as the size of the linear operator",
+            )
+            self.__input = scipy.fft.rfft(
+                input,
+                workers=MPI_UTILS.nthreads_per_process,
+            ).real.astype(dtype=dtype, copy=False)
         elif input_type == "power_spectrum":
-            self.__input = input
+            MPI_RAISE_EXCEPTION(
+                condition=(size != input.shape[0] and input.shape[0] != size // 2 + 1),
+                exception=ValueError,
+                message="The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)",
+            )
+            self.__input = input[: size // 2 + 1]
 
         super(NoiseCovLO_Circulant, self).__init__(
             nargin=size,
@@ -59,7 +68,12 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
 
     @property
     def diag(self) -> np.ndarray:
-        factor = np.average(self.__input)
+        if self.size % 2 == 0:
+            total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
+        else:
+            total_sum = 2 * np.sum(self.__input) - self.__input[0]
+
+        factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self):
@@ -86,11 +100,18 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
                 )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.fft.ifft(vec)
+        prod = scipy.fft.rfft(
+            vec,
+            workers=MPI_UTILS.nthreads_per_process,
+        )
         prod = prod * self.__input
-        prod = np.real(np.fft.fft(prod))
+        prod = scipy.fft.irfft(
+            prod,
+            n=len(vec),
+            workers=MPI_UTILS.nthreads_per_process,
+        )
 
-        return prod
+        return prod.astype(dtype=self.dtype, copy=False)
 
 
 class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
@@ -122,16 +143,24 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
             exception=ValueError,
             message="The `input` array must be a 1-d vector",
         )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != input.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
 
         if input_type == "covariance":
-            self.__input = 1.0 / np.fft.fft(input).real.astype(dtype=dtype, copy=False)
+            MPI_RAISE_EXCEPTION(
+                condition=(size != input.shape[0]),
+                exception=ValueError,
+                message="The input array size must be same as the size of the linear operator",
+            )
+            self.__input = 1.0 / scipy.fft.rfft(
+                input,
+                workers=MPI_UTILS.nthreads_per_process,
+            ).real.astype(dtype=dtype, copy=False)
         elif input_type == "power_spectrum":
-            self.__input = 1.0 / input
+            MPI_RAISE_EXCEPTION(
+                condition=(size != input.shape[0] and input.shape[0] != size // 2 + 1),
+                exception=ValueError,
+                message="The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)",
+            )
+            self.__input = 1.0 / input[: size // 2 + 1]
 
         super(InvNoiseCovLO_Circulant, self).__init__(
             nargin=size,
@@ -142,7 +171,12 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
 
     @property
     def diag(self) -> np.ndarray:
-        factor = np.average(self.__input)
+        if self.size % 2 == 0:
+            total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
+        else:
+            total_sum = 2 * np.sum(self.__input) - self.__input[0]
+
+        factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self):
@@ -169,8 +203,15 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
                 )
             vec = vec.astype(dtype=self.dtype, copy=False)
 
-        prod = np.fft.ifft(vec)
+        prod = scipy.fft.rfft(
+            vec,
+            workers=MPI_UTILS.nthreads_per_process,
+        )
         prod = prod * self.__input
-        prod = np.real(np.fft.fft(prod))
+        prod = scipy.fft.irfft(
+            prod,
+            n=len(vec),
+            workers=MPI_UTILS.nthreads_per_process,
+        )
 
-        return prod
+        return prod.astype(dtype=self.dtype, copy=False)
