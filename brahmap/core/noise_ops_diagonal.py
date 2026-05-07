@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.fft
 import warnings
 from numbers import Number
 from typing import List, Union, Literal
@@ -42,8 +43,9 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         elif input_type == "covariance":
             self.__noise_covariance = np.asarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
-            self.__noise_covariance = np.fft.ifft(input).real.astype(
-                dtype=dtype, copy=False
+            self.__noise_covariance = scipy.fft.ifft(input).real.astype(
+                dtype=dtype,
+                copy=False,
             )
 
         MPI_RAISE_EXCEPTION(
@@ -133,7 +135,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         elif input_type == "covariance":
             self.__inv_noise_cov = 1.0 / np.asarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
-            self.__inv_noise_cov = 1.0 / np.fft.ifft(input).real.astype(
+            self.__inv_noise_cov = 1.0 / scipy.fft.ifft(input).real.astype(
                 dtype=dtype, copy=False
             )
 
