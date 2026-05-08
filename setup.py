@@ -27,7 +27,6 @@ compiler_args = [
     "-fwrapv",
     "-fvisibility=hidden",
     "-std=c++20",
-    "-faligned-allocation",
 ]
 
 # These options are common with `compiler_so_args`. And since I am supplying
@@ -189,6 +188,12 @@ class brahmap_build_ext(build_ext):
             if check_flag(custom_compiler, item) is not None:
                 compiler_flags += [item]
                 break
+
+        # Check for macOS-specific aligned allocation flag
+        # can be removed once the support for python 3.11 is dropped
+        # (linked with a similar change in action workflow)
+        if check_flag(custom_compiler, "-faligned-allocation") is not None:
+            compiler_flags += ["-faligned-allocation"]
 
         return compiler_flags, linker_flags
 
