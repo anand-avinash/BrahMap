@@ -1,14 +1,13 @@
-#include <functional>
 #include <vector>
 
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #ifndef _DISABLE_OMP
 #include <omp.h>
 #endif
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 template <typename dfloat>
 void BDPLO_mult_QU(                                //
@@ -86,171 +85,83 @@ void BDPLO_mult_IQU(                               //
   return;
 } // BDPLO_mult_IQU()
 
-template <template <typename, int = py::array::c_style> class buffer_t,
-          typename dfloat>
-std::function<void(                              //
-    const ssize_t new_npix,                      //
-    const buffer_t<dfloat> weighted_sin_sq,      //
-    const buffer_t<dfloat> weighted_cos_sq,      //
-    const buffer_t<dfloat> weighted_sincos,      //
-    const buffer_t<dfloat> one_over_determinant, //
-    const buffer_t<dfloat> vec,                  //
-    buffer_t<dfloat> prod                        //
-    )>
-    numpy_bind_BDPLO_mult_QU =                //
-    [](const ssize_t new_npix,                //
-       const py::buffer weighted_sin_sq,      //
-       const py::buffer weighted_cos_sq,      //
-       const py::buffer weighted_sincos,      //
-       const py::buffer one_over_determinant, //
-       const py::buffer vec,                  //
-       py::buffer prod                        //
-    ) {
-      py::buffer_info weighted_sin_sq_info = weighted_sin_sq.request();
-      py::buffer_info weighted_cos_sq_info = weighted_cos_sq.request();
-      py::buffer_info weighted_sincos_info = weighted_sincos.request();
-      py::buffer_info one_over_determinant_info =
-          one_over_determinant.request();
-      py::buffer_info vec_info = vec.request();
-      py::buffer_info prod_info = prod.request();
+template <typename dfloat, typename device> //
+void register_BlkDiagPrecondLO(nb::module_ &m) {
+  using arr_t = nb::ndarray<dfloat, nb::ndim<1>, device, nb::c_contig>;
 
-      const dfloat *weighted_sin_sq_ptr =
-          reinterpret_cast<const dfloat *>(weighted_sin_sq_info.ptr);
-      const dfloat *weighted_cos_sq_ptr =
-          reinterpret_cast<const dfloat *>(weighted_cos_sq_info.ptr);
-      const dfloat *weighted_sincos_ptr =
-          reinterpret_cast<const dfloat *>(weighted_sincos_info.ptr);
-      const dfloat *one_over_determinant_ptr =
-          reinterpret_cast<const dfloat *>(one_over_determinant_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
-      dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
+  m.def(
+      "BDPLO_mult_QU",                      //
+      [](                                   //
+          const ssize_t new_npix,           //
+          const arr_t weighted_sin_sq,      //
+          const arr_t weighted_cos_sq,      //
+          const arr_t weighted_sincos,      //
+          const arr_t one_over_determinant, //
+          const arr_t vec,                  //
+          arr_t prod                        //
+      ) {
+        BDPLO_mult_QU(                   //
+            new_npix,                    //
+            weighted_sin_sq.data(),      //
+            weighted_cos_sq.data(),      //
+            weighted_sincos.data(),      //
+            one_over_determinant.data(), //
+            vec.data(),                  //
+            prod.data()                  //
+        );
+      },
+      nb::arg("new_npix"),                         //
+      nb::arg("weighted_sin_sq").noconvert(),      //
+      nb::arg("weighted_cos_sq").noconvert(),      //
+      nb::arg("weighted_sincos").noconvert(),      //
+      nb::arg("one_over_determinant").noconvert(), //
+      nb::arg("vec").noconvert(),                  //
+      nb::arg("prod").noconvert()                  //
+  );
 
-      BDPLO_mult_QU(                //
-          new_npix,                 //
-          weighted_sin_sq_ptr,      //
-          weighted_cos_sq_ptr,      //
-          weighted_sincos_ptr,      //
-          one_over_determinant_ptr, //
-          vec_ptr,                  //
-          prod_ptr                  //
-      );
+  m.def(
+      "BDPLO_mult_IQU",                     //
+      [](                                   //
+          const ssize_t new_npix,           //
+          const arr_t weighted_counts,      //
+          const arr_t weighted_sin_sq,      //
+          const arr_t weighted_cos_sq,      //
+          const arr_t weighted_sincos,      //
+          const arr_t weighted_sin,         //
+          const arr_t weighted_cos,         //
+          const arr_t one_over_determinant, //
+          const arr_t vec,                  //
+          arr_t prod                        //
+      ) {
+        BDPLO_mult_IQU(                  //
+            new_npix,                    //
+            weighted_counts.data(),      //
+            weighted_sin_sq.data(),      //
+            weighted_cos_sq.data(),      //
+            weighted_sincos.data(),      //
+            weighted_sin.data(),         //
+            weighted_cos.data(),         //
+            one_over_determinant.data(), //
+            vec.data(),                  //
+            prod.data()                  //
+        );
+      },
+      nb::arg("new_npix"),                         //
+      nb::arg("weighted_counts").noconvert(),      //
+      nb::arg("weighted_sin_sq").noconvert(),      //
+      nb::arg("weighted_cos_sq").noconvert(),      //
+      nb::arg("weighted_sincos").noconvert(),      //
+      nb::arg("weighted_sin").noconvert(),         //
+      nb::arg("weighted_cos").noconvert(),         //
+      nb::arg("one_over_determinant").noconvert(), //
+      nb::arg("vec").noconvert(),                  //
+      nb::arg("prod").noconvert()                  //
+  );
+}
 
-      return;
-    }; // numpy_bind_BDPLO_mult_QU()
-
-template <template <typename, int = py::array::c_style> class buffer_t,
-          typename dfloat>
-std::function<void(                              //
-    const ssize_t new_npix,                      //
-    const buffer_t<dfloat> weighted_counts,      //
-    const buffer_t<dfloat> weighted_sin_sq,      //
-    const buffer_t<dfloat> weighted_cos_sq,      //
-    const buffer_t<dfloat> weighted_sincos,      //
-    const buffer_t<dfloat> weighted_sin,         //
-    const buffer_t<dfloat> weighted_cos,         //
-    const buffer_t<dfloat> one_over_determinant, //
-    const buffer_t<dfloat> vec,                  //
-    buffer_t<dfloat> prod                        //
-    )>
-    numpy_bind_BDPLO_mult_IQU =               //
-    [](const ssize_t new_npix,                //
-       const py::buffer weighted_counts,      //
-       const py::buffer weighted_sin_sq,      //
-       const py::buffer weighted_cos_sq,      //
-       const py::buffer weighted_sincos,      //
-       const py::buffer weighted_sin,         //
-       const py::buffer weighted_cos,         //
-       const py::buffer one_over_determinant, //
-       const py::buffer vec,                  //
-       py::buffer prod                        //
-    ) {
-      py::buffer_info weighted_counts_info = weighted_counts.request();
-      py::buffer_info weighted_sin_sq_info = weighted_sin_sq.request();
-      py::buffer_info weighted_cos_sq_info = weighted_cos_sq.request();
-      py::buffer_info weighted_sincos_info = weighted_sincos.request();
-      py::buffer_info weighted_sin_info = weighted_sin.request();
-      py::buffer_info weighted_cos_info = weighted_cos.request();
-      py::buffer_info one_over_determinant_info =
-          one_over_determinant.request();
-      py::buffer_info vec_info = vec.request();
-      py::buffer_info prod_info = prod.request();
-
-      const dfloat *weighted_counts_ptr =
-          reinterpret_cast<const dfloat *>(weighted_counts_info.ptr);
-      const dfloat *weighted_sin_sq_ptr =
-          reinterpret_cast<const dfloat *>(weighted_sin_sq_info.ptr);
-      const dfloat *weighted_cos_sq_ptr =
-          reinterpret_cast<const dfloat *>(weighted_cos_sq_info.ptr);
-      const dfloat *weighted_sincos_ptr =
-          reinterpret_cast<const dfloat *>(weighted_sincos_info.ptr);
-      const dfloat *weighted_sin_ptr =
-          reinterpret_cast<const dfloat *>(weighted_sin_info.ptr);
-      const dfloat *weighted_cos_ptr =
-          reinterpret_cast<const dfloat *>(weighted_cos_info.ptr);
-      const dfloat *one_over_determinant_ptr =
-          reinterpret_cast<const dfloat *>(one_over_determinant_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
-      dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
-
-      BDPLO_mult_IQU(               //
-          new_npix,                 //
-          weighted_counts_ptr,      //
-          weighted_sin_sq_ptr,      //
-          weighted_cos_sq_ptr,      //
-          weighted_sincos_ptr,      //
-          weighted_sin_ptr,         //
-          weighted_cos_ptr,         //
-          one_over_determinant_ptr, //
-          vec_ptr,                  //
-          prod_ptr                  //
-      );
-
-      return;
-    }; // numpy_bind_BDPLO_mult_IQU()
-
-PYBIND11_MODULE(BlkDiagPrecondLO_tools, m) {
+NB_MODULE(BlkDiagPrecondLO_tools, m) {
   m.doc() = "BlkDiagPrecondLO_tools";
-  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<py::array_t, float>, //
-        py::arg("new_npix"),                                           //
-        py::arg("weighted_sin_sq").noconvert(),                        //
-        py::arg("weighted_cos_sq").noconvert(),                        //
-        py::arg("weighted_sincos").noconvert(),                        //
-        py::arg("one_over_determinant").noconvert(),                   //
-        py::arg("vec").noconvert(),                                    //
-        py::arg("prod").noconvert()                                    //
-  );
-  m.def("BDPLO_mult_QU", numpy_bind_BDPLO_mult_QU<py::array_t, double>, //
-        py::arg("new_npix"),                                            //
-        py::arg("weighted_sin_sq").noconvert(),                         //
-        py::arg("weighted_cos_sq").noconvert(),                         //
-        py::arg("weighted_sincos").noconvert(),                         //
-        py::arg("one_over_determinant").noconvert(),                    //
-        py::arg("vec").noconvert(),                                     //
-        py::arg("prod").noconvert()                                     //
-  );
 
-  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<py::array_t, float>, //
-        py::arg("new_npix"),                                             //
-        py::arg("weighted_counts").noconvert(),                          //
-        py::arg("weighted_sin_sq").noconvert(),                          //
-        py::arg("weighted_cos_sq").noconvert(),                          //
-        py::arg("weighted_sincos").noconvert(),                          //
-        py::arg("weighted_sin").noconvert(),                             //
-        py::arg("weighted_cos").noconvert(),                             //
-        py::arg("one_over_determinant").noconvert(),                     //
-        py::arg("vec").noconvert(),                                      //
-        py::arg("prod").noconvert()                                      //
-  );
-  m.def("BDPLO_mult_IQU", numpy_bind_BDPLO_mult_IQU<py::array_t, double>, //
-        py::arg("new_npix"),                                              //
-        py::arg("weighted_counts").noconvert(),                           //
-        py::arg("weighted_sin_sq").noconvert(),                           //
-        py::arg("weighted_cos_sq").noconvert(),                           //
-        py::arg("weighted_sincos").noconvert(),                           //
-        py::arg("weighted_sin").noconvert(),                              //
-        py::arg("weighted_cos").noconvert(),                              //
-        py::arg("one_over_determinant").noconvert(),                      //
-        py::arg("vec").noconvert(),                                       //
-        py::arg("prod").noconvert()                                       //
-  );
+  register_BlkDiagPrecondLO<double, nb::device::cpu>(m);
+  register_BlkDiagPrecondLO<float, nb::device::cpu>(m);
 }
