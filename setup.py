@@ -4,6 +4,7 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 from setuptools._distutils.ccompiler import new_compiler
 import mpi4py
+import nanobind
 import threading
 from typing import Any, Iterator
 import tempfile
@@ -136,6 +137,15 @@ def update_git_hash():
 ### defining the dedicated build extension ###
 ##############################################
 
+# nanobind requires its runtime stub to be compiled into each extension.
+# nb_combined.cpp has an absolute path so it cannot go in Extension.sources
+# (setuptools rejects absolute paths there). Instead we pre-compile it once
+# in build_extensions() and inject the resulting .o via extra_objects.
+_nb_src = os.path.join(nanobind.source_dir(), "nb_combined.cpp")
+_nb_tsl_include = os.path.join(
+    os.path.dirname(nanobind.include_dir()), "ext", "robin_map", "include"
+)
+
 
 class brahmap_build_ext(build_ext):
     def get_environ_vars(self):
@@ -212,15 +222,28 @@ class brahmap_build_ext(build_ext):
         self.compiler.set_executable("linker_so", [MPICXX] + linker_flags + LDFLAGS)
         self.compiler.set_executable("linker_exe", [MPICXX] + linker_flags + LDFLAGS)
 
+        # Pre-compile nanobind's runtime stub once and share across all exts.
+        nb_obj = self.compiler.compile(
+            [_nb_src],
+            output_dir=self.build_temp,
+            include_dirs=[nanobind.include_dir(), _nb_tsl_include],
+            extra_postargs=compiler_so_args + CPPFLAGS + CXXFLAGS1 + CXXFLAGS2,
+        )
+        for ext in self.extensions:
+            ext.extra_objects = list(getattr(ext, "extra_objects", []) or []) + nb_obj
+
         super().build_extensions()
 
 
 ext1 = Extension(
     "brahmap._extensions.compute_weights",
-    sources=[os.path.join("brahmap", "_extensions", "compute_weights.cpp")],
+    sources=[
+        os.path.join("brahmap", "_extensions", "compute_weights.cpp"),
+    ],
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
         os.path.join(mpi4py.get_include()),
     ],
     define_macros=None,
@@ -229,10 +252,13 @@ ext1 = Extension(
 
 ext2 = Extension(
     "brahmap._extensions.repixelize",
-    sources=[os.path.join("brahmap", "_extensions", "repixelization.cpp")],
+    sources=[
+        os.path.join("brahmap", "_extensions", "repixelization.cpp"),
+    ],
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
     ],
     define_macros=None,
     extra_link_args=linker_so_args,
@@ -240,10 +266,13 @@ ext2 = Extension(
 
 ext3 = Extension(
     "brahmap._extensions.PointingLO_tools",
-    sources=[os.path.join("brahmap", "_extensions", "PointingLO_tools.cpp")],
+    sources=[
+        os.path.join("brahmap", "_extensions", "PointingLO_tools.cpp"),
+    ],
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
         os.path.join(mpi4py.get_include()),
     ],
     define_macros=None,
@@ -252,10 +281,13 @@ ext3 = Extension(
 
 ext4 = Extension(
     "brahmap._extensions.BlkDiagPrecondLO_tools",
-    sources=[os.path.join("brahmap", "_extensions", "BlkDiagPrecondLO_tools.cpp")],
+    sources=[
+        os.path.join("brahmap", "_extensions", "BlkDiagPrecondLO_tools.cpp"),
+    ],
     include_dirs=[
         os.path.join("brahmap", "_extensions"),
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
     ],
     define_macros=None,
     extra_link_args=linker_so_args,
@@ -263,9 +295,12 @@ ext4 = Extension(
 
 ext5 = Extension(
     "brahmap.math.linalg_tools",
-    sources=[os.path.join("brahmap", "math", "linalg_tools.cpp")],
+    sources=[
+        os.path.join("brahmap", "math", "linalg_tools.cpp"),
+    ],
     include_dirs=[
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
     ],
     define_macros=None,
     extra_link_args=linker_so_args,
@@ -273,9 +308,12 @@ ext5 = Extension(
 
 ext6 = Extension(
     "brahmap.math.unary_functions",
-    sources=[os.path.join("brahmap", "math", "unary_functions.cpp")],
+    sources=[
+        os.path.join("brahmap", "math", "unary_functions.cpp"),
+    ],
     include_dirs=[
-        os.path.join("extern", "pybind11", "include"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
     ],
     define_macros=None,
     extra_link_args=linker_so_args,
