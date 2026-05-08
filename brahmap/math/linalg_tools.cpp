@@ -1,13 +1,13 @@
 #include <functional>
 
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #ifndef _DISABLE_OMP
 #include <omp.h>
 #endif
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 template <typename dfloat>
 void multiply_array(               //
@@ -24,51 +24,35 @@ void multiply_array(               //
   return;
 } // multiply_array()
 
-template <template <typename, int = py::array::c_style> class buffer_t,
-          typename dfloat>
-std::function<void(              //
-    const ssize_t nsamples,      //
-    const buffer_t<dfloat> diag, //
-    const buffer_t<dfloat> vec,  //
-    buffer_t<dfloat> prod        //
-    )>
-    numpy_bind_multiply_array = //
-    [](const ssize_t nsamples,  //
-       const py::buffer diag,   //
-       const py::buffer vec,    //
-       py::buffer prod          //
+template <typename dfloat, typename device> //
+void register_multiply_array(nb::module_ &m) {
+  using arr_t = nb::ndarray<dfloat, nb::ndim<1>, device, nb::c_contig>;
 
-    ) {
-      py::buffer_info diag_info = diag.request();
-      py::buffer_info vec_info = vec.request();
-      py::buffer_info prod_info = prod.request();
+  m.def(
+      "multiply_array",           //
+      [](                         //
+          const ssize_t nsamples, //
+          const arr_t diag,       //
+          const arr_t vec,        //
+          arr_t prod              //
+      ) {
+        multiply_array(  //
+            nsamples,    //
+            diag.data(), //
+            vec.data(),  //
+            prod.data()  //
+        );
+      },
+      nb::arg("nsamples"),         //
+      nb::arg("diag").noconvert(), //
+      nb::arg("vec").noconvert(),  //
+      nb::arg("prod").noconvert()  //
+  );
+}
 
-      const dfloat *diag_ptr = reinterpret_cast<const dfloat *>(diag_info.ptr);
-      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
-      dfloat *prod_ptr = reinterpret_cast<dfloat *>(prod_info.ptr);
-
-      multiply_array( //
-          nsamples,   //
-          diag_ptr,   //
-          vec_ptr,    //
-          prod_ptr    //
-      );
-
-      return;
-    }; // numpy_bind_multiply_array()
-
-PYBIND11_MODULE(linalg_tools, m) {
+NB_MODULE(linalg_tools, m) {
   m.doc() = "linalg_tools";
-  m.def("multiply_array", numpy_bind_multiply_array<py::array_t, float>,
-        py::arg("nsamples"), //
-        py::arg("diag"),     //
-        py::arg("vec"),      //
-        py::arg("prod")      //
-  );
-  m.def("multiply_array", numpy_bind_multiply_array<py::array_t, double>,
-        py::arg("nsamples"), //
-        py::arg("diag"),     //
-        py::arg("vec"),      //
-        py::arg("prod")      //
-  );
+
+  register_multiply_array<double, nb::device::cpu>(m);
+  register_multiply_array<float, nb::device::cpu>(m);
 }

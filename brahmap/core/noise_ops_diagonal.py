@@ -41,11 +41,10 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         if isinstance(input, Number) and input_type == "covariance":
             self.__noise_covariance = np.full(shape=size, fill_value=input, dtype=dtype)
         elif input_type == "covariance":
-            self.__noise_covariance = np.asarray(a=input, dtype=dtype)
+            self.__noise_covariance = np.ascontiguousarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
-            self.__noise_covariance = scipy.fft.ifft(input).real.astype(
-                dtype=dtype,
-                copy=False,
+            self.__noise_covariance = np.ascontiguousarray(
+                scipy.fft.ifft(input).real, dtype=dtype
             )
 
         MPI_RAISE_EXCEPTION(
@@ -86,14 +85,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
             message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
         )
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
+        vec = np.ascontiguousarray(vec, dtype=self.dtype)
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 
         linalg_tools.multiply_array(
@@ -133,10 +125,12 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
                 shape=size, fill_value=1.0 / input, dtype=dtype
             )
         elif input_type == "covariance":
-            self.__inv_noise_cov = 1.0 / np.asarray(a=input, dtype=dtype)
+            self.__inv_noise_cov = np.ascontiguousarray(
+                1.0 / np.asarray(a=input, dtype=dtype), dtype=dtype
+            )
         elif input_type == "power_spectrum":
-            self.__inv_noise_cov = 1.0 / scipy.fft.ifft(input).real.astype(
-                dtype=dtype, copy=False
+            self.__inv_noise_cov = np.ascontiguousarray(
+                1.0 / scipy.fft.ifft(input).real, dtype=dtype
             )
 
         MPI_RAISE_EXCEPTION(
@@ -177,13 +171,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
             message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
         )
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
+        vec = np.ascontiguousarray(vec, dtype=self.dtype)
 
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 

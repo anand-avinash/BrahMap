@@ -2,6 +2,7 @@
 requires = [
     "setuptools",
     "setuptools_scm",
+    "nanobind",
     "mpi4py",         # `mpi4py` is needed to use `mpi4py.get_include()` in `setup.py`
 ]
 

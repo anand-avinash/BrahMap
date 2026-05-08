@@ -12,7 +12,7 @@ compiler. To install `BrahMap`, please follow these steps:
 
 ```bash
 # Clone the repository
-git clone --recursive https://github.com/anand-avinash/BrahMap.git
+git clone https://github.com/anand-avinash/BrahMap.git
 
 # Enter the directory
 cd BrahMap
