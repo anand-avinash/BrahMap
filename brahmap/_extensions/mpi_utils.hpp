@@ -1,6 +1,7 @@
 #ifndef _MPI_UTILS
 #define _MPI_UTILS
 
+#include <complex>
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 
