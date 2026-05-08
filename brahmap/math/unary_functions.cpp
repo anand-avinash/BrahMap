@@ -1,14 +1,13 @@
 #include <cmath>
-#include <functional>
 
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #ifndef _DISABLE_OMP
 #include <omp.h>
 #endif
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 // Alias for the signature of a general unary function pointer.
 // Here the unary function refers to a function that takes one
@@ -31,178 +30,77 @@ void execute(                     //
   return;
 } // execute()
 
-template <template <typename, int = py::array::c_style> class buffer_t,
-          typename dfloat,
-          dfunc<dfloat> unary>
-std::function<void(             //
-    const ssize_t size,         //
-    const buffer_t<dfloat> vec, //
-    buffer_t<dfloat> result     //
-    )>
-    numpy_bind_unary =       //
-    [](const ssize_t size,   //
-       const py::buffer vec, //
-       py::buffer result     //
-    ) {
-      py::buffer_info vec_info = vec.request();
-      py::buffer_info result_info = result.request();
+template <typename dfloat, dfunc<dfloat> unary, typename device> //
+void register_unary_function(nb::module_ &m, const char *name) {
+  using arr_t = nb::ndarray<dfloat, nb::ndim<1>, device, nb::c_contig>;
 
-      const dfloat *vec_ptr = reinterpret_cast<const dfloat *>(vec_info.ptr);
-      dfloat *result_ptr = reinterpret_cast<dfloat *>(result_info.ptr);
+  m.def(
+      name,                   //
+      [](                     //
+          const ssize_t size, //
+          const arr_t vec,    //
+          arr_t result        //
+      ) {
+        execute<dfloat, unary>( //
+            size,               //
+            vec.data(),         //
+            result.data()       //
+        );
+      },
+      nb::arg("size"),              //
+      nb::arg("vec").noconvert(),   //
+      nb::arg("result").noconvert() //
+  );
+}
 
-      execute<dfloat, unary>( //
-          size,               //
-          vec_ptr,            //
-          result_ptr          //
-      );
-
-      return;
-    }; // numpy_bind_unary()
-
-PYBIND11_MODULE(unary_functions, m) {
+NB_MODULE(unary_functions, m) {
   m.doc() = "unary_functions";
 
   // sin function
-  m.def("sin", numpy_bind_unary<py::array_t, float, std::sin>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("sin", numpy_bind_unary<py::array_t, double, std::sin>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::sin, nb::device::cpu>(m, "sin");
+  register_unary_function<float, std::sin, nb::device::cpu>(m, "sin");
 
   // cos function
-  m.def("cos", numpy_bind_unary<py::array_t, float, std::cos>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("cos", numpy_bind_unary<py::array_t, double, std::cos>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::cos, nb::device::cpu>(m, "cos");
+  register_unary_function<float, std::cos, nb::device::cpu>(m, "cos");
 
   // tan function
-  m.def("tan", numpy_bind_unary<py::array_t, float, std::tan>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("tan", numpy_bind_unary<py::array_t, double, std::tan>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::tan, nb::device::cpu>(m, "tan");
+  register_unary_function<float, std::tan, nb::device::cpu>(m, "tan");
 
   // arcsin function
-  m.def("arcsin", numpy_bind_unary<py::array_t, float, std::asin>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("arcsin", numpy_bind_unary<py::array_t, double, std::asin>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::asin, nb::device::cpu>(m, "arcsin");
+  register_unary_function<float, std::asin, nb::device::cpu>(m, "arcsin");
 
   // arccos function
-  m.def("arccos", numpy_bind_unary<py::array_t, float, std::acos>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("arccos", numpy_bind_unary<py::array_t, double, std::acos>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::acos, nb::device::cpu>(m, "arccos");
+  register_unary_function<float, std::acos, nb::device::cpu>(m, "arccos");
 
   // arctan function
-  m.def("arctan", numpy_bind_unary<py::array_t, float, std::atan>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("arctan", numpy_bind_unary<py::array_t, double, std::atan>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  register_unary_function<double, std::atan, nb::device::cpu>(m, "arctan");
+  register_unary_function<float, std::atan, nb::device::cpu>(m, "arctan");
 
-  // exp function: to compute e**x
-  m.def("exp", numpy_bind_unary<py::array_t, float, std::exp>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("exp", numpy_bind_unary<py::array_t, double, std::exp>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // exp function
+  register_unary_function<double, std::exp, nb::device::cpu>(m, "exp");
+  register_unary_function<float, std::exp, nb::device::cpu>(m, "exp");
 
-  // exp2 function: to compute 2**x
-  m.def("exp2", numpy_bind_unary<py::array_t, float, std::exp2>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("exp2", numpy_bind_unary<py::array_t, double, std::exp2>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // exp2 function
+  register_unary_function<double, std::exp2, nb::device::cpu>(m, "exp2");
+  register_unary_function<float, std::exp2, nb::device::cpu>(m, "exp2");
 
-  // log function: natural log
-  m.def("log", numpy_bind_unary<py::array_t, float, std::log>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("log", numpy_bind_unary<py::array_t, double, std::log>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // log function
+  register_unary_function<double, std::log, nb::device::cpu>(m, "log");
+  register_unary_function<float, std::log, nb::device::cpu>(m, "log");
 
-  // log2 function: log base-2
-  m.def("log2", numpy_bind_unary<py::array_t, float, std::log2>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("log2", numpy_bind_unary<py::array_t, double, std::log2>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // log2 function
+  register_unary_function<double, std::log2, nb::device::cpu>(m, "log2");
+  register_unary_function<float, std::log2, nb::device::cpu>(m, "log2");
 
-  // sqrt function: square root
-  m.def("sqrt", numpy_bind_unary<py::array_t, float, std::sqrt>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("sqrt", numpy_bind_unary<py::array_t, double, std::sqrt>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // sqrt function
+  register_unary_function<double, std::sqrt, nb::device::cpu>(m, "sqrt");
+  register_unary_function<float, std::sqrt, nb::device::cpu>(m, "sqrt");
 
-  // cbrt function: cube root
-  m.def("cbrt", numpy_bind_unary<py::array_t, float, std::cbrt>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
-  m.def("cbrt", numpy_bind_unary<py::array_t, double, std::cbrt>,
-        py::arg("size"),              //
-        py::arg("vec").noconvert(),   //
-        py::arg("result").noconvert() //
-  );
+  // cbrt function
+  register_unary_function<double, std::cbrt, nb::device::cpu>(m, "cbrt");
+  register_unary_function<float, std::cbrt, nb::device::cpu>(m, "cbrt");
 }
