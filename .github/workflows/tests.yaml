@@ -9,6 +9,8 @@ on: [push]
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.15"  # To be removed when support for Python 3.11 is dropped
     strategy:
       fail-fast: false
       matrix:

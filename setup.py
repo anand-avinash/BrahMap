@@ -27,6 +27,7 @@ compiler_args = [
     "-fwrapv",
     "-fvisibility=hidden",
     "-std=c++20",
+    "-faligned-allocation",
 ]
 
 # These options are common with `compiler_so_args`. And since I am supplying
