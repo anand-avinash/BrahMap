@@ -1,10 +1,10 @@
-# BrahMap Benchmarks
+# Benchmarking BrahMap
 
 This directory contains scripts for benchmarking the performance of BrahMap components. While the benchmark scripts are primarily designed for serial execution, they can also be used for parallel execution with `mpirun/mpiexec`, though one has to be careful while saving the benchmark results.
 
 ## Setup
 
-The benchmarks use `pytest-benchmark`. You can install it via pip:
+The benchmarks use [`pytest-benchmark`](http://pytest-benchmark.readthedocs.org/en/stable/). You can install it via pip:
 
 ```bash
 pip install pytest-benchmark
@@ -43,13 +43,30 @@ pytest benchmarks/ --size=small
 
 Available sizes are:
 
-| Size | npix ($N_{side}$) | Global nsamples |
-| :--- | :--- | :--- |
-| `small` | $12 \times 256^2$ (256) | $10^5$ |
-| `medium` | $12 \times 512^2$ (512) | $10^6$ |
-| `large` | $12 \times 1024^2$ (1024) | $10^8$ |
+| Size     | npix ($N_{side}$)         | Global nsamples |
+| :------- | :------------------------ | :-------------- |
+| `small`  | $12 \times 256^2$ (256)   | $10^5$          |
+| `medium` | $12 \times 512^2$ (512)   | $10^6$          |
+| `large`  | $12 \times 1024^2$ (1024) | $10^8$          |
 
 This allows for quick sanity checks with `small` or more robust performance measurements with `large`. The samples are automatically distributed across available MPI ranks.
+
+### Overriding Benchmark Parameters
+
+You can override specific parameters regardless of the `--size` flag:
+
+| Option          | Values               | Description                                               |
+| :-------------- | :------------------- | :-------------------------------------------------------- |
+| `--nside`       | e.g. `128`           | Sets $N_{side}$ (overrides npix)                        |
+| `--nsamples`    | e.g. `1000000`       | Sets global number of samples (overrides global nsamples) |
+| `--dtype-float` | `float32`, `float64` | Sets floating point precision (default: float64)          |
+| `--dtype-int`   | `int32`, `int64`     | Sets integer precision (default: int64)                   |
+
+Example usage:
+
+```bash
+pytest benchmarks/ --nside=256 --dtype-float=float32
+```
 
 ### Saving and Comparing Results
 
@@ -67,7 +84,7 @@ pytest-benchmark compare results_v1.json results_v2.json
 
 This will show a detailed comparison table with percentage differences. You can also use the option `--sort=...` to sort the comparison results.
 
-## Parallel Execution (MPI)
+## Parallel Execution (with MPI)
 
 To run benchmarks in parallel:
 
@@ -90,14 +107,16 @@ New benchmarks should follow the class-based structure as in `test_bench_extensi
 class TestMyComponent:
     def test_bench_my_function_1(self, benchmark, data):
         # Setup randomized buffers using the module-level data fixture
-        vec = rng.random(data["npix"])
+        rng = data["rng"]
+        vec = rng.random(data["npix"]).astype(data["dtype_float"])
         
         # Run benchmark
         benchmark(my_function1, vec)
 
     def test_bench_my_function_2(self, benchmark, data):
         # Setup randomized buffers using the module-level data fixture
-        vec = rng.random(data["npix"])
+        rng = data["rng"]
+        vec = rng.random(data["npix"]).astype(data["dtype_float"])
         
         # Run benchmark
         benchmark(my_function2, vec)

@@ -84,6 +84,12 @@ pre-commit install
 > flags used during the installation by setting the `CXXFLAGS`, `CPPFLAGS`,
 > and `LDFLAGS` environment variables.
 
+## Benchmarking
+
+BrahMap includes a comprehensive benchmarking suite to evaluate the performance of its numerical routines and linear operators. The benchmarks are based on `pytest-benchmark` and support both serial and MPI-parallel execution.
+
+For detailed instructions on how to run and customize the benchmarks, refer to the [benchmarks documentation](./benchmarks/README.md).
+
 ## Citation
 
 This work can be cited with:
