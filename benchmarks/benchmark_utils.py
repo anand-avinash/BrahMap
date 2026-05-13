@@ -11,22 +11,27 @@ BENCHMARK_SIZES = {
 
 
 def setup_common_data(
-    benchmark_size="medium",
+    params: dict,
     gen_pol_angles=True,
     gen_noise_weights=True,
-    **kwargs,
 ):
+    benchmark_size = params.get("benchmark_size", "medium")
     if benchmark_size in BENCHMARK_SIZES:
-        params = BENCHMARK_SIZES[benchmark_size]
+        config = BENCHMARK_SIZES[benchmark_size].copy()
     else:
-        params = BENCHMARK_SIZES["medium"]
+        config = BENCHMARK_SIZES["medium"].copy()
 
-    dtype_int = np.int64
-    dtype_float = np.float64
+    # Overrides
+    if params.get("nside") is not None:
+        config["npix"] = 12 * params["nside"] ** 2
+    if params.get("nsamples") is not None:
+        config["nsamples"] = params["nsamples"]
 
-    params.update(kwargs)
-    npix = params["npix"]
-    nsamples = params["nsamples"]
+    dtype_int = np.dtype(params.get("dtype_int", "int64"))
+    dtype_float = np.dtype(params.get("dtype_float", "float64"))
+
+    npix = config["npix"]
+    nsamples = config["nsamples"]
 
     comm_rank = brahmap.MPI_UTILS.rank
     comm_size = brahmap.MPI_UTILS.size
