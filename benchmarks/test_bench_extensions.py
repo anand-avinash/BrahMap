@@ -12,8 +12,8 @@ from .benchmark_utils import setup_common_data
 
 
 @pytest.fixture(scope="module")
-def data(bench_size):
-    return setup_common_data(benchmark_size=bench_size)
+def data(bench_params):
+    return setup_common_data(params=bench_params)
 
 
 # --- compute_weights.cpp ---
