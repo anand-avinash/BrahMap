@@ -23,6 +23,8 @@ For a quick introduction to map-making with BrahMap, refer to the
 For a complete reference of the `BrahMap` API, refer to the
 [API reference](api_reference/index.md). Complete example notebooks and scripts can
 be [found here](https://github.com/anand-avinash/BrahMap/tree/main/examples).
+Performance benchmarks suite for the core numerical routines can be found in the
+[benchmarks](https://github.com/anand-avinash/BrahMap/tree/main/benchmarks) directory.
 
 You can find detailed information on the implementation and features of
 `BrahMap` at [arXiv:2501.16122](https://arxiv.org/abs/2501.16122).
