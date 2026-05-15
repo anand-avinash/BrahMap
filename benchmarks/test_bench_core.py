@@ -1,6 +1,4 @@
-import numpy as np
 import pytest
-import brahmap
 from brahmap.core import (
     ProcessTimeSamples,
     PointingLO,

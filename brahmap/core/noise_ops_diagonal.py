@@ -1,19 +1,14 @@
 import numpy as np
 import scipy.fft
-import warnings
 from numbers import Number
 from typing import List, Union, Literal
 
-
-from ..base import TypeChangeWarning
 
 from ..math import DTypeFloat, linalg_tools
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
-
-from brahmap import MPI_UTILS
 
 
 class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
