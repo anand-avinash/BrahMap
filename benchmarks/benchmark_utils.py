@@ -4,8 +4,8 @@ from brahmap.core import SolverType
 
 
 BENCHMARK_SIZES = {
-    "small": {"npix": 12*256*256, "nsamples": 10**5},
-    "medium": {"npix": 12*512*512, "nsamples": 10**6},
+    "small": {"npix": 12*128*128, "nsamples": 10**6},
+    "medium": {"npix": 12*512*512, "nsamples": 10**7},
     "large": {"npix": 12*1024*1024, "nsamples": 10**8},
 }
 
