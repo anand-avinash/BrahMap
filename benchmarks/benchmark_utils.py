@@ -4,9 +4,9 @@ from brahmap.core import SolverType
 
 
 BENCHMARK_SIZES = {
-    "small": {"npix": 12*128*128, "nsamples": 10**6},
-    "medium": {"npix": 12*512*512, "nsamples": 10**7},
-    "large": {"npix": 12*1024*1024, "nsamples": 10**8},
+    "small": {"npix": 12 * 128 * 128, "nsamples": 10**6},
+    "medium": {"npix": 12 * 512 * 512, "nsamples": 10**7},
+    "large": {"npix": 12 * 1024 * 1024, "nsamples": 10**8},
 }
 
 
@@ -32,6 +32,7 @@ def setup_common_data(
 
     npix = config["npix"]
     nsamples = config["nsamples"]
+    nside = int(np.sqrt(npix // 12))
 
     comm_rank = brahmap.MPI_UTILS.rank
     comm_size = brahmap.MPI_UTILS.size
@@ -68,6 +69,7 @@ def setup_common_data(
 
     return {
         "npix": npix,
+        "nside": nside,
         "nsamples_global": nsamples,
         "nsamples": local_nsamples,
         "pointings": pointings,
