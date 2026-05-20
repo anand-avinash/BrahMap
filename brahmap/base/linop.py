@@ -41,7 +41,7 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 
-from typing import Callable, Optional, Tuple, Any
+from typing import Callable, Optional, Tuple, Any, cast, Union
 import numbers
 import numpy as np
 import numpy.typing as npt
@@ -90,7 +90,7 @@ class BaseLinearOperator(object):
         symmetric: bool = False,
         dtype: npt.DTypeLike = np.float64,
         **kwargs,
-    ):
+    ) -> None:
         self.__nargin = nargin
         self.__nargout = nargout
         self.__symmetric = symmetric
@@ -129,7 +129,7 @@ class BaseLinearOperator(object):
         return self.__dtype
 
     @dtype.setter
-    def dtype(self, dtype):
+    def dtype(self, dtype) -> None:
         self.__dtype = dtype
 
     @property
@@ -137,11 +137,11 @@ class BaseLinearOperator(object):
         """The number of products with vectors computed so far."""
         return self._nMatvec
 
-    def reset_counters(self):
+    def reset_counters(self) -> None:
         """Reset operator/vector product counter to zero."""
         self._nMatvec = 0
 
-    def dot(self, x):
+    def dot(self, x) -> np.ndarray:
         """Numpy-like dot() method."""
         return self.__mul__(x)
 
@@ -156,7 +156,7 @@ class BaseLinearOperator(object):
         if self.symmetric:
             s = "Symmetric"
         else:
-            s = "Unsymmetric"
+            s = "Asymmetric"
         s += " <" + self.__class__.__name__ + ">"
         s += " of type %s" % self.dtype
         s += " with shape (%d,%d)" % (self.nargout, self.nargin)
@@ -195,7 +195,7 @@ class LinearOperator(BaseLinearOperator):
         matvec: Callable,
         rmatvec: Optional[Callable] = None,
         **kwargs,
-    ):
+    ) -> None:
         super(LinearOperator, self).__init__(
             nargin,
             nargout,
@@ -205,6 +205,8 @@ class LinearOperator(BaseLinearOperator):
         rmatvec = rmatvec or kwargs.get("matvec_transp", None)
 
         self.__matvec = matvec
+
+        self.__H: Optional[LinearOperator] = None
 
         if self.symmetric:
             self.__H = self
@@ -224,7 +226,7 @@ class LinearOperator(BaseLinearOperator):
                     self.__H = None
             else:
                 # Use operator supplied as transpose operator.
-                if isinstance(adjoint_of, BaseLinearOperator):
+                if isinstance(adjoint_of, LinearOperator):
                     self.__H = adjoint_of
                 else:
                     msg = (
@@ -235,16 +237,16 @@ class LinearOperator(BaseLinearOperator):
                     raise ValueError(msg)
 
     @property
-    def T(self):
+    def T(self) -> "LinearOperator":
         """The transpose operator"""
-        return self.__H
+        return cast(LinearOperator, self.__H)
 
     @property
-    def H(self):
+    def H(self) -> "LinearOperator":
         """The adjoint operator"""
-        return self.__H
+        return cast(LinearOperator, self.__H)
 
-    def matvec(self, x):
+    def matvec(self, x) -> np.ndarray:
         """
         Matrix-vector multiplication.
 
@@ -304,7 +306,7 @@ class LinearOperator(BaseLinearOperator):
             ej[j] = 0.0
         return H
 
-    def __mul_scalar(self, x):
+    def __mul_scalar(self, x) -> "LinearOperator":
         # Product between a linear operator and a scalar
         result_type = np.result_type(self.dtype, type(x))
 
@@ -327,7 +329,7 @@ class LinearOperator(BaseLinearOperator):
         else:
             return ZeroOperator(self.nargin, self.nargout, dtype=result_type)
 
-    def __mul_linop(self, op):
+    def __mul_linop(self, op) -> "LinearOperator":
         # Product between two linear operators
         if self.nargin != op.nargout:
             msg = (
@@ -354,13 +356,13 @@ class LinearOperator(BaseLinearOperator):
             dtype=result_type,
         )
 
-    def __mul_vector(self, x):
+    def __mul_vector(self, x) -> np.ndarray:
         # Product between a linear operator and a vector
         self._nMatvec += 1
         result_type = np.result_type(self.dtype, x.dtype)
         return self.matvec(x).astype(result_type, copy=False)
 
-    def __mul__(self, x):
+    def __mul__(self, x) -> Union["LinearOperator", np.ndarray]:
         # Returns a linear operator if x is a scalar or a linear operator
         # Returns a vector if x is an array
         if isinstance(x, numbers.Number):
@@ -377,7 +379,7 @@ class LinearOperator(BaseLinearOperator):
             return self.__mul__(x)
         raise ValueError("Invalid operation! Cannot multiply")
 
-    def __add__(self, other):
+    def __add__(self, other) -> "LinearOperator":
         if not isinstance(other, BaseLinearOperator):
             raise ValueError("Invalid operation! Cannot add")
         if self.shape != other.shape:
@@ -388,11 +390,13 @@ class LinearOperator(BaseLinearOperator):
             )
             raise ShapeError(msg)
 
+        other_op = cast(LinearOperator, other)
+
         def matvec(x):
             return self(x) + other(x)
 
         def rmatvec(x):
-            return self.H(x) + other.T(x)
+            return self.H(x) + other_op.T(x)
 
         result_type = np.result_type(self.dtype, other.dtype)
 
@@ -405,10 +409,10 @@ class LinearOperator(BaseLinearOperator):
             dtype=result_type,
         )
 
-    def __neg__(self):
+    def __neg__(self) -> "LinearOperator":
         return self * (-1)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> "LinearOperator":
         if not isinstance(other, BaseLinearOperator):
             raise ValueError("Invalid operation! Cannot subtract")
         if self.shape != other.shape:
@@ -419,11 +423,13 @@ class LinearOperator(BaseLinearOperator):
             )
             raise ShapeError(msg)
 
+        other_op = cast(LinearOperator, other)
+
         def matvec(x):
             return self(x) - other(x)
 
         def rmatvec(x):
-            return self.H(x) - other.T(x)
+            return self.H(x) - other_op.T(x)
 
         result_type = np.result_type(self.dtype, other.dtype)
 
@@ -436,13 +442,13 @@ class LinearOperator(BaseLinearOperator):
             dtype=result_type,
         )
 
-    def __truediv__(self, other):
-        if np.isscalar(other):
-            return self * (1 / other)
+    def __truediv__(self, other) -> "LinearOperator":
+        if isinstance(other, (numbers.Number, np.number)):
+            return self * (1.0 / cast(Any, other))
         else:
             raise ValueError("Invalid operation! Cannot divide")
 
-    def __pow__(self, other):
+    def __pow__(self, other) -> "LinearOperator":
         if not isinstance(other, int):
             raise ValueError("Can only raise to integer power")
         if other < 0:
@@ -467,7 +473,7 @@ class IdentityOperator(LinearOperator):
         _description_
     """
 
-    def __init__(self, nargin: int, **kwargs: Any):
+    def __init__(self, nargin: int, **kwargs: Any) -> None:
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -489,7 +495,7 @@ class DiagonalOperator(LinearOperator):
         _description_
     """
 
-    def __init__(self, diag: np.ndarray, **kwargs: Any):
+    def __init__(self, diag: np.ndarray, **kwargs: Any) -> None:
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -527,7 +533,7 @@ class MatrixLinearOperator(LinearOperator):
         _description_
     """
 
-    def __init__(self, matrix: np.ndarray, **kwargs: Any):
+    def __init__(self, matrix: np.ndarray, **kwargs: Any) -> None:
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -579,7 +585,7 @@ class ZeroOperator(LinearOperator):
         _description_
     """
 
-    def __init__(self, nargin: int, nargout: int, **kwargs: Any):
+    def __init__(self, nargin: int, nargout: int, **kwargs: Any) -> None:
         if "matvec" in kwargs:
             kwargs.pop("matvec")
         if "rmatvec" in kwargs:
@@ -619,7 +625,12 @@ class InverseLO(LinearOperator):
 
     """
 
-    def __init__(self, A, method=None, preconditioner=None):
+    def __init__(
+        self,
+        A: LinearOperator,
+        method: Callable = None,
+        preconditioner: LinearOperator = None,
+    ) -> None:
         super(InverseLO, self).__init__(
             nargin=A.shape[0], nargout=A.shape[1], matvec=self.mult, symmetric=True
         )
@@ -628,18 +639,20 @@ class InverseLO(LinearOperator):
         self.__preconditioner = preconditioner
         self.__converged = None
 
-    def mult(self, x):
+    def mult(self, x) -> np.ndarray:
         r"""
         It returns  :math:`y=A^{-1}x` by solving the linear system :math:`Ay=x`
         with a certain :mod:`scipy` routine (e.g. :func:`scipy.sparse.linalg.cg`)
         defined above as ``method``.
         """
 
+        if self.method is None:
+            raise ValueError("InverseLO solver method is not specified.")
         y, info = self.method(self.A, x, M=self.preconditioner)
         self.isconverged(info)
         return y
 
-    def isconverged(self, info):
+    def isconverged(self, info) -> bool:
         r"""
         It returns a Boolean value  depending on the
         exit status of the solver.
@@ -656,7 +669,7 @@ class InverseLO(LinearOperator):
             return False
 
     @property
-    def method(self):
+    def method(self) -> Callable:
         r"""
         The method to compute the inverse of A. \
         It can be any :mod:`scipy.sparse.linalg` solver, namely :func:`scipy.sparse.linalg.cg`,
@@ -666,7 +679,7 @@ class InverseLO(LinearOperator):
         return self.__method
 
     @property
-    def converged(self):
+    def converged(self) -> int:
         r"""
         provides convergence information:
 
@@ -678,14 +691,16 @@ class InverseLO(LinearOperator):
         return self.__converged
 
     @property
-    def preconditioner(self):
+    def preconditioner(self) -> LinearOperator:
         """
         Preconditioner for the solver.
         """
         return self.__preconditioner
 
 
-def ReducedLinearOperator(op, row_indices, col_indices):
+def ReducedLinearOperator(
+    op: LinearOperator, row_indices, col_indices
+) -> LinearOperator:
     """
     Implements reduction of a linear operator (non symmetrical).
 
@@ -714,7 +729,7 @@ def ReducedLinearOperator(op, row_indices, col_indices):
     )
 
 
-def SymmetricallyReducedLinearOperator(op, indices):
+def SymmetricallyReducedLinearOperator(op: LinearOperator, indices):
     """
     Implements reduction of a linear operator (symmetrical).
 
@@ -743,7 +758,7 @@ def SymmetricallyReducedLinearOperator(op, indices):
     )
 
 
-def aslinearoperator(A):
+def aslinearoperator(A) -> LinearOperator:
     """Returns A as a LinearOperator.
 
     'A' may be any of the following types:
@@ -807,6 +822,8 @@ def aslinearoperator(A):
                 symmetric = A.isSymmetric()
             except Exception:
                 symmetric = False
+        if matvec is None:
+            raise TypeError("unsupported object type: missing matvec or __mul__")
         return LinearOperator(
             nargin,
             nargout,
