@@ -1,6 +1,5 @@
 import numpy as np
 import warnings
-from typing import Union
 
 from ..base.linop import LinearOperator
 
@@ -30,7 +29,7 @@ class PointingLO(LinearOperator):
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
-        solver_type: Union[None, SolverType] = None,
+        solver_type: None | SolverType = None,
     ):
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
@@ -55,7 +54,7 @@ class PointingLO(LinearOperator):
             self.cos2phi = processed_samples.cos2phi
 
         if self.solver_type == 1:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
@@ -64,7 +63,7 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
@@ -73,7 +72,7 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         else:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 matvec=self._mult_IQU,
@@ -332,7 +331,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
-        solver_type: Union[None, SolverType] = None,
+        solver_type: None | SolverType = None,
     ):
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
@@ -349,19 +348,19 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         self.size = processed_samples.new_npix * self.solver_type
 
         if self.solver_type == 1:
-            self.weighted_counts = processed_samples.weighted_counts
+            self.weighted_counts = processed_samples.weighted_counts  # type: ignore
         else:
             self.weighted_sin_sq = processed_samples.weighted_sin_sq
             self.weighted_cos_sq = processed_samples.weighted_cos_sq
             self.weighted_sincos = processed_samples.weighted_sincos
             self.one_over_determinant = processed_samples.one_over_determinant
             if self.solver_type == 3:
-                self.weighted_counts = processed_samples.weighted_counts
-                self.weighted_sin = processed_samples.weighted_sin
-                self.weighted_cos = processed_samples.weighted_cos
+                self.weighted_counts = processed_samples.weighted_counts  # type: ignore
+                self.weighted_sin = processed_samples.weighted_sin  # type: ignore
+                self.weighted_cos = processed_samples.weighted_cos  # type: ignore
 
         if self.solver_type == 1:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,
@@ -369,7 +368,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,
@@ -377,7 +376,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         else:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,

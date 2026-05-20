@@ -1,6 +1,5 @@
 from enum import IntEnum
 import numpy as np
-from typing import Optional
 from mpi4py import MPI
 
 
@@ -110,12 +109,12 @@ class ProcessTimeSamples(object):
         self,
         npix: int,
         pointings: np.ndarray,
-        pointings_flag: Optional[np.ndarray] = None,
+        pointings_flag: np.ndarray | None = None,
         solver_type: SolverType = SolverType.IQU,
-        pol_angles: Optional[np.ndarray] = None,
-        noise_weights: Optional[np.ndarray] = None,
+        pol_angles: np.ndarray | None = None,
+        noise_weights: np.ndarray | None = None,
         threshold: float = 1.0e-5,
-        dtype_float: Optional[DTypeFloat] = None,
+        dtype_float: DTypeFloat | None = None,
         update_pointings_inplace: bool = False,
     ):
         self.__npix = npix
@@ -133,6 +132,8 @@ class ProcessTimeSamples(object):
 
         if pointings_flag is None:
             self.pointings_flag = np.ones(self.nsamples, dtype=bool)
+
+        assert self.pointings_flag is not None
 
         MPI_RAISE_EXCEPTION(
             condition=(len(self.pointings_flag) != self.nsamples),

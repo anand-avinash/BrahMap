@@ -3,7 +3,7 @@ import gc
 import numpy as np
 
 from dataclasses import dataclass
-from typing import Union, Callable
+from typing import Callable, Union
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
@@ -109,14 +109,14 @@ def separate_map_vectors(
     try:
         map_vector = np.reshape(
             map_vector,
-            shape=(processed_samples.solver_type, processed_samples.new_npix),
+            (int(processed_samples.solver_type), processed_samples.new_npix),
             order="F",
         )
     except TypeError:
         # `newshape` parameter has been deprecated since numpy 2.1.0. This part should be removed once the support is dropped for lower version
         map_vector = np.reshape(
             map_vector,
-            newshape=(processed_samples.solver_type, processed_samples.new_npix),
+            newshape=(int(processed_samples.solver_type), processed_samples.new_npix),
             order="F",
         )
 
@@ -126,9 +126,9 @@ def separate_map_vectors(
         fill_value=-1.6375e30,
     )
 
-    output_maps = np.tile(A=output_maps, reps=(processed_samples.solver_type, 1))
+    output_maps = np.tile(A=output_maps, reps=(int(processed_samples.solver_type), 1))
 
-    for idx in range(processed_samples.solver_type):
+    for idx in range(int(processed_samples.solver_type)):
         output_maps[idx][~output_maps[idx].mask] = map_vector[idx]
 
     return output_maps
@@ -137,9 +137,9 @@ def separate_map_vectors(
 def compute_GLS_maps_from_PTS(
     processed_samples: ProcessTimeSamples,
     time_ordered_data: np.ndarray,
-    inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
+    inv_noise_cov_operator: DTypeNoiseCov | None = None,
     gls_parameters: GLSParameters = GLSParameters(),
-    x0: Union[np.ndarray, None] = None,
+    x0: np.ndarray | None = None,
 ) -> GLSResult:
     """This function computes the GLS maps given an instance of
     `ProcessTimeSamples`, TOD, and inverse noise covariance operator
@@ -211,8 +211,8 @@ def compute_GLS_maps_from_PTS(
         A = pointing_operator.T * inv_noise_cov_operator * pointing_operator
 
         map_vector, pcg_status = cg(
-            A=A,
-            b=b,
+            A=A,  # type: ignore
+            b=b,  # type: ignore
             x0=x0,
             atol=gls_parameters.isolver_threshold,
             maxiter=gls_parameters.isolver_max_iterations,
@@ -225,7 +225,8 @@ def compute_GLS_maps_from_PTS(
         map_vector = blockdiagprecond_operator * b
 
     output_maps = separate_map_vectors(
-        map_vector=map_vector, processed_samples=processed_samples
+        map_vector=map_vector,  # type: ignore
+        processed_samples=processed_samples,
     )
 
     if gls_parameters.return_hit_map:
@@ -256,15 +257,15 @@ def compute_GLS_maps(
     npix: int,
     pointings: np.ndarray,
     time_ordered_data: np.ndarray,
-    pointings_flag: Union[np.ndarray, None] = None,
-    pol_angles: Union[np.ndarray, None] = None,
-    inv_noise_cov_operator: Union[DTypeNoiseCov, None] = None,
+    pointings_flag: np.ndarray | None = None,
+    pol_angles: np.ndarray | None = None,
+    inv_noise_cov_operator: DTypeNoiseCov | None = None,
     threshold: float = 1.0e-5,
-    dtype_float: Union[DTypeFloat, None] = None,
+    dtype_float: DTypeFloat | None = None,
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
-    x0: Union[np.ndarray, None] = None,
-) -> Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]:
+    x0: np.ndarray | None = None,
+) -> Union[GLSResult | tuple[ProcessTimeSamples, GLSResult]]:
     """The function to compute the GLS maps given pointing information and TOD
 
     Parameters
