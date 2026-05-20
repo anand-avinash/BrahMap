@@ -86,7 +86,7 @@ def LBSim_compute_GLS_maps(
     pointings_flag: Optional[np.ndarray] = None,
     inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
     threshold: float = 1.0e-5,
-    dtype_float: Optional[DTypeFloat] = None,
+    dtype_float: DTypeFloat = np.float64,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
     x0: Union[np.ndarray, None] = None,
 ) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:

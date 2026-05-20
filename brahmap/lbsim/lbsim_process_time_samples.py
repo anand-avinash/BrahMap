@@ -1,4 +1,4 @@
-from typing import List, Union, Optional
+from typing import List, Any
 
 import numpy as np
 import healpy as hp
@@ -38,12 +38,12 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
     def __init__(
         self,
         nside: int,
-        observations: Union[lbs.Observation, List[lbs.Observation]],
-        pointings: Union[np.ndarray, List[np.ndarray], None] = None,
-        hwp: Optional[lbs.HWP] = None,
-        pointings_flag: Optional[np.ndarray] = None,
+        observations: lbs.Observation | List[lbs.Observation],
+        pointings: np.ndarray | List[np.ndarray] | None = None,
+        hwp: lbs.HWP | None = None,
+        pointings_flag: np.ndarray | None = None,
         solver_type: SolverType = SolverType.IQU,
-        noise_weights: Optional[np.ndarray] = None,
+        noise_weights: np.ndarray | None = None,
         output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
         threshold: float = 1.0e-5,
         dtype_float: DTypeFloat = np.float64,
@@ -75,6 +75,8 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                 hwp_angle = lbs.pointings_in_obs._get_hwp_angle(
                     obs=obs, hwp=hwp, pointing_dtype=dtype_float
                 )
+
+            curr_pointings_det: Any = None
 
             for det_idx in range(obs.n_detectors):
                 (
