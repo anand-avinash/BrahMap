@@ -11,9 +11,7 @@ from ..base import TypeChangeWarning
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
 
-from ..mpi import MPI_RAISE_EXCEPTION
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
 
 
 class PointingLO(LinearOperator):

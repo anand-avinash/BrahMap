@@ -49,9 +49,7 @@ from functools import reduce, partial
 from ..base import BaseLinearOperator, LinearOperator
 from ..base import null_log
 from .misc import ShapeError, TypeChangeWarning
-from ..mpi import MPI_RAISE_EXCEPTION
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
 
 
 class BlockLinearOperator(LinearOperator):

@@ -9,11 +9,9 @@ from ..utilities import bash_colors
 from .._extensions import compute_weights
 from .._extensions import repixelize
 
-from ..mpi import MPI_RAISE_EXCEPTION
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
 
 from ..math import DTypeFloat
-
-from brahmap import MPI_UTILS
 
 
 class SolverType(IntEnum):

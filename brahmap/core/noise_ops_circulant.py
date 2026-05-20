@@ -6,9 +6,7 @@ from typing import List, Union, Literal
 from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat
-from ..mpi import MPI_RAISE_EXCEPTION
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
 
 
 class NoiseCovLO_Circulant(NoiseCovLinearOperator):

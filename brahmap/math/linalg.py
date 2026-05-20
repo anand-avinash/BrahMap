@@ -4,7 +4,7 @@ import scipy
 import scipy.sparse
 import scipy.sparse.linalg
 
-from brahmap import MPI_UTILS
+from ..mpi import MPI_UTILS
 from ..base import LinearOperator
 
 
@@ -86,7 +86,9 @@ def cg(
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        def norm_function(x): return np.sqrt(x.dot(x))
+
+        def norm_function(x):
+            return np.sqrt(x.dot(x))
 
     b_norm = norm_function(b)
 

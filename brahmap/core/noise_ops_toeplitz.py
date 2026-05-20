@@ -6,10 +6,8 @@ from typing import List, Union, Literal, Callable
 from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat, cg
-from ..mpi import MPI_RAISE_EXCEPTION
-from ..core import InvNoiseCovLO_Circulant
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from .noise_ops_circulant import InvNoiseCovLO_Circulant
 
 
 class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):

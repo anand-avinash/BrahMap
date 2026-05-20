@@ -4,8 +4,6 @@ import numbers
 import numpy as np
 import scipy.fft
 import litebird_sim as lbs
-from brahmap import MPI_UTILS
-
 from ..base import InvNoiseCovLinearOperator
 
 from ..core import (
@@ -17,7 +15,7 @@ from ..core import (
 
 from ..math import DTypeFloat
 
-from ..mpi import MPI_RAISE_EXCEPTION
+from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
 
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
