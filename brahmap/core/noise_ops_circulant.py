@@ -30,7 +30,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
         MPI_RAISE_EXCEPTION(
@@ -74,7 +74,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Circulant":
         inv_noise_cov = InvNoiseCovLO_Circulant(
             size=self.size,
             input=self.__input,
@@ -83,7 +83,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -133,7 +133,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
         MPI_RAISE_EXCEPTION(
@@ -177,7 +177,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):  # type: ignore
+    def get_inverse(self) -> "NoiseCovLO_Circulant":  # type: ignore
         noise_cov = NoiseCovLO_Circulant(
             size=self.size,
             input=1.0 / self.__input,
@@ -186,7 +186,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,

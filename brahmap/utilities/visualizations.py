@@ -6,7 +6,7 @@ from ..base import LinearOperator
 
 def plot_LinearOperator(
     operator: LinearOperator,
-):
+) -> None:
     """A utility function to visualize BrahMap linear operators. Make sure that `matplotlib` is installed if you want to use it.
 
     !!! Warning

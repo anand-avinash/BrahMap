@@ -41,7 +41,7 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 
-from typing import Callable, Tuple, Any, cast, Union
+from typing import Callable, Tuple, Any, cast
 import numbers
 import numpy as np
 import numpy.typing as npt
@@ -145,11 +145,11 @@ class BaseLinearOperator(object):
         """Numpy-like dot() method."""
         return self.__mul__(x)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         # An alias for __mul__.
         return self.__mul__(*args, **kwargs)
 
-    def __mul__(self, x):
+    def __mul__(self, x: Any) -> Any:
         raise NotImplementedError("Please subclass to implement __mul__.")
 
     def __repr__(self) -> str:
@@ -362,7 +362,7 @@ class LinearOperator(BaseLinearOperator):
         result_type = np.result_type(self.dtype, x.dtype)
         return self.matvec(x).astype(result_type, copy=False)
 
-    def __mul__(self, x) -> Union["LinearOperator", np.ndarray]:
+    def __mul__(self, x) -> "LinearOperator | np.ndarray":
         # Returns a linear operator if x is a scalar or a linear operator
         # Returns a vector if x is an array
         if isinstance(x, numbers.Number):
@@ -374,7 +374,7 @@ class LinearOperator(BaseLinearOperator):
         else:
             raise ValueError("Invalid multiplier! Cannot multiply")
 
-    def __rmul__(self, x):
+    def __rmul__(self, x) -> "LinearOperator | np.ndarray":
         if np.isscalar(x):
             return self.__mul__(x)
         raise ValueError("Invalid operation! Cannot multiply")

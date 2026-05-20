@@ -265,39 +265,39 @@ class ProcessTimeSamples(object):
             print(bc.header(f"{'--' * 40}"))
 
     @property
-    def npix(self):
+    def npix(self) -> int:
         return self.__npix
 
     @property
-    def nsamples(self):
+    def nsamples(self) -> int:
         return self.__nsamples
 
     @property
-    def nsamples_global(self):
+    def nsamples_global(self) -> int:
         return self.__nsamples_global
 
     @property
-    def solver_type(self):
+    def solver_type(self) -> SolverType:
         return self.__solver_type
 
     @property
-    def threshold(self):
+    def threshold(self) -> float:
         return self.__threshold
 
     @property
-    def dtype_float(self):
+    def dtype_float(self) -> DTypeFloat:
         return self.__dtype_float
 
     @property
-    def old2new_pixel(self):
+    def old2new_pixel(self) -> np.ndarray:
         old2new_pixel = np.where(self.pixel_flag, self.__old2new_pixel, -1)
         return old2new_pixel.astype(self.pointings.dtype, copy=False)
 
     @property
-    def bad_pixels(self):
+    def bad_pixels(self) -> np.ndarray:
         return np.nonzero(~self.pixel_flag)[0]
 
-    def get_hit_counts(self):
+    def get_hit_counts(self) -> np.ndarray:
         """Returns hit counts of the pixel indices"""
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix),

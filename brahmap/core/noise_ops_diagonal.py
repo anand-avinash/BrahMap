@@ -32,7 +32,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         input: np.ndarray | List | float = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(input, Number) and input_type == "covariance":
             self.__noise_covariance = np.full(shape=size, fill_value=input, dtype=dtype)
         elif input_type == "covariance":
@@ -64,7 +64,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
     def diag(self) -> np.ndarray:
         return self.__noise_covariance
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Diagonal":
         inv_noise_cov = InvNoiseCovLO_Diagonal(
             size=self.shape[0],
             input=self.__noise_covariance,
@@ -73,7 +73,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -114,7 +114,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         input: np.ndarray | List | float = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(input, Number) and input_type == "covariance":
             self.__inv_noise_cov = np.full(
                 shape=size, fill_value=1.0 / input, dtype=dtype
@@ -150,7 +150,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
     def diag(self) -> np.ndarray:
         return self.__inv_noise_cov
 
-    def get_inverse(self):  # type: ignore
+    def get_inverse(self) -> "NoiseCovLO_Diagonal":  # type: ignore
         noise_cov = NoiseCovLO_Diagonal(
             size=self.shape[0],
             input=1.0 / self.__inv_noise_cov,
@@ -159,7 +159,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,

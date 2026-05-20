@@ -40,7 +40,7 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
         obs: lbs.Observation | List[lbs.Observation],
         noise_variance: dict | float | None = None,
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(obs, lbs.Observation):
             obs_list = [obs]
         else:
@@ -116,7 +116,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
         input: dict | np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(obs, lbs.Observation):
             obs_list = [obs]
         else:
@@ -175,7 +175,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             dtype=dtype,
         )
 
-    def __resize_input(self, new_size, input, input_type, dtype):
+    def __resize_input(self, new_size, input, input_type, dtype) -> np.ndarray:
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Circulant class
@@ -208,6 +208,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
                 # If it is smaller, InvNoiseCovLO_Circulant class will
                 # throw an error automatically
                 return input
+        return np.asarray(input)
 
 
 class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
@@ -239,7 +240,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
         operator: Any = InvNoiseCovLO_Toeplitz01,
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
-    ):
+    ) -> None:
         if isinstance(obs, lbs.Observation):
             obs_list = [obs]
         else:
@@ -299,7 +300,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
             extra_kwargs=extra_kwargs,
         )
 
-    def __resize_input(self, new_size, input, input_type, dtype):
+    def __resize_input(self, new_size, input, input_type, dtype) -> np.ndarray:
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Toeplitz0x class
@@ -330,3 +331,4 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
                 # If it is smaller, InvNoiseCovLO_Toeplitz0x class will
                 # throw an error automatically
                 return input
+        return np.asarray(input)

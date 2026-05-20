@@ -34,7 +34,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
         MPI_RAISE_EXCEPTION(
@@ -85,7 +85,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
     def diag(self) -> np.ndarray:
         return self.__diag_factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Toeplitz01":
         covariance = scipy.fft.irfft(
             self.__input,
             n=2 * self.size,
@@ -100,7 +100,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -168,7 +168,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         precond_atol: float = 1.0e-10,
         precond_callback: Callable | None = None,
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         self.__toeplitz_op = NoiseCovLO_Toeplitz01(
             size=size,
             input=input,
@@ -244,11 +244,11 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             )
 
     @property
-    def precond_op(self):
+    def precond_op(self) -> LinearOperator | None:
         return self.__precond_op
 
     @precond_op.setter
-    def precond_op(self, operator: LinearOperator | None):
+    def precond_op(self, operator: LinearOperator | None) -> None:
         if operator is not None:
             MPI_RAISE_EXCEPTION(
                 condition=(self.shape != operator.shape),
@@ -267,22 +267,22 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         return diag_arr
 
     @diag.setter
-    def diag(self, diag: np.ndarray):
+    def diag(self, diag: np.ndarray) -> None:
         self.__diag = diag
 
     @property
     def previous_num_iterations(self) -> int:
         return self.__previous_num_iterations
 
-    def get_inverse(self):  # type: ignore
+    def get_inverse(self) -> "NoiseCovLO_Toeplitz01":  # type: ignore
         return self.__toeplitz_op
 
-    def __callback(self, x, r, norm_residual):
+    def __callback(self, x, r, norm_residual) -> None:
         self.__previous_num_iterations += 1
         if self.precond_callback is not None:
             self.precond_callback(x, r, norm_residual)
 
-    def _mult(self, vec: np.ndarray):
+    def _mult(self, vec: np.ndarray) -> np.ndarray:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,

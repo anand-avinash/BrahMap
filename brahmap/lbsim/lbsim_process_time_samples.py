@@ -47,7 +47,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
         threshold: float = 1.0e-5,
         dtype_float: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         self.__nside = nside
         self.__coordinate_system = output_coordinate_system
         npix = hp.nside2npix(self.nside)
@@ -121,16 +121,16 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         )
 
     @property
-    def obs_list(self):
+    def obs_list(self) -> List[lbs.Observation]:
         """List of the instances of `Observation` class"""
         return self.__obs_list
 
     @property
-    def nside(self):
+    def nside(self) -> int:
         """Nside parameter of the healpix map"""
         return self.__nside
 
     @property
-    def coordinate_system(self):
+    def coordinate_system(self) -> lbs.CoordinateSystem:
         """Coordinate system used in data-processing"""
         return self.__coordinate_system

@@ -202,7 +202,7 @@ def compute_GLS_maps_from_PTS(
     num_iterations = 0
     if gls_parameters.use_iterative_solver:
 
-        def callback_function(x, r, norm_residual):
+        def callback_function(x, r, norm_residual) -> None:
             nonlocal num_iterations
             num_iterations += 1
             if gls_parameters.callback_function is not None:

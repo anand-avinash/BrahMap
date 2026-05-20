@@ -87,7 +87,7 @@ def cg(
         norm_function: Callable = parallel_norm
     else:
 
-        def norm_function(x):
+        def norm_function(x: np.ndarray) -> float:
             return np.sqrt(x.dot(x))
 
     b_norm = norm_function(b)
