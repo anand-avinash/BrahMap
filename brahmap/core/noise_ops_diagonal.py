@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.fft
 from numbers import Number
-from typing import List, Union, Literal
+from typing import List, Literal, cast
 
 
 from ..math import DTypeFloat, linalg_tools
@@ -18,7 +18,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
     ----------
     size : int
         _description_
-    input : Union[np.ndarray, List, DTypeFloat], optional
+    input : Union[np.ndarray, List, float], optional
         _description_, by default 1.0
     input_type : Literal["covariance", "power_spectrum"], optional
         _description_, by default "covariance"
@@ -29,7 +29,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input: np.ndarray | List | float = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ):
@@ -53,7 +53,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
             message="The input array size must be same as the size of the linear operator",
         )
 
-        super(NoiseCovLO_Diagonal, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -69,7 +69,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
             size=self.shape[0],
             input=self.__noise_covariance,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
@@ -100,7 +100,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
     ----------
     size : int
         _description_
-    input : Union[np.ndarray, List, DTypeFloat], optional
+    input : Union[np.ndarray, List, float], optional
         _description_, by default 1.0
     input_type : Literal["covariance", "power_spectrum"], optional
         _description_, by default "covariance"
@@ -111,7 +111,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input: np.ndarray | List | float = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ):
@@ -139,7 +139,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
             message="The input array size must be same as the size of the linear operator",
         )
 
-        super(InvNoiseCovLO_Diagonal, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -150,12 +150,12 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
     def diag(self) -> np.ndarray:
         return self.__inv_noise_cov
 
-    def get_inverse(self):
+    def get_inverse(self):  # type: ignore
         noise_cov = NoiseCovLO_Diagonal(
             size=self.shape[0],
             input=1.0 / self.__inv_noise_cov,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return noise_cov
 

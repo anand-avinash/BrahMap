@@ -199,6 +199,7 @@ class ProcessTimeSamples(object):
             )
 
         if self.solver_type != 1:
+            assert pol_angles is not None
             MPI_RAISE_EXCEPTION(
                 condition=(len(pol_angles) != self.nsamples),
                 exception=AssertionError,

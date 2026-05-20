@@ -72,8 +72,8 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
                 " OR a dictionary that maps operator size to an array or a list",
             )
 
-        super(BlockDiagNoiseCovLO, self).__init__(
-            block_list=block_list,
+        super().__init__(
+            block_list=block_list,  # type: ignore
         )
 
     def __build_blocks_from_list(
