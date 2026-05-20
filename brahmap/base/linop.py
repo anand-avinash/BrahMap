@@ -41,7 +41,7 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 
-from typing import Callable, Optional, Tuple, Any, cast, Union
+from typing import Callable, Tuple, Any, cast, Union
 import numbers
 import numpy as np
 import numpy.typing as npt
@@ -193,7 +193,7 @@ class LinearOperator(BaseLinearOperator):
         nargin: int,
         nargout: int,
         matvec: Callable,
-        rmatvec: Optional[Callable] = None,
+        rmatvec: Callable | None = None,
         **kwargs,
     ) -> None:
         super(LinearOperator, self).__init__(
@@ -206,7 +206,7 @@ class LinearOperator(BaseLinearOperator):
 
         self.__matvec = matvec
 
-        self.__H: Optional[LinearOperator] = None
+        self.__H: LinearOperator | None = None
 
         if self.symmetric:
             self.__H = self
@@ -410,7 +410,7 @@ class LinearOperator(BaseLinearOperator):
         )
 
     def __neg__(self) -> "LinearOperator":
-        return self * (-1)
+        return self * (-1)  # type: ignore
 
     def __sub__(self, other) -> "LinearOperator":
         if not isinstance(other, BaseLinearOperator):
@@ -459,7 +459,7 @@ class LinearOperator(BaseLinearOperator):
             return IdentityOperator(self.nargin)
         if other == 1:
             return self
-        return self * self ** (other - 1)
+        return self * self ** (other - 1)  # type: ignore
 
 
 class IdentityOperator(LinearOperator):
@@ -628,8 +628,8 @@ class InverseLO(LinearOperator):
     def __init__(
         self,
         A: LinearOperator,
-        method: Callable = None,
-        preconditioner: LinearOperator = None,
+        method: Callable,
+        preconditioner: LinearOperator | None = None,
     ) -> None:
         super(InverseLO, self).__init__(
             nargin=A.shape[0], nargout=A.shape[1], matvec=self.mult, symmetric=True
@@ -652,7 +652,7 @@ class InverseLO(LinearOperator):
         self.isconverged(info)
         return y
 
-    def isconverged(self, info) -> bool:
+    def isconverged(self, info):
         r"""
         It returns a Boolean value  depending on the
         exit status of the solver.
@@ -663,10 +663,6 @@ class InverseLO(LinearOperator):
             output of the solver method (usually :func:`scipy.sparse.cg`).
         """
         self.__converged = info
-        if info == 0:
-            return True
-        else:
-            return False
 
     @property
     def method(self) -> Callable:
@@ -679,7 +675,7 @@ class InverseLO(LinearOperator):
         return self.__method
 
     @property
-    def converged(self) -> int:
+    def converged(self) -> int | None:
         r"""
         provides convergence information:
 
@@ -691,7 +687,7 @@ class InverseLO(LinearOperator):
         return self.__converged
 
     @property
-    def preconditioner(self) -> LinearOperator:
+    def preconditioner(self) -> LinearOperator | None:
         """
         Preconditioner for the solver.
         """
@@ -716,13 +712,13 @@ def ReducedLinearOperator(
         z = np.zeros(n, dtype=x.dtype)
         z[col_indices] = x[:]
         y = op * z
-        return y[row_indices]
+        return y[row_indices]  # type: ignore
 
     def rmatvec(x):
         z = np.zeros(m, dtype=x.dtype)
         z[row_indices] = x[:]
         y = op.H * z
-        return y[col_indices]
+        return y[col_indices]  # type: ignore
 
     return LinearOperator(
         nargin, nargout, matvec=matvec, symmetric=False, rmatvec=rmatvec
@@ -745,13 +741,13 @@ def SymmetricallyReducedLinearOperator(op: LinearOperator, indices):
         z = np.zeros(n, dtype=x.dtype)
         z[indices] = x[:]
         y = op * z
-        return y[indices]
+        return y[indices]  # type: ignore
 
     def rmatvec(x):
         z = np.zeros(m, dtype=x.dtype)
         z[indices] = x[:]
         y = op * z
-        return y[indices]
+        return y[indices]  # type: ignore
 
     return LinearOperator(
         nargin, nargin, matvec=matvec, symmetric=op.symmetric, rmatvec=rmatvec

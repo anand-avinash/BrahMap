@@ -55,14 +55,14 @@ class NoiseCovLinearOperator(LinearOperator):
         return self.__size
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> np.ndarray:  # type: ignore
         MPI_RAISE_EXCEPTION(
             condition=True,
             exception=NotImplementedError,
             message="Please subclass to implement `diag`",
         )
 
-    def get_inverse(self) -> "InvNoiseCovLinearOperator":
+    def get_inverse(self) -> "InvNoiseCovLinearOperator":  # type: ignore
         MPI_RAISE_EXCEPTION(
             condition=True,
             exception=NotImplementedError,
@@ -137,15 +137,18 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
     @property
     def diag(self) -> np.ndarray:
         diag = np.concatenate(
-            [block.diag for block in self.block_list],
+            [cast(NoiseCovLinearOperator, block).diag for block in self.block_list],
             axis=None,
         )
         return diag
 
     def get_inverse(self) -> "BaseBlockDiagInvNoiseCovLinearOperator":
-        inverse_list = [block.get_inverse() for block in self.block_list]
+        inverse_list = [
+            cast(NoiseCovLinearOperator, block).get_inverse()
+            for block in self.block_list
+        ]
         return BaseBlockDiagInvNoiseCovLinearOperator(
-            block_list=cast(List[LinearOperator], inverse_list)
+            block_list=inverse_list,
         )
 
 
@@ -166,13 +169,16 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
         **kwargs: Any,
     ) -> None:
         super(BaseBlockDiagInvNoiseCovLinearOperator, self).__init__(
-            cast(List[LinearOperator], block_list), **kwargs
+            cast(List[NoiseCovLinearOperator], block_list), **kwargs
         )
 
-    def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":
-        inverse_list = [block.get_inverse() for block in self.block_list]
+    def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":  # type: ignore
+        inverse_list = [
+            cast(InvNoiseCovLinearOperator, block).get_inverse()
+            for block in self.block_list
+        ]
         return BaseBlockDiagNoiseCovLinearOperator(
-            block_list=cast(List[LinearOperator], inverse_list)
+            block_list=cast(List[NoiseCovLinearOperator], inverse_list),
         )
 
 
