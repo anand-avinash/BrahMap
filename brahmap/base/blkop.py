@@ -42,7 +42,7 @@
 
 import numpy as np
 import warnings
-from typing import List, Any
+from typing import List, Any, cast
 from functools import reduce, partial
 
 from ..base import BaseLinearOperator, LinearOperator
@@ -75,10 +75,10 @@ class BlockLinearOperator(LinearOperator):
 
     def __init__(
         self,
-        blocks: List[LinearOperator],
+        blocks: List[List[LinearOperator]],
         symmetric: bool = False,
         **kwargs: Any,
-    ):
+    ) -> None:
         # If building a symmetric operator, fill in the blanks.
         # They're just references to existing objects.
         try:
@@ -125,7 +125,7 @@ class BlockLinearOperator(LinearOperator):
         nargout = sum(out[0] for out in nargouts)
 
         # Create blocks of transpose operator.
-        blocksT = list(map(lambda *row: [blk.T for blk in row], *self._blocks))
+        blocksT = [[blk.T for blk in row] for row in zip(*self._blocks)]
 
         def blk_matvec(x, blks):
             nargins = [[blk.shape[-1] for blk in blkrow] for blkrow in blks]
@@ -173,15 +173,15 @@ class BlockLinearOperator(LinearOperator):
             **kwargs,
         )
 
-        self.H._blocks = blocksT
+        cast(Any, self.H)._blocks = blocksT
 
     @property
-    def blocks(self):
+    def blocks(self) -> List[List[LinearOperator]]:
         """The list of blocks defining the block operator."""
         return self._blocks
 
     def __getitem__(self, indices):
-        blks = np.matrix(self._blocks, dtype=object)[indices]
+        blks = np.matrix(cast(Any, self._blocks), dtype=object)[indices]
         # If indexing narrowed it down to a single block, return it.
         if isinstance(blks, BaseLinearOperator):
             return blks
@@ -212,7 +212,7 @@ class BlockDiagonalLinearOperator(LinearOperator):
         self,
         block_list: List[LinearOperator],
         **kwargs: Any,
-    ):
+    ) -> None:
         try:
             for block in block_list:
                 __, __ = block.shape
@@ -264,7 +264,7 @@ class BlockDiagonalLinearOperator(LinearOperator):
         )
 
     @property
-    def block_list(self) -> List:
+    def block_list(self) -> List[LinearOperator]:
         return self.__block_list
 
     @property
@@ -372,10 +372,10 @@ class BlockHorizontalLinearOperator(BlockLinearOperator):
         except (TypeError, AttributeError):
             raise ValueError("blocks should be a flattened list of operators")
 
-        blocks = [[blk for blk in blocks]]
+        blocks_nested = [[blk for blk in blocks]]
 
         super(BlockHorizontalLinearOperator, self).__init__(
-            blocks=blocks, symmetric=False, **kwargs
+            blocks=blocks_nested, symmetric=False, **kwargs
         )
 
 
@@ -405,10 +405,10 @@ class BlockVerticalLinearOperator(BlockLinearOperator):
         except (TypeError, AttributeError):
             raise ValueError("blocks should be a flattened list of operators")
 
-        blocks = [[blk] for blk in blocks]
+        blocks_nested = [[blk] for blk in blocks]
 
         super(BlockVerticalLinearOperator, self).__init__(
-            blocks=blocks, symmetric=False, **kwargs
+            blocks=blocks_nested, symmetric=False, **kwargs
         )
 
 
