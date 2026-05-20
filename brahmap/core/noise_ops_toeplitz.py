@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.fft
 import warnings
-from typing import List, Union, Literal, Callable
+from typing import List, Literal, Callable, cast, Union
 
 from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -31,7 +31,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
@@ -74,7 +74,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
 
         del covariance
 
-        super(NoiseCovLO_Toeplitz01, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -96,7 +96,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
             size=self.size,
             input=covariance,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
@@ -160,14 +160,14 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         precond_op: Union[
             LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
         ] = None,
         precond_maxiter: int = 50,
         precond_atol: float = 1.0e-10,
-        precond_callback: Callable = None,
+        precond_callback: Callable | None = None,
         dtype: DTypeFloat = np.float64,
     ):
         self.__toeplitz_op = NoiseCovLO_Toeplitz01(
@@ -183,7 +183,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
 
         self.__previous_num_iterations = 0
 
-        super(InvNoiseCovLO_Toeplitz01, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -204,7 +204,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                 )[:size]
                 cov = cov.real.astype(dtype=dtype, copy=False)
             else:
-                cov = input[:size]
+                cov = np.asarray(input[:size], dtype=dtype)
 
             if precond_op == "Strang":
                 temp_size = int(np.floor(cov.size / 2))
@@ -249,7 +249,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         return self.__precond_op
 
     @precond_op.setter
-    def precond_op(self, operator: LinearOperator):
+    def precond_op(self, operator: LinearOperator | None):
         if operator is not None:
             MPI_RAISE_EXCEPTION(
                 condition=(self.shape != operator.shape),
@@ -275,7 +275,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
     def previous_num_iterations(self) -> int:
         return self.__previous_num_iterations
 
-    def get_inverse(self):
+    def get_inverse(self):  # type: ignore
         return self.__toeplitz_op
 
     def __callback(self, x, r, norm_residual):

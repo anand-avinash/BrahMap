@@ -148,7 +148,7 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             for block in self.block_list
         ]
         return BaseBlockDiagInvNoiseCovLinearOperator(
-            block_list=inverse_list,
+            block_list=cast(List[InvNoiseCovLinearOperator], inverse_list),
         )
 
 

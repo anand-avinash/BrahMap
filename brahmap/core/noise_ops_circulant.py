@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.fft
 import warnings
-from typing import List, Union, Literal
+from typing import List, Literal, cast
 
 from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -27,7 +27,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
@@ -57,7 +57,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
             )
             self.__input = input[: size // 2 + 1]
 
-        super(NoiseCovLO_Circulant, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -79,7 +79,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
             size=self.size,
             input=self.__input,
             input_type="power_spectrum",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
@@ -130,7 +130,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
@@ -160,7 +160,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
             )
             self.__input = 1.0 / input[: size // 2 + 1]
 
-        super(InvNoiseCovLO_Circulant, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -177,12 +177,12 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self):  # type: ignore
         noise_cov = NoiseCovLO_Circulant(
             size=self.size,
             input=1.0 / self.__input,
             input_type="power_spectrum",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return noise_cov
 
