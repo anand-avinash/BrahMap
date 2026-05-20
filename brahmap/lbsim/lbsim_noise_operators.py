@@ -1,4 +1,4 @@
-from typing import List, Literal, Dict, Any, cast, Union
+from typing import List, Literal, Dict, Any, cast
 import numbers
 
 import numpy as np
@@ -113,7 +113,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: lbs.Observation | List[lbs.Observation],
-        input: dict | Union[np.ndarray, List],
+        input: dict | np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ):
@@ -234,7 +234,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: lbs.Observation | List[lbs.Observation],
-        input: dict | Union[np.ndarray, List],
+        input: dict | np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         operator: Any = InvNoiseCovLO_Toeplitz01,
         dtype: DTypeFloat = np.float64,

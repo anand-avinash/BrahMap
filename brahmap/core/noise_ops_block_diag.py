@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union, Literal, Dict, Any
+from typing import List, Literal, Dict, Any
 
 from ..base import (
     BaseBlockDiagNoiseCovLinearOperator,
@@ -31,8 +31,8 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
     def __init__(
         self,
         operator,
-        block_size: Union[np.ndarray, List],
-        block_input: Union[List, Dict],
+        block_size: np.ndarray | List,
+        block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
@@ -80,7 +80,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         self,
         operator,
         block_input: List,
-        block_size: Union[np.ndarray, List],
+        block_size: np.ndarray | List,
         input_type,
         dtype,
         extra_kwargs,
@@ -102,7 +102,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         self,
         operator,
         block_input: Dict,
-        block_size: Union[np.ndarray, List],
+        block_size: np.ndarray | List,
         input_type,
         dtype,
         extra_kwargs,
@@ -153,8 +153,8 @@ class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
     def __init__(
         self,
         operator,
-        block_size: Union[np.ndarray, List],
-        block_input: Union[List, Dict],
+        block_size: np.ndarray | List,
+        block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},

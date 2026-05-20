@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.fft
 import warnings
-from typing import List, Literal, Callable, cast, Union
+from typing import List, Literal, Callable, cast
 
 from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -162,9 +162,8 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         size: int,
         input: np.ndarray | List,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        precond_op: Union[
-            LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
-        ] = None,
+        precond_op: LinearOperator
+        | Literal[None, "Strang", "TChan", "RChan", "KK2"] = None,
         precond_maxiter: int = 50,
         precond_atol: float = 1.0e-10,
         precond_callback: Callable | None = None,

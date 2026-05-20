@@ -1,5 +1,5 @@
 import gc
-from typing import List, Union, Optional
+from typing import List
 from dataclasses import dataclass, asdict
 
 import numpy as np
@@ -79,17 +79,17 @@ class LBSimGLSResult(GLSResult):
 
 def LBSim_compute_GLS_maps(
     nside: int,
-    observations: Union[lbs.Observation, List[lbs.Observation]],
-    pointings: Union[np.ndarray, List[np.ndarray], None] = None,
-    hwp: Optional[lbs.HWP] = None,
-    components: Union[str, List[str]] = "tod",
-    pointings_flag: Optional[np.ndarray] = None,
-    inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
+    observations: lbs.Observation | List[lbs.Observation],
+    pointings: np.ndarray | List[np.ndarray] | None = None,
+    hwp: lbs.HWP | None = None,
+    components: str | List[str] = "tod",
+    pointings_flag: np.ndarray | None = None,
+    inv_noise_cov_operator: DTypeNoiseCov | DTypeLBSNoiseCov | None = None,
     threshold: float = 1.0e-5,
     dtype_float: DTypeFloat = np.float64,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
-    x0: Union[np.ndarray, None] = None,
-) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:
+    x0: np.ndarray | None = None,
+) -> LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]:
     """_summary_
 
     Parameters

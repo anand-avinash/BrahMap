@@ -3,7 +3,7 @@ import gc
 import numpy as np
 
 from dataclasses import dataclass
-from typing import Callable, Union
+from typing import Callable
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
@@ -265,7 +265,7 @@ def compute_GLS_maps(
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
     x0: np.ndarray | None = None,
-) -> Union[GLSResult | tuple[ProcessTimeSamples, GLSResult]]:
+) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
     """The function to compute the GLS maps given pointing information and TOD
 
     Parameters
