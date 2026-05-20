@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Literal, List, Any
+from typing import Literal, List, Any, Callable, cast
 
 from ..base import LinearOperator, BlockDiagonalLinearOperator
 
@@ -28,11 +28,11 @@ class NoiseCovLinearOperator(LinearOperator):
     def __init__(
         self,
         nargin: int,
-        matvec: int,
+        matvec: Callable,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
         **kwargs: Any,
-    ):
+    ) -> None:
         MPI_RAISE_EXCEPTION(
             condition=(input_type not in ["covariance", "power_spectrum"]),
             exception=ValueError,
@@ -90,11 +90,11 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
     def __init__(
         self,
         nargin: int,
-        matvec: int,
+        matvec: Callable,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
         **kwargs: Any,
-    ):
+    ) -> None:
         super(InvNoiseCovLinearOperator, self).__init__(
             nargin,
             matvec,
@@ -120,7 +120,9 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
         block_list: List[NoiseCovLinearOperator],
         **kwargs: Any,
     ):
-        super(BaseBlockDiagNoiseCovLinearOperator, self).__init__(block_list, **kwargs)
+        super(BaseBlockDiagNoiseCovLinearOperator, self).__init__(
+            cast(List[LinearOperator], block_list), **kwargs
+        )
 
         MPI_RAISE_EXCEPTION(
             condition=(not self.symmetric),
@@ -142,7 +144,9 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
 
     def get_inverse(self) -> "BaseBlockDiagInvNoiseCovLinearOperator":
         inverse_list = [block.get_inverse() for block in self.block_list]
-        return BaseBlockDiagInvNoiseCovLinearOperator(block_list=inverse_list)
+        return BaseBlockDiagInvNoiseCovLinearOperator(
+            block_list=cast(List[LinearOperator], inverse_list)
+        )
 
 
 class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator):
@@ -160,11 +164,13 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
         self,
         block_list: List[InvNoiseCovLinearOperator],
         **kwargs: Any,
-    ):
+    ) -> None:
         super(BaseBlockDiagInvNoiseCovLinearOperator, self).__init__(
-            block_list, **kwargs
+            cast(List[LinearOperator], block_list), **kwargs
         )
 
     def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":
         inverse_list = [block.get_inverse() for block in self.block_list]
-        return BaseBlockDiagNoiseCovLinearOperator(block_list=inverse_list)
+        return BaseBlockDiagNoiseCovLinearOperator(
+            block_list=cast(List[LinearOperator], inverse_list)
+        )
