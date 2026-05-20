@@ -21,23 +21,20 @@ class _MPI(object):
         self.__rank = comm.rank
 
     @property
-    def comm(self):
+    def comm(self) -> Intracomm:
         return self.__comm
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self.__size
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         return self.__rank
 
     @property
-    def nthreads_per_process(self):
-        if "OMP_NUM_THREADS" in os.environ:
-            value = int(os.environ.get("OMP_NUM_THREADS"))
-        else:
-            value = 1
+    def nthreads_per_process(self) -> int:
+        value = int(os.environ.get("OMP_NUM_THREADS", 1))
         return value
 
 
@@ -55,9 +52,9 @@ def Finalize() -> None:
 
 def MPI_RAISE_EXCEPTION(
     condition: bool,
-    exception: Exception,
+    exception: type[Exception],
     message: str,
-):
+) -> None:
     """Will raise `exception` with `message` if the `condition` is `True`.
 
     Args:
@@ -77,6 +74,10 @@ def MPI_RAISE_EXCEPTION(
     else:
         exception_count = brahmap.MPI_UTILS.comm.reduce(condition, MPI.SUM, 0)
 
-        if exception_count > 0 and brahmap.MPI_UTILS.rank == 0:
+        if (
+            exception_count is not None
+            and exception_count > 0
+            and brahmap.MPI_UTILS.rank == 0
+        ):
             error_str = f"Exception raised by {int(exception_count)} MPI process(es)\n"
             raise exception(error_str + message)
