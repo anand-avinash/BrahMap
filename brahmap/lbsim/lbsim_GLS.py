@@ -5,7 +5,9 @@ from dataclasses import dataclass, asdict
 import numpy as np
 import litebird_sim as lbs
 
-from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS, DTypeNoiseCov
+from ..base import DTypeNoiseCov
+
+from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS
 
 from ..lbsim import LBSimProcessTimeSamples, DTypeLBSNoiseCov
 
@@ -113,7 +115,7 @@ def LBSim_compute_GLS_maps(
     LBSim_gls_parameters : LBSimGLSParameters, optional
         _description_, by default LBSimGLSParameters()
     x0 : np.ndarray, optional
-        Initial guess for the GLS solution in the form 
+        Initial guess for the GLS solution in the form
         [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
 
     Returns

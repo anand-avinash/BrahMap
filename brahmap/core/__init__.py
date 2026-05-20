@@ -25,15 +25,6 @@ from .noise_ops_block_diag import (
     BlockDiagInvNoiseCovLO,
 )
 
-# Imports for type hinting
-from ..base import DiagonalOperator
-from typing import Union
-
-DTypeNoiseCov = Union[
-    DiagonalOperator,
-    InvNoiseCovLO_Diagonal,
-]
-
 from .GLS import (  # noqa: E402
     GLSParameters,
     GLSResult,
@@ -68,6 +59,4 @@ __all__ = [
     "separate_map_vectors",
     "compute_GLS_maps_from_PTS",
     "compute_GLS_maps",
-    # NoiseCov dtype
-    "DTypeNoiseCov",
 ]

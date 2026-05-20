@@ -174,3 +174,11 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
         return BaseBlockDiagNoiseCovLinearOperator(
             block_list=cast(List[LinearOperator], inverse_list)
         )
+
+
+DTypeNoiseCov = (
+    NoiseCovLinearOperator
+    | InvNoiseCovLinearOperator
+    | BaseBlockDiagNoiseCovLinearOperator
+    | BaseBlockDiagInvNoiseCovLinearOperator
+)

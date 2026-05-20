@@ -7,13 +7,14 @@ from typing import Union, Callable
 
 from ..mpi import MPI_RAISE_EXCEPTION
 
+from ..base import DTypeNoiseCov
+
 from ..core import (
     SolverType,
     ProcessTimeSamples,
     PointingLO,
     BlockDiagonalPreconditionerLO,
     InvNoiseCovLO_Diagonal,
-    DTypeNoiseCov,
 )
 
 from ..math import cg, DTypeFloat

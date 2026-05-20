@@ -70,6 +70,7 @@ from .noise_ops import (
     InvNoiseCovLinearOperator,
     BaseBlockDiagNoiseCovLinearOperator,
     BaseBlockDiagInvNoiseCovLinearOperator,
+    DTypeNoiseCov,
 )
 
 __all__ = [
@@ -102,4 +103,5 @@ __all__ = [
     "InvNoiseCovLinearOperator",
     "BaseBlockDiagNoiseCovLinearOperator",
     "BaseBlockDiagInvNoiseCovLinearOperator",
+    "DTypeNoiseCov",
 ]
