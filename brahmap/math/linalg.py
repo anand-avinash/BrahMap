@@ -31,13 +31,13 @@ def parallel_norm(x: np.ndarray) -> float:
 def cg(
     A: LinearOperator,
     b: np.ndarray,
-    x0: np.ndarray = None,
+    x0: np.ndarray | None = None,
     atol: float = 1.0e-12,
     maxiter: int = 100,
-    M: LinearOperator = None,
-    callback: Callable = None,
+    M: LinearOperator | None = None,
+    callback: Callable | None = None,
     parallel: bool = False,
-):
+) -> tuple[np.ndarray, int]:
     """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
     replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
     is set `True`. Also all the matrices and vectors are assumed to be real.

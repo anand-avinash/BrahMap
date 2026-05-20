@@ -47,10 +47,10 @@ class modify_numpy_context(object):
         self.original_norm = np.linalg.norm
 
     def __enter__(self):
-        np.linalg.norm = self.parallel_norm
+        setattr(np.linalg, "norm", self.parallel_norm)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        np.linalg.norm = self.original_norm
+        setattr(np.linalg, "norm", self.original_norm)
 
 
 def profile_run():

@@ -64,8 +64,13 @@ def setup_common_data(
         pol_angles = rng.uniform(-np.pi / 2, np.pi / 2, local_nsamples).astype(
             dtype=dtype_float,
         )
+    else:
+        pol_angles = None
+
     if gen_noise_weights:
         noise_weights = rng.random(local_nsamples).astype(dtype=dtype_float)
+    else:
+        noise_weights = None
 
     return {
         "npix": npix,
@@ -74,8 +79,8 @@ def setup_common_data(
         "nsamples": local_nsamples,
         "pointings": pointings,
         "pointings_flag": pointings_flag,
-        "pol_angles": pol_angles if gen_pol_angles else None,
-        "noise_weights": noise_weights if gen_noise_weights else None,
+        "pol_angles": pol_angles,
+        "noise_weights": noise_weights,
         "dtype_int": dtype_int,
         "dtype_float": dtype_float,
         "rng": rng,
