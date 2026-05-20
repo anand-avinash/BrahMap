@@ -2,11 +2,11 @@ import numpy as np
 import warnings
 from typing import Union
 
-from ..base import LinearOperator
+from ..base.linop import LinearOperator
 
-from ..core import SolverType, ProcessTimeSamples
+from .process_time_samples import SolverType, ProcessTimeSamples
 
-from ..base import TypeChangeWarning
+from ..base.misc import TypeChangeWarning
 
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools

@@ -4,7 +4,6 @@ import numbers
 import numpy as np
 import scipy.fft
 import litebird_sim as lbs
-from ..base import InvNoiseCovLinearOperator
 
 from ..core import (
     InvNoiseCovLO_Diagonal,
@@ -232,7 +231,7 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
         obs: Union[lbs.Observation, List[lbs.Observation]],
         input: Union[dict, Union[np.ndarray, List]],
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        operator: InvNoiseCovLinearOperator = InvNoiseCovLO_Toeplitz01,
+        operator: Any = InvNoiseCovLO_Toeplitz01,
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
     ):

@@ -34,6 +34,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
     dtype_float : DTypeFloat, optional
         _description_, by default np.float64
     """
+
     def __init__(
         self,
         nside: int,

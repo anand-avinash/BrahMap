@@ -41,7 +41,6 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 import numpy as np
-import itertools
 import warnings
 from typing import List, Any
 from functools import reduce, partial
@@ -160,7 +159,7 @@ class BlockLinearOperator(LinearOperator):
 
             return y
 
-        flat_blocks = list(itertools.chain(*blocks))
+        flat_blocks = [blk for row in blocks for blk in row]
         blk_dtypes = [blk.dtype for blk in flat_blocks]
         op_dtype = np.result_type(*blk_dtypes)
 
@@ -190,7 +189,7 @@ class BlockLinearOperator(LinearOperator):
         return BlockLinearOperator(blks.tolist(), symmetric=False)
 
     def __contains__(self, op):
-        flat_blocks = list(itertools.chain(*self.blocks))
+        flat_blocks = [blk for row in self.blocks for blk in row]
         return op in flat_blocks
 
     def __iter__(self):

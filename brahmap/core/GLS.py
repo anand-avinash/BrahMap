@@ -45,7 +45,7 @@ class GLSParameters:
     use_iterative_solver: bool = True
     isolver_threshold: float = 1.0e-12
     isolver_max_iterations: int = 100
-    callback_function: Callable = None
+    callback_function: Callable | None = None
     return_processed_samples: bool = False
     return_hit_map: bool = False
 
@@ -78,7 +78,7 @@ class GLSResult:
     npix: int
     new_npix: int
     GLS_maps: np.ndarray
-    hit_map: np.ndarray
+    hit_map: np.ndarray | None
     convergence_status: bool
     num_iterations: int
     GLSParameters: GLSParameters
@@ -154,7 +154,7 @@ def compute_GLS_maps_from_PTS(
     gls_parameters : GLSParameters, optional
         _description_, by default GLSParameters()
     x0 : np.ndarray, optional
-        Initial guess for GLS solution in the form 
+        Initial guess for GLS solution in the form
         [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
 
     Returns
@@ -289,7 +289,7 @@ def compute_GLS_maps(
     gls_parameters : GLSParameters, optional
         _description_, by default GLSParameters()
     x0 : np.ndarray, optional
-        Initial guess for GLS solution in the form 
+        Initial guess for GLS solution in the form
         [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
 
     Returns
