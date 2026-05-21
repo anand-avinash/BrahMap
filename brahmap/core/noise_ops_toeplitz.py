@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
 import warnings
-from typing import List, Literal, Callable, cast
+from typing import Literal, Callable, cast
 
 from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -31,7 +32,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List,
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -63,11 +64,14 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             )[:size]
-            covariance = covariance.real.astype(dtype=dtype, copy=False)
+            covariance = covariance.real.astype(  # type: ignore
+                dtype=dtype,
+                copy=False,
+            )
 
         self.__diag_factor = covariance[0]
         self.__input = np.concatenate([covariance, np.roll(covariance[::-1], 1)])
-        self.__input = scipy.fft.rfft(
+        self.__input = scipy.fft.rfft(  # type: ignore
             self.__input,
             workers=MPI_UTILS.nthreads_per_process,
         )
@@ -82,7 +86,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         return self.__diag_factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self) -> "InvNoiseCovLO_Toeplitz01":
@@ -91,7 +95,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
             n=2 * self.size,
             workers=MPI_UTILS.nthreads_per_process,
         )[: self.size]
-        covariance = covariance.astype(dtype=self.dtype)
+        covariance = covariance.astype(dtype=self.dtype)  # type: ignore
         inv_noise_cov = InvNoiseCovLO_Toeplitz01(
             size=self.size,
             input=covariance,
@@ -100,7 +104,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -128,7 +132,7 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )[: self.size]
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore
 
 
 class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
@@ -160,7 +164,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List,
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         precond_op: LinearOperator
         | Literal[None, "Strang", "TChan", "RChan", "KK2"] = None,
@@ -201,9 +205,9 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                     input,
                     workers=MPI_UTILS.nthreads_per_process,
                 )[:size]
-                cov = cov.real.astype(dtype=dtype, copy=False)
+                cov = cov.real.astype(dtype=dtype, copy=False)  # type: ignore
             else:
-                cov = np.asarray(input[:size], dtype=dtype)
+                cov = np.asarray(input, dtype=dtype)[:size]
 
             if precond_op == "Strang":
                 temp_size = int(np.floor(cov.size / 2))
@@ -258,7 +262,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         self.__precond_op = operator
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         try:
             diag_arr = getattr(self, "__diag")
         except AttributeError:
@@ -267,7 +271,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         return diag_arr
 
     @diag.setter
-    def diag(self, diag: np.ndarray) -> None:
+    def diag(self, diag: npt.NDArray[np.number]) -> None:
         self.__diag = diag
 
     @property
@@ -282,7 +286,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         if self.precond_callback is not None:
             self.precond_callback(x, r, norm_residual)
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,

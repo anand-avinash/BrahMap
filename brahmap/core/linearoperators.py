@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 import warnings
 
 from ..base.linop import LinearOperator
@@ -30,7 +31,7 @@ class PointingLO(LinearOperator):
         self,
         processed_samples: ProcessTimeSamples,
         solver_type: None | SolverType = None,
-    ):
+    ) -> None:
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
@@ -81,7 +82,7 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
 
-    def _mult_I(self, vec: np.ndarray):
+    def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Performs the product of a sparse matrix :math:`Av`,\
          with :math:`v` a  :mod:`numpy`  array (:math:`dim(v)=n_{pix}`)  .
@@ -117,7 +118,7 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_I(self, vec: np.ndarray):
+    def _rmult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Performs the product for the transpose operator :math:`A^T`.
 
@@ -151,7 +152,7 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _mult_QU(self, vec: np.ndarray):
+    def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs :math:`A * v` with :math:`v` being a *polarization* vector.
         The output array will encode a linear combination of the two Stokes
         parameters,  (whose components are stored contiguously).
@@ -188,7 +189,7 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_QU(self, vec: np.ndarray):
+    def _rmult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
@@ -223,7 +224,7 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _mult_IQU(self, vec: np.ndarray):
+    def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the product of a sparse matrix :math:`Av`,
         with ``v`` a  :mod:`numpy` array containing the
         three Stokes parameters [IQU] .
@@ -267,7 +268,7 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_IQU(self, vec: np.ndarray):
+    def _rmult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Performs the product for the transpose operator :math:`A^T` to get a IQU map-like vector.
         Since this vector resembles the pixel of 3 maps it has 3 times the size ``Npix``.
@@ -306,7 +307,7 @@ class PointingLO(LinearOperator):
         return prod
 
     @property
-    def solver_type(self):
+    def solver_type(self) -> SolverType:
         return self.__solver_type
 
 
@@ -332,7 +333,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         self,
         processed_samples: ProcessTimeSamples,
         solver_type: None | SolverType = None,
-    ):
+    ) -> None:
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
@@ -384,7 +385,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
 
-    def _mult_I(self, vec: np.ndarray):
+    def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
@@ -408,7 +409,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
         return prod
 
-    def _mult_QU(self, vec: np.ndarray):
+    def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
@@ -442,7 +443,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
         return prod
 
-    def _mult_IQU(self, vec: np.ndarray):
+    def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
@@ -480,5 +481,5 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         return prod
 
     @property
-    def solver_type(self):
+    def solver_type(self) -> SolverType:
         return self.__solver_type

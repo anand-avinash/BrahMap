@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
 from numbers import Number
-from typing import List, Literal, cast
+from typing import Literal, cast
 
 
 from ..math import DTypeFloat, linalg_tools
@@ -29,7 +30,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List | float = 1.0,
+        input: npt.ArrayLike = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -39,7 +40,8 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
             self.__noise_covariance = np.ascontiguousarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
             self.__noise_covariance = np.ascontiguousarray(
-                scipy.fft.ifft(input).real, dtype=dtype
+                scipy.fft.ifft(input).real,  # type: ignore
+                dtype=dtype,
             )
 
         MPI_RAISE_EXCEPTION(
@@ -61,7 +63,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         return self.__noise_covariance
 
     def get_inverse(self) -> "InvNoiseCovLO_Diagonal":
@@ -73,7 +75,7 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -111,7 +113,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List | float = 1.0,
+        input: npt.ArrayLike = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -125,7 +127,8 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
             )
         elif input_type == "power_spectrum":
             self.__inv_noise_cov = np.ascontiguousarray(
-                1.0 / scipy.fft.ifft(input).real, dtype=dtype
+                1.0 / scipy.fft.ifft(input).real,  # type: ignore
+                dtype=dtype,
             )
 
         MPI_RAISE_EXCEPTION(
@@ -147,7 +150,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         return self.__inv_noise_cov
 
     def get_inverse(self) -> "NoiseCovLO_Diagonal":  # type: ignore
@@ -159,7 +162,7 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,

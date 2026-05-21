@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
 import warnings
-from typing import List, Literal, cast
+from typing import Literal, cast
 
 from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
@@ -27,7 +28,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List,
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -45,7 +46,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
                 exception=ValueError,
                 message="The input array size must be same as the size of the linear operator",
             )
-            self.__input = scipy.fft.rfft(
+            self.__input = scipy.fft.rfft(  # type: ignore
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             ).real.astype(dtype=dtype, copy=False)
@@ -65,7 +66,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -83,7 +84,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -109,7 +110,7 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore
 
 
 class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
@@ -130,7 +131,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
     def __init__(
         self,
         size: int,
-        input: np.ndarray | List,
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -148,7 +149,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
                 exception=ValueError,
                 message="The input array size must be same as the size of the linear operator",
             )
-            self.__input = 1.0 / scipy.fft.rfft(
+            self.__input = 1.0 / scipy.fft.rfft(  # type: ignore
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             ).real.astype(dtype=dtype, copy=False)
@@ -168,7 +169,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -186,7 +187,7 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray) -> np.ndarray:
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         MPI_RAISE_EXCEPTION(
             condition=(len(vec) != self.shape[0]),
             exception=ValueError,
@@ -212,4 +213,4 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore

@@ -1,6 +1,7 @@
 import gc
 
 import numpy as np
+import numpy.typing as npt
 
 from dataclasses import dataclass
 from typing import Callable
@@ -78,16 +79,17 @@ class GLSResult:
     solver_type: SolverType
     npix: int
     new_npix: int
-    GLS_maps: np.ndarray
-    hit_map: np.ndarray | None
+    GLS_maps: npt.NDArray[np.number]
+    hit_map: npt.NDArray[np.number] | None
     convergence_status: bool
     num_iterations: int
     GLSParameters: GLSParameters
 
 
 def separate_map_vectors(
-    map_vector: np.ndarray, processed_samples: ProcessTimeSamples
-) -> np.ndarray:
+    map_vector: npt.NDArray[np.number],
+    processed_samples: ProcessTimeSamples,
+) -> npt.NDArray[np.number]:
     """The output maps of the GLS are in the form
     [I_1, Q_1, U_1, I_2, Q_2, U_2, ...]. Following the typical conventions,
     the Stokes parameters have to be separated as [I_1, I_2, ...],
@@ -136,10 +138,10 @@ def separate_map_vectors(
 
 def compute_GLS_maps_from_PTS(
     processed_samples: ProcessTimeSamples,
-    time_ordered_data: np.ndarray,
+    time_ordered_data: npt.NDArray[np.number],
     inv_noise_cov_operator: DTypeNoiseCov | None = None,
     gls_parameters: GLSParameters = GLSParameters(),
-    x0: np.ndarray | None = None,
+    x0: npt.NDArray[np.number] | None = None,
 ) -> GLSResult:
     """This function computes the GLS maps given an instance of
     `ProcessTimeSamples`, TOD, and inverse noise covariance operator
@@ -163,6 +165,7 @@ def compute_GLS_maps_from_PTS(
     GLSResult
         _description_
     """
+    time_ordered_data = np.asarray(time_ordered_data)
     MPI_RAISE_EXCEPTION(
         condition=(processed_samples.nsamples != len(time_ordered_data)),
         exception=ValueError,
@@ -255,16 +258,16 @@ def compute_GLS_maps_from_PTS(
 
 def compute_GLS_maps(
     npix: int,
-    pointings: np.ndarray,
-    time_ordered_data: np.ndarray,
-    pointings_flag: np.ndarray | None = None,
-    pol_angles: np.ndarray | None = None,
+    pointings: npt.NDArray[np.integer],
+    time_ordered_data: npt.NDArray[np.number],
+    pointings_flag: npt.NDArray[np.bool_] | None = None,
+    pol_angles: npt.NDArray[np.number] | None = None,
     inv_noise_cov_operator: DTypeNoiseCov | None = None,
     threshold: float = 1.0e-5,
     dtype_float: DTypeFloat | None = None,
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
-    x0: np.ndarray | None = None,
+    x0: npt.NDArray[np.number] | None = None,
 ) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
     """The function to compute the GLS maps given pointing information and TOD
 
@@ -301,7 +304,7 @@ def compute_GLS_maps(
     """
     if dtype_float is None:
         if pol_angles is None:
-            dtype_float = time_ordered_data.dtype
+            dtype_float = time_ordered_data.dtype  # type: ignore
         else:
             dtype_float = np.promote_types(pol_angles.dtype, time_ordered_data.dtype)
 

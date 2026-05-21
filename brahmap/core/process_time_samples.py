@@ -1,5 +1,6 @@
 from enum import IntEnum
 import numpy as np
+import numpy.typing as npt
 from mpi4py import MPI
 
 
@@ -108,11 +109,11 @@ class ProcessTimeSamples(object):
     def __init__(
         self,
         npix: int,
-        pointings: np.ndarray,
-        pointings_flag: np.ndarray | None = None,
+        pointings: npt.NDArray[np.integer],
+        pointings_flag: npt.NDArray[np.bool_] | None = None,
         solver_type: SolverType = SolverType.IQU,
-        pol_angles: np.ndarray | None = None,
-        noise_weights: np.ndarray | None = None,
+        pol_angles: npt.NDArray[np.number] | None = None,
+        noise_weights: npt.NDArray[np.number] | None = None,
         threshold: float = 1.0e-5,
         dtype_float: DTypeFloat | None = None,
         update_pointings_inplace: bool = False,
@@ -169,9 +170,9 @@ class ProcessTimeSamples(object):
                 pol_angles.dtype,
             )
         elif noise_weights is not None:
-            self.__dtype_float = noise_weights.dtype
+            self.__dtype_float = noise_weights.dtype  # type: ignore
         elif pol_angles is not None:
-            self.__dtype_float = pol_angles.dtype
+            self.__dtype_float = pol_angles.dtype  # type: ignore
         else:
             self.__dtype_float = np.float64
 
@@ -289,15 +290,15 @@ class ProcessTimeSamples(object):
         return self.__dtype_float
 
     @property
-    def old2new_pixel(self) -> np.ndarray:
+    def old2new_pixel(self) -> npt.NDArray[np.integer]:
         old2new_pixel = np.where(self.pixel_flag, self.__old2new_pixel, -1)
         return old2new_pixel.astype(self.pointings.dtype, copy=False)
 
     @property
-    def bad_pixels(self) -> np.ndarray:
+    def bad_pixels(self) -> npt.NDArray[np.integer]:
         return np.nonzero(~self.pixel_flag)[0]
 
-    def get_hit_counts(self) -> np.ndarray:
+    def get_hit_counts(self) -> npt.NDArray[np.integer]:
         """Returns hit counts of the pixel indices"""
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix),
@@ -308,7 +309,11 @@ class ProcessTimeSamples(object):
         hit_counts[~hit_counts.mask] = self.hit_counts
         return hit_counts
 
-    def _compute_weights(self, pol_angles: np.ndarray, noise_weights: np.ndarray):
+    def _compute_weights(
+        self,
+        pol_angles: npt.NDArray[np.number],
+        noise_weights: npt.NDArray[np.number],
+    ):
         self.hit_counts = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
         self.observed_pixels = np.zeros(self.npix, dtype=self.pointings.dtype)
@@ -325,7 +330,7 @@ class ProcessTimeSamples(object):
                 hit_counts=self.hit_counts,
                 weighted_counts=self.weighted_counts,
                 observed_pixels=self.observed_pixels,
-                __old2new_pixel=self.__old2new_pixel,
+                __old2new_pixel=self.__old2new_pixel,  # type: ignore
                 pixel_flag=self.pixel_flag,
                 comm=MPI_UTILS.comm,
             )
@@ -390,7 +395,7 @@ class ProcessTimeSamples(object):
                 hit_counts=self.hit_counts,
                 one_over_determinant=self.one_over_determinant,
                 observed_pixels=self.observed_pixels,
-                __old2new_pixel=self.__old2new_pixel,
+                __old2new_pixel=self.__old2new_pixel,  # type: ignore
                 pixel_flag=self.pixel_flag,
             )
 
