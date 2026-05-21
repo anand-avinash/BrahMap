@@ -292,11 +292,6 @@ class BlockDiagonalLinearOperator(LinearOperator):
         dtype,
     ) -> npt.NDArray[np.number]:
         nrows = sum(block.shape[0] for block in block_list)
-        ncols = sum(block.shape[1] for block in block_list)
-        if len(vec) != ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `BlockDiagonalLinearOperator` instance.\nShape of `BlockDiagonalLinearOperator` instance: ({nrows, ncols})\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != dtype:
             if MPI_UTILS.rank == 0:

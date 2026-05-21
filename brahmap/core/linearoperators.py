@@ -91,11 +91,6 @@ class PointingLO(LinearOperator):
 
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -121,11 +116,6 @@ class PointingLO(LinearOperator):
         Performs the product for the transpose operator :math:`A^T`.
 
         """
-
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -158,11 +148,6 @@ class PointingLO(LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -189,11 +174,6 @@ class PointingLO(LinearOperator):
         r"""
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
-
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -235,11 +215,6 @@ class PointingLO(LinearOperator):
             :math:`\phi_t`.
         """
 
-        if len(vec) != self.ncols:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -269,11 +244,6 @@ class PointingLO(LinearOperator):
         IQU values referring to the same pixel are  contiguously stored in the memory.
 
         """
-
-        if len(vec) != self.nrows:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -383,11 +353,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -405,11 +370,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -438,11 +398,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:

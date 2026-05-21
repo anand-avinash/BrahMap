@@ -80,11 +80,6 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Circulant` instance.\nShape of `NoiseCovLO_Circulant` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -177,11 +172,6 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         return noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Circulant` instance.\nShape of `InvNoiseCovLO_Circulant` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(

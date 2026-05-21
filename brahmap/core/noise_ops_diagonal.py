@@ -71,11 +71,6 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 
@@ -153,11 +148,6 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         return noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
 
         prod = np.zeros(self.shape[0], dtype=self.dtype)

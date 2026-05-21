@@ -97,11 +97,6 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Toeplitz` instance.\nShape of `NoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -273,11 +268,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             self.precond_callback(x, r, norm_residual)
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if len(vec) != self.shape[0]:
-            raise ValueError(
-                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Toeplitz` instance.\nShape of `InvNoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         self.__previous_num_iterations = 0
 
         if vec.dtype != self.dtype:
