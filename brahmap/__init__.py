@@ -76,7 +76,6 @@ __all__ = __all__ + [
     # ./mpi.py
     "MPI_UTILS",
     "Finalize",
-    "MPI_RAISE_EXCEPTION",
     # ./base/
     "base",
     "TypeChangeWarning",

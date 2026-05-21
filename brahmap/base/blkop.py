@@ -49,7 +49,7 @@ from functools import reduce, partial
 from ..base import BaseLinearOperator, LinearOperator
 from ..base import null_log
 from .misc import ShapeError, TypeChangeWarning
-from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from ..mpi import MPI_UTILS
 
 
 class BlockLinearOperator(LinearOperator):
@@ -218,11 +218,7 @@ class BlockDiagonalLinearOperator(LinearOperator):
             for block in block_list:
                 __, __ = block.shape
         except (TypeError, AttributeError):
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="The `block_list` must be a flat list of linearoperators",
-            )
+            raise ValueError("The `block_list` must be a flat list of linearoperators")
 
         self.__row_size = np.asarray(
             [block.shape[0] for block in block_list], dtype=int
@@ -297,11 +293,10 @@ class BlockDiagonalLinearOperator(LinearOperator):
     ) -> npt.NDArray[np.number]:
         nrows = sum(block.shape[0] for block in block_list)
         ncols = sum(block.shape[1] for block in block_list)
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `BlockDiagonalLinearOperator` instance.\nShape of `BlockDiagonalLinearOperator` instance: ({nrows, ncols})\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `BlockDiagonalLinearOperator` instance.\nShape of `BlockDiagonalLinearOperator` instance: ({nrows, ncols})\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != dtype:
             if MPI_UTILS.rank == 0:

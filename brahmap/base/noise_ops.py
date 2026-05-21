@@ -6,8 +6,6 @@ from ..base import LinearOperator, BlockDiagonalLinearOperator
 
 from ..math import DTypeFloat
 
-from ..mpi import MPI_RAISE_EXCEPTION
-
 
 class NoiseCovLinearOperator(LinearOperator):
     """Base class for noise covariance operators
@@ -34,11 +32,10 @@ class NoiseCovLinearOperator(LinearOperator):
         dtype: DTypeFloat = np.float64,
         **kwargs: Any,
     ) -> None:
-        MPI_RAISE_EXCEPTION(
-            condition=(input_type not in ["covariance", "power_spectrum"]),
-            exception=ValueError,
-            message="Please provide only one of `covariance` or `power_spectrum`",
-        )
+        if input_type not in ["covariance", "power_spectrum"]:
+            raise ValueError(
+                "Please provide only one of `covariance` or `power_spectrum`"
+            )
 
         self.__size = nargin
 
@@ -57,18 +54,10 @@ class NoiseCovLinearOperator(LinearOperator):
 
     @property
     def diag(self) -> npt.NDArray[np.number]:  # type: ignore
-        MPI_RAISE_EXCEPTION(
-            condition=True,
-            exception=NotImplementedError,
-            message="Please subclass to implement `diag`",
-        )
+        raise NotImplementedError("Please subclass to implement `diag`")
 
     def get_inverse(self) -> "InvNoiseCovLinearOperator":  # type: ignore
-        MPI_RAISE_EXCEPTION(
-            condition=True,
-            exception=NotImplementedError,
-            message="Please subclass to implement `get_inverse()`",
-        )
+        raise NotImplementedError("Please subclass to implement `get_inverse()`")
 
 
 class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
@@ -125,11 +114,8 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             cast(List[LinearOperator], block_list), **kwargs
         )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(not self.symmetric),
-            exception=ValueError,
-            message="The noise (inv-)covariance operators must be symmetric",
-        )
+        if not self.symmetric:
+            raise ValueError("The noise (inv-)covariance operators must be symmetric")
 
     @property
     def size(self) -> int:
