@@ -150,7 +150,9 @@ class BaseLinearOperator(object):
         return self.__mul__(*args, **kwargs)
 
     def __mul__(self, x: Any) -> Any:
-        raise NotImplementedError("Please subclass to implement __mul__.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__}: Please subclass to implement __mul__."
+        )
 
     def __repr__(self) -> str:
         if self.symmetric:
@@ -234,6 +236,7 @@ class LinearOperator(BaseLinearOperator):
                         " LinearOperator."
                     )
                     msg += " Got " + str(adjoint_of.__class__)
+                    msg = f"{self.__class__.__name__}: " + msg
                     raise ValueError(msg)
 
     @property
@@ -263,11 +266,12 @@ class LinearOperator(BaseLinearOperator):
             x = x.reshape(N)
         except ValueError:
             msg = (
-                "The size of the input array is incompatible with the "
-                "operator dimensions\n"
-                f"size of the input array: {len(x)}\n"
+                f"The size of the input array is incompatible with the "
+                f"dimensions required by the operator\n"
+                f"size of the input array: {x.size}\n"
                 f"shape of the operator: {self.shape}"
             )
+            msg = f"{self.__class__.__name__}: " + msg
             raise ValueError(msg)
 
         y = self.__matvec(x)
@@ -278,11 +282,12 @@ class LinearOperator(BaseLinearOperator):
             y = y.reshape(M)
         except ValueError:
             msg = (
-                "The size of the output array is incompatible with the "
-                "operator dimensions\n"
-                f"size of the output array: {len(y)}\n"
+                f"The size of the output array is incompatible with the "
+                f"dimensions required by the operator\n"
+                f"size of the output array: {y.size}\n"
                 f"shape of the operator: {self.shape}"
             )
+            msg = f"{self.__class__.__name__}: " + msg
             raise ValueError(msg)
 
         return y
@@ -337,6 +342,7 @@ class LinearOperator(BaseLinearOperator):
                 f"shape of the first operator: {self.shape}\n"
                 f"shape of the second operator: {op.shape}"
             )
+            msg = f"{self.__class__.__name__}: " + msg
             raise ShapeError(msg)
 
         def matvec(x):
@@ -372,22 +378,29 @@ class LinearOperator(BaseLinearOperator):
         elif isinstance(x, np.ndarray):
             return self.__mul_vector(x)
         else:
-            raise ValueError("Invalid multiplier! Cannot multiply")
+            raise ValueError(
+                f"{self.__class__.__name__}: Invalid multiplier! Cannot multiply"
+            )
 
     def __rmul__(self, x) -> "LinearOperator | npt.NDArray[np.number]":
         if np.isscalar(x):
             return self.__mul__(x)
-        raise ValueError("Invalid operation! Cannot multiply")
+        raise ValueError(
+            f"{self.__class__.__name__}: Invalid operation! Cannot multiply"
+        )
 
     def __add__(self, other) -> "LinearOperator":
         if not isinstance(other, BaseLinearOperator):
-            raise ValueError("Invalid operation! Cannot add")
+            raise ValueError(
+                f"{self.__class__.__name__}: Invalid operation! Cannot add"
+            )
         if self.shape != other.shape:
             msg = (
                 "Cannot add the two operators together\n"
                 f"shape of the first operator: {self.shape}\n"
                 f"shape of the second operator: {other.shape}"
             )
+            msg = f"{self.__class__.__name__}: " + msg
             raise ShapeError(msg)
 
         other_op = cast(LinearOperator, other)
@@ -414,13 +427,16 @@ class LinearOperator(BaseLinearOperator):
 
     def __sub__(self, other) -> "LinearOperator":
         if not isinstance(other, BaseLinearOperator):
-            raise ValueError("Invalid operation! Cannot subtract")
+            raise ValueError(
+                f"{self.__class__.__name__}: Invalid operation! Cannot subtract"
+            )
         if self.shape != other.shape:
             msg = (
                 "Cannot subtract one operator from the other\n"
                 f"shape of the first operator: {self.shape}\n"
                 f"shape of the second operator: {other.shape}"
             )
+            msg = f"{self.__class__.__name__}: " + msg
             raise ShapeError(msg)
 
         other_op = cast(LinearOperator, other)
@@ -446,15 +462,23 @@ class LinearOperator(BaseLinearOperator):
         if isinstance(other, (numbers.Number, np.number)):
             return self * (1.0 / cast(Any, other))
         else:
-            raise ValueError("Invalid operation! Cannot divide")
+            raise ValueError(
+                f"{self.__class__.__name__}: Invalid operation! Cannot divide"
+            )
 
     def __pow__(self, other) -> "LinearOperator":
         if not isinstance(other, int):
-            raise ValueError("Can only raise to integer power")
+            raise ValueError(
+                f"{self.__class__.__name__}: Can only raise to integer power"
+            )
         if other < 0:
-            raise ValueError("Can only raise to nonnegative power")
+            raise ValueError(
+                f"{self.__class__.__name__}: Can only raise to nonnegative power"
+            )
         if self.nargin != self.nargout:
-            raise ShapeError("Can only raise square operators to a power")
+            raise ShapeError(
+                f"{self.__class__.__name__}: Can only raise square operators to a power"
+            )
         if other == 0:
             return IdentityOperator(self.nargin)
         if other == 1:
@@ -506,6 +530,7 @@ class DiagonalOperator(LinearOperator):
         self.diag = np.asarray(diag)
         if self.diag.ndim != 1:
             msg = "diag array must be 1-d"
+            msg = f"{self.__class__.__name__}: " + msg
             raise ValueError(msg)
 
         super(DiagonalOperator, self).__init__(
@@ -546,6 +571,7 @@ class MatrixLinearOperator(LinearOperator):
 
         if matrix.ndim != 2:
             msg = "matrix must be 2-d (shape can be [M, N], [M, 1] or [1, N])"
+            msg = f"{self.__class__.__name__}: " + msg
             raise ValueError(msg)
 
         matvec = matrix.dot
@@ -595,6 +621,7 @@ class ZeroOperator(LinearOperator):
             if x.shape != (nargin,):
                 msg = "Input has shape " + str(x.shape)
                 msg += " instead of (%d,)" % self.nargin
+                msg = f"{self.__class__.__name__}: " + msg
                 raise ValueError(msg)
             return np.zeros(nargout)
 
@@ -602,6 +629,7 @@ class ZeroOperator(LinearOperator):
             if x.shape != (nargout,):
                 msg = "Input has shape " + str(x.shape)
                 msg += " instead of (%d,)" % self.nargout
+                msg = f"{self.__class__.__name__}: " + msg
                 raise ValueError(msg)
             return np.zeros(nargin)
 
@@ -647,7 +675,9 @@ class InverseLO(LinearOperator):
         """
 
         if self.method is None:
-            raise ValueError("InverseLO solver method is not specified.")
+            raise ValueError(
+                f"{self.__class__.__name__}: InverseLO solver method is not specified."
+            )
         y, info = self.method(self.A, x, M=self.preconditioner)
         self.isconverged(info)
         return y
