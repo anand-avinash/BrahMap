@@ -1,4 +1,5 @@
 import os
+import sys
 
 from mpi4py import MPI
 from mpi4py.MPI import Intracomm
@@ -10,10 +11,8 @@ class _MPI(object):
     def __init__(
         self,
         comm: Intracomm,
-        raise_exception_per_process: bool,
     ) -> None:
         self.update_communicator(comm=comm)
-        self.raise_exception_per_process = raise_exception_per_process
 
     def update_communicator(self, comm: Intracomm) -> None:
         self.__comm = comm
@@ -38,7 +37,7 @@ class _MPI(object):
         return value
 
 
-MPI_UTILS: _MPI = _MPI(comm=MPI.COMM_WORLD, raise_exception_per_process=True)
+MPI_UTILS: _MPI = _MPI(comm=MPI.COMM_WORLD)
 
 
 def Finalize() -> None:
@@ -50,34 +49,28 @@ def Finalize() -> None:
             print(f"Caught an exception during MPI finalization: {e}")
 
 
-def MPI_RAISE_EXCEPTION(
-    condition: bool,
-    exception: type[Exception],
-    message: str,
-) -> None:
-    """Will raise `exception` with `message` if the `condition` is `True`.
+sys_excepthook = sys.excepthook
 
-    Args:
-        condition (_type_): The condition to be evaluated
-        exception (_type_): The exception to throw
-        message (_type_): The message to pass to the `Exception`
 
-    Raises:
-        exception: _description_
-        exception: _description_
-    """
+# If errors during a parallel run are not handled properly, they can lead to a deadlock
+# as discussed here:
+# <https://mpi4py.readthedocs.io/en/stable/mpi4py.run.html#exceptions-and-deadlocks>
+# The following exception hook taken from <https://stackoverflow.com/a/34313363>
+# solves the problem by flushing stderr before calling `Abort(1)` on global
+# communicator effectively aborting the MPI execution environment
+def mpi_excepthook(exctype, value, traceback):
+    """Ensure the rank that crashes prints its traceback, then kill all processes."""
 
-    if brahmap.MPI_UTILS.raise_exception_per_process:
-        if condition:
-            error_str = f"Exception raised by MPI rank {brahmap.MPI_UTILS.rank}\n"
-            raise exception(error_str + message)
-    else:
-        exception_count = brahmap.MPI_UTILS.comm.reduce(condition, MPI.SUM, 0)
+    sys.stderr.write(
+        f"\n*** Exception raised by MPI rank {brahmap.MPI_UTILS.rank} ***\n"
+    )
+    sys_excepthook(exctype, value, traceback)
 
-        if (
-            exception_count is not None
-            and exception_count > 0
-            and brahmap.MPI_UTILS.rank == 0
-        ):
-            error_str = f"Exception raised by {int(exception_count)} MPI process(es)\n"
-            raise exception(error_str + message)
+    sys.stderr.flush()
+
+    # Force the MPI runtime to abort in order to prevent deadlocks
+    MPI.COMM_WORLD.Abort(1)
+
+
+# Override the default Python exception handler
+sys.excepthook = mpi_excepthook
