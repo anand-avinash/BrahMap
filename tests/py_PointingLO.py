@@ -3,7 +3,6 @@ import warnings
 
 from brahmap import (
     MPI_UTILS,
-    MPI_RAISE_EXCEPTION,
     ProcessTimeSamples,
     TypeChangeWarning,
 )
@@ -60,11 +59,10 @@ class PointingLO(LinearOperator):
             )
 
     def _mult_I(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -84,11 +82,10 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_I(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -110,11 +107,10 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_QU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -136,11 +132,10 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_QU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -164,11 +159,10 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_IQU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -190,11 +184,10 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_IQU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:

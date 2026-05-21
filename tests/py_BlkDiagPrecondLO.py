@@ -3,7 +3,6 @@ import warnings
 
 from brahmap import (
     MPI_UTILS,
-    MPI_RAISE_EXCEPTION,
     ProcessTimeSamples,
     TypeChangeWarning,
 )
@@ -56,11 +55,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -80,11 +78,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -112,11 +109,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
