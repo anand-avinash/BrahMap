@@ -1,10 +1,7 @@
 import numpy as np
-import warnings
 
 from brahmap import (
-    MPI_UTILS,
     ProcessTimeSamples,
-    TypeChangeWarning,
 )
 
 from brahmap.base import LinearOperator
@@ -55,14 +52,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = vec / self.weighted_counts
 
         return prod
@@ -72,14 +61,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = bdplo_tools.BDPLO_mult_QU(
             solver_type=self.solver_type,
@@ -98,14 +79,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
 
         prod = bdplo_tools.BDPLO_mult_IQU(
             solver_type=self.solver_type,
