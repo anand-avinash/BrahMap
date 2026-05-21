@@ -1,10 +1,8 @@
 import numpy as np
 import numpy.typing as npt
 import scipy.fft
-import warnings
 from typing import Literal, cast
 
-from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat
 from ..mpi import MPI_UTILS
@@ -80,14 +78,6 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,
@@ -172,14 +162,6 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         return noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,

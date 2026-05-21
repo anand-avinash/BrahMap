@@ -1,10 +1,8 @@
 import numpy as np
 import numpy.typing as npt
 import scipy.fft
-import warnings
 from typing import Literal, Callable, cast
 
-from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat, cg
 from ..mpi import MPI_UTILS
@@ -97,14 +95,6 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = np.pad(vec, pad_width=((0, self.size)), mode="constant")
 
         prod = scipy.fft.rfft(
@@ -269,14 +259,6 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         self.__previous_num_iterations = 0
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod, _ = cg(
             A=self.__toeplitz_op,

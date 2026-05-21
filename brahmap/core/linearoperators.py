@@ -1,12 +1,10 @@
 import numpy as np
 import numpy.typing as npt
-import warnings
 
 from ..base.linop import LinearOperator
 
 from .process_time_samples import SolverType, ProcessTimeSamples
 
-from ..base.misc import TypeChangeWarning
 
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
@@ -91,14 +89,6 @@ class PointingLO(LinearOperator):
 
         """
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_I(
@@ -116,14 +106,6 @@ class PointingLO(LinearOperator):
         Performs the product for the transpose operator :math:`A^T`.
 
         """
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -148,14 +130,6 @@ class PointingLO(LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_QU(
@@ -174,14 +148,6 @@ class PointingLO(LinearOperator):
         r"""
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -215,14 +181,6 @@ class PointingLO(LinearOperator):
             :math:`\phi_t`.
         """
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
         PointingLO_tools.PLO_mult_IQU(
@@ -244,14 +202,6 @@ class PointingLO(LinearOperator):
         IQU values referring to the same pixel are  contiguously stored in the memory.
 
         """
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -353,14 +303,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
-
         prod = vec / self.weighted_counts
 
         return prod
@@ -370,14 +312,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
 
@@ -398,14 +332,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
 

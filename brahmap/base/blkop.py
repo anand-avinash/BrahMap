@@ -42,14 +42,12 @@
 
 import numpy as np
 import numpy.typing as npt
-import warnings
 from typing import List, Any, cast
 from functools import reduce, partial
 
 from ..base import BaseLinearOperator, LinearOperator
 from ..base import null_log
-from .misc import ShapeError, TypeChangeWarning
-from ..mpi import MPI_UTILS
+from .misc import ShapeError
 
 
 class BlockLinearOperator(LinearOperator):
@@ -292,14 +290,6 @@ class BlockDiagonalLinearOperator(LinearOperator):
         dtype,
     ) -> npt.NDArray[np.number]:
         nrows = sum(block.shape[0] for block in block_list)
-
-        if vec.dtype != dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=dtype, copy=False)
 
         prod = np.zeros(nrows, dtype=dtype)
 
