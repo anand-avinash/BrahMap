@@ -17,7 +17,7 @@ from ..core import (
 
 from ..math import DTypeFloat
 
-from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from ..mpi import MPI_UTILS
 
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
@@ -164,10 +164,8 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
                         block_input_dict[obs.n_samples] = resized_input
             block_input = block_input_dict
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum",
+            raise ValueError(
+                "The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum"
             )
 
         super(LBSim_InvNoiseCovLO_Circulant, self).__init__(
@@ -290,10 +288,8 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
                         block_input_dict[obs.n_samples] = resized_input
             block_input = block_input_dict
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum",
+            raise ValueError(
+                "The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum"
             )
 
         super(LBSim_InvNoiseCovLO_Toeplitz, self).__init__(
