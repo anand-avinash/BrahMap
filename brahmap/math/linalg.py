@@ -1,5 +1,6 @@
 from typing import Callable
 import numpy as np
+import numpy.typing as npt
 import scipy
 import scipy.sparse
 import scipy.sparse.linalg
@@ -8,13 +9,13 @@ from ..mpi import MPI_UTILS
 from ..base import LinearOperator
 
 
-def parallel_norm(x: np.ndarray) -> float:
+def parallel_norm(x: npt.NDArray[np.number]) -> float:
     """A replacement of `np.linalg.norm` to compute 2-norm of a vector
     distributed among multiple MPI processes
 
     Parameters
     ----------
-    x : np.ndarray
+    x : npt.NDArray[np.number]
         Input array
 
     Returns
@@ -30,14 +31,14 @@ def parallel_norm(x: np.ndarray) -> float:
 
 def cg(
     A: LinearOperator,
-    b: np.ndarray,
-    x0: np.ndarray | None = None,
+    b: npt.NDArray[np.number],
+    x0: npt.NDArray[np.number] | None = None,
     atol: float = 1.0e-12,
     maxiter: int = 100,
     M: LinearOperator | None = None,
     callback: Callable | None = None,
     parallel: bool = False,
-) -> tuple[np.ndarray, int]:
+) -> tuple[npt.NDArray[np.number], int]:
     """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
     replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
     is set `True`. Also all the matrices and vectors are assumed to be real.
@@ -46,9 +47,9 @@ def cg(
     ----------
     A : LinearOperator
         _description_
-    b : np.ndarray
+    b : npt.NDArray[np.number]
         _description_
-    x0 : np.ndarray, optional
+    x0 : npt.NDArray[np.number], optional
         _description_, by default None
     atol : float, optional
         _description_, by default 1.0e-12
@@ -78,8 +79,8 @@ def cg(
     # use. The following unpacking ensures compatibility across all versions.
     # This logic can be simplified once support for versions below 1.16.0 is
     # dropped.
-    A = temp_tuple[0]
-    M = temp_tuple[1]
+    A = temp_tuple[0]  # type: ignore
+    M = temp_tuple[1]  # type: ignore
     x = temp_tuple[2]
     b = temp_tuple[3]
 
@@ -87,7 +88,7 @@ def cg(
         norm_function: Callable = parallel_norm
     else:
 
-        def norm_function(x: np.ndarray) -> float:
+        def norm_function(x: npt.NDArray[np.number]) -> float:
             return np.sqrt(x.dot(x))
 
     b_norm = norm_function(b)
@@ -107,14 +108,14 @@ def cg(
         if norm_residual < atol:
             return x, 0
 
-        z = M * r
-        rho_cur = np.dot(r, z)
+        z = M * r  # type: ignore
+        rho_cur = np.dot(r, z)  # type: ignore
         if iteration > 0:
             beta = rho_cur / rho_prev
             p *= beta
             p += z
         else:
-            p = z.copy()
+            p = z.copy()  # type: ignore
 
         q = A * p
         alpha = rho_cur / np.dot(p, q)

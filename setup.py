@@ -6,7 +6,6 @@ from setuptools._distutils.ccompiler import new_compiler
 import mpi4py
 import nanobind
 import threading
-from typing import Any, Iterator
 import tempfile
 import shutil
 from pathlib import Path
@@ -79,7 +78,7 @@ tmp_chdir_lock = threading.Lock()
 
 
 @contextlib.contextmanager
-def tmp_chdir() -> Iterator[str]:
+def tmp_chdir():
     "Prepare and enter a temporary directory, cleanup when done"
     # Threadsafe
     with tmp_chdir_lock:
@@ -94,7 +93,7 @@ def tmp_chdir() -> Iterator[str]:
 
 
 # cf http://bugs.python.org/issue26689
-def check_flag(compiler: Any, flag: str) -> bool:
+def check_flag(compiler, flag: str):
     """
     Return the flag if a flag name is supported on the
     specified compiler, otherwise None (can be used as a boolean).
