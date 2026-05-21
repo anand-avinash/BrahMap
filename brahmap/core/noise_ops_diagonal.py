@@ -7,7 +7,6 @@ from typing import Literal, cast
 
 from ..math import DTypeFloat, linalg_tools
 
-from ..mpi import MPI_RAISE_EXCEPTION
 
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 
@@ -44,16 +43,12 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
                 dtype=dtype,
             )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.__noise_covariance.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != self.__noise_covariance.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
+        if self.__noise_covariance.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
+        if size != self.__noise_covariance.shape[0]:
+            raise ValueError(
+                "The input array size must be same as the size of the linear operator"
+            )
 
         super().__init__(
             nargin=size,
@@ -76,11 +71,10 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
         prod = np.zeros(self.shape[0], dtype=self.dtype)
@@ -131,16 +125,12 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
                 dtype=dtype,
             )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.__inv_noise_cov.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != self.__inv_noise_cov.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
+        if self.__inv_noise_cov.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
+        if size != self.__inv_noise_cov.shape[0]:
+            raise ValueError(
+                "The input array size must be same as the size of the linear operator"
+            )
 
         super().__init__(
             nargin=size,
@@ -163,11 +153,10 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         return noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
 

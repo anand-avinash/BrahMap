@@ -9,7 +9,7 @@ from ..utilities import bash_colors
 from .._extensions import compute_weights
 from .._extensions import repixelize
 
-from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from ..mpi import MPI_UTILS
 
 from ..math import DTypeFloat
 
@@ -136,25 +136,23 @@ class ProcessTimeSamples(object):
 
         assert self.pointings_flag is not None
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(self.pointings_flag) != self.nsamples),
-            exception=AssertionError,
-            message="Size of `pointings_flag` must be equal to the size of "
-            "`pointings` array:\n"
-            f"len(pointings_flag) = {len(self.pointings_flag)}\n"
-            f"len(pointings) = {self.nsamples}",
-        )
+        if len(self.pointings_flag) != self.nsamples:
+            raise AssertionError(
+                "Size of `pointings_flag` must be equal to the size of "
+                "`pointings` array:\n"
+                f"len(pointings_flag) = {len(self.pointings_flag)}\n"
+                f"len(pointings) = {self.nsamples}"
+            )
 
         self.__solver_type = solver_type
         self.__threshold = threshold
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.solver_type not in [1, 2, 3]),
-            exception=ValueError,
-            message="Invalid `solver_type`!!!\n`solver_type` must be either "
-            "SolverType.I, SolverType.QU or SolverType.IQU "
-            "(equivalently 1, 2 or 3).",
-        )
+        if self.solver_type not in [1, 2, 3]:
+            raise ValueError(
+                "Invalid `solver_type`!!!\n`solver_type` must be either "
+                "SolverType.I, SolverType.QU or SolverType.IQU "
+                "(equivalently 1, 2 or 3)."
+            )
 
         # setting the dtype for the `float` arrays: if one or both of
         # `noise_weights` and `pol_angles` are supplied, the `dtype_float`
@@ -179,14 +177,13 @@ class ProcessTimeSamples(object):
         if noise_weights is None:
             noise_weights = np.ones(self.nsamples, dtype=self.dtype_float)
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(noise_weights) != self.nsamples),
-            exception=AssertionError,
-            message="Size of `noise_weights` must be equal to the size of "
-            "`pointings` array:\n"
-            f"len(noise_weigths) = {len(noise_weights)}\n"
-            f"len(pointings) = {self.nsamples}",
-        )
+        if len(noise_weights) != self.nsamples:
+            raise AssertionError(
+                "Size of `noise_weights` must be equal to the size of "
+                "`pointings` array:\n"
+                f"len(noise_weigths) = {len(noise_weights)}\n"
+                f"len(pointings) = {self.nsamples}"
+            )
 
         try:
             noise_weights = noise_weights.astype(
@@ -201,14 +198,13 @@ class ProcessTimeSamples(object):
 
         if self.solver_type != 1:
             assert pol_angles is not None
-            MPI_RAISE_EXCEPTION(
-                condition=(len(pol_angles) != self.nsamples),
-                exception=AssertionError,
-                message="Size of `pol_angles` must be equal to the size of "
-                "`pointings` array:\n"
-                f"len(pol_angles) = {len(pol_angles)}\n"
-                f"len(pointings) = {self.nsamples}",
-            )
+            if len(pol_angles) != self.nsamples:
+                raise AssertionError(
+                    "Size of `pol_angles` must be equal to the size of "
+                    "`pointings` array:\n"
+                    f"len(pol_angles) = {len(pol_angles)}\n"
+                    f"len(pointings) = {self.nsamples}"
+                )
 
             try:
                 pol_angles = pol_angles.astype(
@@ -226,12 +222,11 @@ class ProcessTimeSamples(object):
             noise_weights,
         )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.new_npix == 0),
-            exception=ValueError,
-            message="All pixels were found to be pathological. The map-making "
-            "cannot be done. Please ensure that the inputs are consistent!",
-        )
+        if self.new_npix == 0:
+            raise ValueError(
+                "All pixels were found to be pathological. The map-making "
+                "cannot be done. Please ensure that the inputs are consistent!"
+            )
 
         self._repixelization()
         self._flag_bad_pixel_samples()

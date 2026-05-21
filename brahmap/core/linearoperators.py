@@ -11,7 +11,7 @@ from ..base.misc import TypeChangeWarning
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
 
-from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from ..mpi import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
@@ -35,12 +35,11 @@ class PointingLO(LinearOperator):
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=(int(processed_samples.solver_type) < int(solver_type)),
-                exception=ValueError,
-                message="`solver_type` must be lower than or equal to the"
-                "`solver_type` of `processed_samples` object",
-            )
+            if int(processed_samples.solver_type) < int(solver_type):
+                raise ValueError(
+                    "`solver_type` must be lower than or equal to the"
+                    "`solver_type` of `processed_samples` object"
+                )
             self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
@@ -92,11 +91,10 @@ class PointingLO(LinearOperator):
 
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -124,11 +122,10 @@ class PointingLO(LinearOperator):
 
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -161,11 +158,10 @@ class PointingLO(LinearOperator):
             d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -194,11 +190,10 @@ class PointingLO(LinearOperator):
         Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -240,11 +235,10 @@ class PointingLO(LinearOperator):
             :math:`\phi_t`.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.ncols:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -276,11 +270,10 @@ class PointingLO(LinearOperator):
 
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.nrows:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -337,12 +330,11 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=(int(processed_samples.solver_type) < int(solver_type)),
-                exception=ValueError,
-                message="`solver_type` must be lower than or equal to the"
-                "`solver_type` of `processed_samples` object",
-            )
+            if int(processed_samples.solver_type) < int(solver_type):
+                raise ValueError(
+                    "`solver_type` must be lower than or equal to the"
+                    "`solver_type` of `processed_samples` object"
+                )
             self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
@@ -391,11 +383,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -415,11 +406,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -449,11 +439,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         where :math:`x` is   an :math:`n_{pix}` array.
         """
 
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.size:
+            raise ValueError(
+                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:

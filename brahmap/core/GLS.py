@@ -6,7 +6,6 @@ import numpy.typing as npt
 from dataclasses import dataclass
 from typing import Callable
 
-from ..mpi import MPI_RAISE_EXCEPTION
 
 from ..base import DTypeNoiseCov
 
@@ -166,11 +165,10 @@ def compute_GLS_maps_from_PTS(
         _description_
     """
     time_ordered_data = np.asarray(time_ordered_data)
-    MPI_RAISE_EXCEPTION(
-        condition=(processed_samples.nsamples != len(time_ordered_data)),
-        exception=ValueError,
-        message=f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {processed_samples.nsamples}\nlen(time_ordered_data) = {len(time_ordered_data)}",
-    )
+    if processed_samples.nsamples != len(time_ordered_data):
+        raise ValueError(
+            f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {processed_samples.nsamples}\nlen(time_ordered_data) = {len(time_ordered_data)}"
+        )
 
     try:
         time_ordered_data = time_ordered_data.astype(
@@ -186,11 +184,10 @@ def compute_GLS_maps_from_PTS(
             size=processed_samples.nsamples, dtype=processed_samples.dtype_float
         )
     else:
-        MPI_RAISE_EXCEPTION(
-            condition=(inv_noise_cov_operator.shape[0] != processed_samples.nsamples),
-            exception=ValueError,
-            message=f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = ({inv_noise_cov_operator.shape}, {inv_noise_cov_operator.shape})",
-        )
+        if inv_noise_cov_operator.shape[0] != processed_samples.nsamples:
+            raise ValueError(
+                f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = ({inv_noise_cov_operator.shape}, {inv_noise_cov_operator.shape})"
+            )
 
     pointing_operator = PointingLO(
         processed_samples=processed_samples, solver_type=gls_parameters.solver_type

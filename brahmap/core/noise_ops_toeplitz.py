@@ -7,7 +7,7 @@ from typing import Literal, Callable, cast
 from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat, cg
-from ..mpi import MPI_RAISE_EXCEPTION, MPI_UTILS
+from ..mpi import MPI_UTILS
 from .noise_ops_circulant import InvNoiseCovLO_Circulant
 
 
@@ -38,28 +38,20 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
     ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
-        MPI_RAISE_EXCEPTION(
-            condition=(input.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
+        if input.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
 
         if input_type == "covariance":
-            MPI_RAISE_EXCEPTION(
-                condition=(size > input.shape[0]),
-                exception=ValueError,
-                message="The input noise covariance array must be at least of the size of the linear operator",
-            )
+            if size > input.shape[0]:
+                raise ValueError(
+                    "The input noise covariance array must be at least of the size of the linear operator"
+                )
             covariance = input[:size]
         elif input_type == "power_spectrum":
-            MPI_RAISE_EXCEPTION(
-                condition=(
-                    (2 * size - 1 != input.shape[0])
-                    and (2 * size - 2 != input.shape[0])
-                ),
-                exception=ValueError,
-                message="The input power spectrum array must be of the size 2n-2 or 2n-1, where n is the size of the linear operator",
-            )
+            if (2 * size - 1 != input.shape[0]) and (2 * size - 2 != input.shape[0]):
+                raise ValueError(
+                    "The input power spectrum array must be of the size 2n-2 or 2n-1, where n is the size of the linear operator"
+                )
             covariance = scipy.fft.ifft(
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
@@ -105,11 +97,10 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Toeplitz` instance.\nShape of `NoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Toeplitz` instance.\nShape of `NoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         if vec.dtype != self.dtype:
             if MPI_UTILS.rank == 0:
@@ -241,11 +232,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                 dtype=dtype,
             )
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="Invalid preconditioner operator provided!",
-            )
+            raise ValueError("Invalid preconditioner operator provided!")
 
     @property
     def precond_op(self) -> LinearOperator | None:
@@ -254,11 +241,10 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
     @precond_op.setter
     def precond_op(self, operator: LinearOperator | None) -> None:
         if operator is not None:
-            MPI_RAISE_EXCEPTION(
-                condition=(self.shape != operator.shape),
-                exception=ValueError,
-                message=f"The shape of the input operator {operator.shape} is not compatible with the shape of inverse Toeplitz operator {self.shape}",
-            )
+            if self.shape != operator.shape:
+                raise ValueError(
+                    f"The shape of the input operator {operator.shape} is not compatible with the shape of inverse Toeplitz operator {self.shape}"
+                )
         self.__precond_op = operator
 
     @property
@@ -287,11 +273,10 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
             self.precond_callback(x, r, norm_residual)
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Toeplitz` instance.\nShape of `InvNoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+        if len(vec) != self.shape[0]:
+            raise ValueError(
+                f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Toeplitz` instance.\nShape of `InvNoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}"
+            )
 
         self.__previous_num_iterations = 0
 

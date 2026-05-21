@@ -7,7 +7,6 @@ from ..base import (
     BaseBlockDiagInvNoiseCovLinearOperator,  # noqa
 )
 from ..math import DTypeFloat
-from ..mpi import MPI_RAISE_EXCEPTION
 
 
 class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
@@ -39,12 +38,11 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         extra_kwargs: Dict[str, Any] = {},
     ):
         if isinstance(block_input, list):
-            MPI_RAISE_EXCEPTION(
-                condition=(len(block_size) != len(block_input)),
-                exception=ValueError,
-                message="The number of blocks listed in `block_size` is different"
-                " from the number of blocks provided in `block_input`",
-            )
+            if len(block_size) != len(block_input):
+                raise ValueError(
+                    "The number of blocks listed in `block_size` is different"
+                    " from the number of blocks provided in `block_input`"
+                )
 
             block_list = self.__build_blocks_from_list(
                 operator=operator,
@@ -66,11 +64,9 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
             )
 
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="`block_input` must be either a list of arrays or list"
-                " OR a dictionary that maps operator size to an array or a list",
+            raise ValueError(
+                "`block_input` must be either a list of arrays or list"
+                " OR a dictionary that maps operator size to an array or a list"
             )
 
         super().__init__(
@@ -123,10 +119,8 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
             if shape in op_dict.keys():
                 block_list.append(op_dict[shape])
             else:
-                MPI_RAISE_EXCEPTION(
-                    condition=True,
-                    exception=ValueError,
-                    message=f"Operator for shape {shape} is missing from the input dictionary",
+                raise ValueError(
+                    f"Operator for shape {shape} is missing from the input dictionary"
                 )
 
         return block_list
