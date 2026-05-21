@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Literal, List, Any, Callable, cast
+import numpy.typing as npt
+from typing import Literal, List, Any, Callable, cast, Union
 
 from ..base import LinearOperator, BlockDiagonalLinearOperator
 
@@ -55,7 +56,7 @@ class NoiseCovLinearOperator(LinearOperator):
         return self.__size
 
     @property
-    def diag(self) -> np.ndarray:  # type: ignore
+    def diag(self) -> npt.NDArray[np.number]:  # type: ignore
         MPI_RAISE_EXCEPTION(
             condition=True,
             exception=NotImplementedError,
@@ -135,7 +136,7 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
         return sum(self.col_size)
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
         diag = np.concatenate(
             [cast(NoiseCovLinearOperator, block).diag for block in self.block_list],
             axis=None,
@@ -148,7 +149,7 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
             for block in self.block_list
         ]
         return BaseBlockDiagInvNoiseCovLinearOperator(
-            block_list=cast(List[InvNoiseCovLinearOperator], inverse_list),
+            block_list=inverse_list,
         )
 
 
@@ -182,9 +183,9 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
         )
 
 
-DTypeNoiseCov = (
-    NoiseCovLinearOperator
-    | InvNoiseCovLinearOperator
-    | BaseBlockDiagNoiseCovLinearOperator
-    | BaseBlockDiagInvNoiseCovLinearOperator
-)
+DTypeNoiseCov = Union[
+    NoiseCovLinearOperator,
+    InvNoiseCovLinearOperator,
+    BaseBlockDiagNoiseCovLinearOperator,
+    BaseBlockDiagInvNoiseCovLinearOperator,
+]

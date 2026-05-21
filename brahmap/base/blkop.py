@@ -41,6 +41,7 @@
 # Licensed under the MIT License. See the <LICENSE.txt> file for details.
 
 import numpy as np
+import numpy.typing as npt
 import warnings
 from typing import List, Any, cast
 from functools import reduce, partial
@@ -272,11 +273,11 @@ class BlockDiagonalLinearOperator(LinearOperator):
         return len(self.block_list)
 
     @property
-    def row_size(self) -> np.ndarray:
+    def row_size(self) -> npt.NDArray[np.integer]:
         return self.__row_size
 
     @property
-    def col_size(self) -> np.ndarray:
+    def col_size(self) -> npt.NDArray[np.integer]:
         return self.__col_size
 
     def __getitem__(self, idx):
@@ -288,7 +289,12 @@ class BlockDiagonalLinearOperator(LinearOperator):
         else:
             return block_range
 
-    def _mult(self, vec: np.ndarray, block_list: List, dtype) -> np.ndarray:
+    def _mult(
+        self,
+        vec: npt.NDArray[np.number],
+        block_list: List,
+        dtype,
+    ) -> npt.NDArray[np.number]:
         nrows = sum(block.shape[0] for block in block_list)
         ncols = sum(block.shape[1] for block in block_list)
         MPI_RAISE_EXCEPTION(

@@ -141,7 +141,7 @@ class BaseLinearOperator(object):
         """Reset operator/vector product counter to zero."""
         self._nMatvec = 0
 
-    def dot(self, x) -> np.ndarray:
+    def dot(self, x) -> npt.NDArray[np.number]:
         """Numpy-like dot() method."""
         return self.__mul__(x)
 
@@ -246,7 +246,7 @@ class LinearOperator(BaseLinearOperator):
         """The adjoint operator"""
         return cast(LinearOperator, self.__H)
 
-    def matvec(self, x) -> np.ndarray:
+    def matvec(self, x) -> npt.NDArray[np.number]:
         """
         Matrix-vector multiplication.
 
@@ -287,7 +287,7 @@ class LinearOperator(BaseLinearOperator):
 
         return y
 
-    def to_array(self) -> np.ndarray:
+    def to_array(self) -> npt.NDArray[np.number]:
         """Returns the dense form of the linear operator as a 2D NumPy array
 
         !!! Warning
@@ -356,13 +356,13 @@ class LinearOperator(BaseLinearOperator):
             dtype=result_type,
         )
 
-    def __mul_vector(self, x) -> np.ndarray:
+    def __mul_vector(self, x) -> npt.NDArray[np.number]:
         # Product between a linear operator and a vector
         self._nMatvec += 1
         result_type = np.result_type(self.dtype, x.dtype)
         return self.matvec(x).astype(result_type, copy=False)
 
-    def __mul__(self, x) -> "LinearOperator | np.ndarray":
+    def __mul__(self, x) -> "LinearOperator | npt.NDArray[np.number]":
         # Returns a linear operator if x is a scalar or a linear operator
         # Returns a vector if x is an array
         if isinstance(x, numbers.Number):
@@ -374,7 +374,7 @@ class LinearOperator(BaseLinearOperator):
         else:
             raise ValueError("Invalid multiplier! Cannot multiply")
 
-    def __rmul__(self, x) -> "LinearOperator | np.ndarray":
+    def __rmul__(self, x) -> "LinearOperator | npt.NDArray[np.number]":
         if np.isscalar(x):
             return self.__mul__(x)
         raise ValueError("Invalid operation! Cannot multiply")
@@ -489,13 +489,13 @@ class DiagonalOperator(LinearOperator):
 
     Parameters
     ----------
-    diag : np.ndarray
+    diag : npt.NDArray[np.number]
         _description_
     **kwargs: Any
         _description_
     """
 
-    def __init__(self, diag: np.ndarray, **kwargs: Any) -> None:
+    def __init__(self, diag: npt.NDArray[np.number], **kwargs: Any) -> None:
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -527,13 +527,13 @@ class MatrixLinearOperator(LinearOperator):
 
     Parameters
     ----------
-    matrix : np.ndarray
+    matrix : npt.NDArray[np.number]
         _description_
     **kwargs: Any
         _description_
     """
 
-    def __init__(self, matrix: np.ndarray, **kwargs: Any) -> None:
+    def __init__(self, matrix: npt.NDArray[np.number], **kwargs: Any) -> None:
         if "symmetric" in kwargs:
             kwargs.pop("symmetric")
         if "matvec" in kwargs:
@@ -639,7 +639,7 @@ class InverseLO(LinearOperator):
         self.__preconditioner = preconditioner
         self.__converged = None
 
-    def mult(self, x) -> np.ndarray:
+    def mult(self, x) -> npt.NDArray[np.number]:
         r"""
         It returns  :math:`y=A^{-1}x` by solving the linear system :math:`Ay=x`
         with a certain :mod:`scipy` routine (e.g. :func:`scipy.sparse.linalg.cg`)
