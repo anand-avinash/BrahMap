@@ -2,8 +2,11 @@ from typing import List, Literal, Dict, Any, cast
 import numbers
 
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
 import litebird_sim as lbs
+
+from ..base import LinearOperator
 
 from ..core import (
     InvNoiseCovLO_Diagonal,
@@ -113,7 +116,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: lbs.Observation | List[lbs.Observation],
-        input: dict | np.ndarray | List,
+        input: dict | npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
     ) -> None:
@@ -175,7 +178,9 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             dtype=dtype,
         )
 
-    def __resize_input(self, new_size, input, input_type, dtype) -> np.ndarray:
+    def __resize_input(
+        self, new_size, input, input_type, dtype
+    ) -> npt.NDArray[np.number]:
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Circulant class
@@ -195,7 +200,7 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
                     input,
                     workers=MPI_UTILS.nthreads_per_process,
                 )[:new_size]  # new covariance
-                new_input = scipy.fft.fft(
+                new_input = scipy.fft.fft(  # type: ignore
                     new_input,
                     workers=MPI_UTILS.nthreads_per_process,
                 ).real.astype(
@@ -235,9 +240,9 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
     def __init__(
         self,
         obs: lbs.Observation | List[lbs.Observation],
-        input: dict | np.ndarray | List,
+        input: dict | npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        operator: Any = InvNoiseCovLO_Toeplitz01,
+        operator: type[LinearOperator] = InvNoiseCovLO_Toeplitz01,
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
     ) -> None:
@@ -300,7 +305,9 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
             extra_kwargs=extra_kwargs,
         )
 
-    def __resize_input(self, new_size, input, input_type, dtype) -> np.ndarray:
+    def __resize_input(
+        self, new_size, input, input_type, dtype
+    ) -> npt.NDArray[np.number]:
         if input_type == "covariance":
             # if the size of the returned array is smaller than new_size, it
             # will be captured by the InvNoiseCovLO_Toeplitz0x class
@@ -315,10 +322,10 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
                     input,
                     workers=MPI_UTILS.nthreads_per_process,
                 )[:new_size]  # covariance of size `new_size`
-                new_input = np.concatenate(
+                new_input = np.concatenate(  # type: ignore
                     [new_input, new_input[1:-1][::-1]]
                 )  # full covariance of size `2*new_size - 2`
-                new_input = scipy.fft.fft(
+                new_input = scipy.fft.fft(  # type: ignore
                     new_input,
                     workers=MPI_UTILS.nthreads_per_process,
                 ).real.astype(

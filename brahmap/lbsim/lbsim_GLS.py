@@ -1,8 +1,8 @@
 import gc
 from typing import List
 from dataclasses import dataclass, asdict
-
 import numpy as np
+import numpy.typing as npt
 import litebird_sim as lbs
 
 from ..base import DTypeNoiseCov
@@ -80,15 +80,15 @@ class LBSimGLSResult(GLSResult):
 def LBSim_compute_GLS_maps(
     nside: int,
     observations: lbs.Observation | List[lbs.Observation],
-    pointings: np.ndarray | List[np.ndarray] | None = None,
+    pointings: npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None = None,
     hwp: lbs.HWP | None = None,
     components: str | List[str] = "tod",
-    pointings_flag: np.ndarray | None = None,
+    pointings_flag: npt.NDArray[np.bool_] | None = None,
     inv_noise_cov_operator: DTypeNoiseCov | DTypeLBSNoiseCov | None = None,
     threshold: float = 1.0e-5,
     dtype_float: DTypeFloat = np.float64,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
-    x0: np.ndarray | None = None,
+    x0: npt.NDArray[np.number] | None = None,
 ) -> LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]:
     """_summary_
 
@@ -164,15 +164,15 @@ def LBSim_compute_GLS_maps(
         x0=x0,
     )
 
-    gls_result = LBSimGLSResult(
+    lbsim_gls_result = LBSimGLSResult(
         nside=nside,
         coordinate_system=LBSim_gls_parameters.output_coordinate_system,
         **asdict(gls_result),
     )
 
     if LBSim_gls_parameters.return_processed_samples:
-        return processed_samples, gls_result
+        return processed_samples, lbsim_gls_result
     else:
         del processed_samples
         gc.collect()
-        return gls_result
+        return lbsim_gls_result

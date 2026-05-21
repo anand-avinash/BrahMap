@@ -1,6 +1,7 @@
 from typing import List, Any
 
 import numpy as np
+import numpy.typing as npt
 import healpy as hp
 import litebird_sim as lbs
 
@@ -17,15 +18,15 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         Nside of the healpix map
     observations : Union[lbs.Observation, List[lbs.Observation]]
         An instance of the `Observation` class or a list of the same
-    pointings : Union[np.ndarray, List[np.ndarray], None], optional
+    pointings : Union[npt.NDArray[np.number], List[npt.NDArray[np.number]], None], optional
         _description_, by default None
     hwp : Optional[lbs.HWP], optional
         _description_, by default None
-    pointings_flag : Optional[np.ndarray], optional
+    pointings_flag : Optional[npt.NDArray[np.number]], optional
         _description_, by default None
     solver_type : SolverType, optional
         _description_, by default SolverType.IQU
-    noise_weights : Optional[np.ndarray], optional
+    noise_weights : Optional[npt.NDArray[np.number]], optional
         _description_, by default None
     output_coordinate_system : lbs.CoordinateSystem, optional
         _description_, by default lbs.CoordinateSystem.Galactic
@@ -39,11 +40,11 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         self,
         nside: int,
         observations: lbs.Observation | List[lbs.Observation],
-        pointings: np.ndarray | List[np.ndarray] | None = None,
+        pointings: npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None = None,
         hwp: lbs.HWP | None = None,
-        pointings_flag: np.ndarray | None = None,
+        pointings_flag: npt.NDArray[np.bool_] | None = None,
         solver_type: SolverType = SolverType.IQU,
-        noise_weights: np.ndarray | None = None,
+        noise_weights: npt.NDArray[np.number] | None = None,
         output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
         threshold: float = 1.0e-5,
         dtype_float: DTypeFloat = np.float64,
