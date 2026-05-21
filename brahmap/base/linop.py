@@ -254,7 +254,7 @@ class LinearOperator(BaseLinearOperator):
         construct time, to ensure the consistency of the input and output
         arrays with the operator's shape.
         """
-        x = np.asanyarray(x)
+        x = np.asanyarray(x, dtype=self.dtype)
         M, N = self.shape
 
         # check input data consistency
