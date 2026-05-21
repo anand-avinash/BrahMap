@@ -55,11 +55,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
-
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
                 warnings.warn(
@@ -77,11 +72,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
@@ -108,11 +98,6 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
         where :math:`x` is   an :math:`n_{pix}` array.
         """
-
-        if len(vec) != self.size:
-            raise ValueError(
-                f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}"
-            )
 
         if vec.dtype != self.dtype_float:
             if MPI_UTILS.rank == 0:
