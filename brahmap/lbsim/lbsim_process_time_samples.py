@@ -10,30 +10,45 @@ from ..math import DTypeFloat
 
 
 class LBSimProcessTimeSamples(ProcessTimeSamples):
-    """A class to store the pre-processed and pre-computed arrays from `litebird_sim` observations.
+    """A data container to store the pre-processed and pre-computed arrays and
+    metadata from `litebird_sim` observations.
+
+    Similar to [`ProcessTimeSamples`][brahmap.core.ProcessTimeSamples],
+    this container object can be used to create pointing operators,
+    block-diagonal preconditioners, etc. as required for map-making.
 
     Parameters
     ----------
     nside : int
-        Nside of the healpix map
-    observations : Union[lbs.Observation, List[lbs.Observation]]
+        The HEALPix $N_{side}$ resolution parameter defining the number of pixels
+    observations : lbs.Observation | List[lbs.Observation]
         An instance of the `Observation` class or a list of the same
-    pointings : Union[npt.NDArray[np.number], List[npt.NDArray[np.number]], None], optional
-        _description_, by default None
-    hwp : Optional[lbs.HWP], optional
-        _description_, by default None
-    pointings_flag : Optional[npt.NDArray[np.number]], optional
-        _description_, by default None
+    pointings : npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None, optional
+        Array of detector pointing indices mapping time samples to observed sky pixels,
+        by default `None`
+    hwp : lbs.HWP | None, optional
+        The Half-Wave Plate (HWP) angles or configuration, by default `None`
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        Boolean array indicating valid pointing samples, by default `None`.
+        The `True` value indicates a valid pointing, and the `False`
+        value indicates a bad pointing. If set as `None`, all the
+        pointings are considered valid
     solver_type : SolverType, optional
-        _description_, by default SolverType.IQU
-    noise_weights : Optional[npt.NDArray[np.number]], optional
-        _description_, by default None
+        The level of map-making solver to construct ($I$, $QU$, or
+        $IQU$), by default `SolverType.IQU`
+    noise_weights : npt.NDArray[np.number] | None, optional
+        Array of noise inverse noise variance for each time sample, by
+        default `None`. If set as `None`, inverse noise variance is set to 1 for each
+        time sample
     output_coordinate_system : lbs.CoordinateSystem, optional
-        _description_, by default lbs.CoordinateSystem.Galactic
+        The celestial coordinate system to use for the generated output maps, by
+        default `lbs.CoordinateSystem.Galactic`
     threshold : float, optional
-        _description_, by default 1.0e-5
+        The condition number threshold used to flag degenerate or under-sampled
+        pixels, by default `1.0e-5`
     dtype_float : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type to use for floating point arrays, by default
+        `np.float64`
     """
 
     def __init__(
@@ -123,15 +138,33 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
 
     @property
     def obs_list(self) -> List[lbs.Observation]:
-        """List of the instances of `Observation` class"""
+        """A list of the parsed `litebird_sim` observations.
+
+        Returns
+        -------
+        List[lbs.Observation]
+            The list of observations
+        """
         return self.__obs_list
 
     @property
     def nside(self) -> int:
-        """Nside parameter of the healpix map"""
+        """The HEALPix resolution parameter.
+
+        Returns
+        -------
+        int
+            The $N_{side}$ parameter
+        """
         return self.__nside
 
     @property
     def coordinate_system(self) -> lbs.CoordinateSystem:
-        """Coordinate system used in data-processing"""
+        """The output celestial coordinate system used in data processing.
+
+        Returns
+        -------
+        lbs.CoordinateSystem
+            The configured coordinate system
+        """
         return self.__coordinate_system
