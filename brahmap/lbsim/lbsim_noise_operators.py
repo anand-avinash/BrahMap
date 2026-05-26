@@ -21,19 +21,24 @@ from ..mpi import MPI_UTILS
 
 
 class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
-    """_summary_
+    """A block-diagonal linear operator representing the inverse of an
+    uncorrelated noise covariance matrix $N^{-1}$.
 
-    The assumption is that at a given MPI process, all observations
-    contain same set of detectors
+    It assumes that for a given MPI process, all observations contain the
+    same set of detectors.
 
     Parameters
     ----------
-    obs : Union[lbs.Observation, List[lbs.Observation]]
-        _description_
-    noise_variance : Union[dict, DTypeFloat, None], optional
-        _description_, by default None
+    obs : lbs.Observation | List[lbs.Observation]
+        An instance of the `Observation` class or a list of the same
+    noise_variance : dict | float | None, optional
+        The expected variance of the noise for the given detectors, by
+        default `None`. It can be a dictionary that maps the detector
+        name to their noise variance OR a single value that is used for
+        all detectors. If set as `None`, inverse noise variance is set to
+        1 for each detector for the entire observation duration
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     # Keep a note of the hard-coded factor of 1e4
@@ -66,7 +71,8 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
         else:
             noise_var_dict = cast(dict, noise_variance)
 
-        # setting the `noise_variance` to 1 for the detectors whose noise variance is not provided in the dictionary
+        # setting the `noise_variance` to 1 for the detectors whose noise variance is
+        # not provided in the dictionary
         det_no_variance = np.setdiff1d(obs_list[0].name, list(noise_var_dict.keys()))
         for detector in det_no_variance:
             noise_var_dict[detector] = 1.0
@@ -99,18 +105,22 @@ class LBSim_InvNoiseCovLO_UnCorr(BlockDiagInvNoiseCovLO):
 
 
 class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
-    """_summary_
+    """A block-diagonal linear operator where each diagonal block
+    represents the inverse of a circulant noise covariance matrix $N^{-1}$.
 
     Parameters
     ----------
-    obs : Union[lbs.Observation, List[lbs.Observation]]
-        _description_
-    input : Union[dict, Union[np.ndarray, List]]
-        _description_
+    obs : lbs.Observation | List[lbs.Observation]
+        An instance of the `Observation` class or a list of the same
+    input : dict | npt.ArrayLike
+        The input array or data defining the operator. It can be a
+        dictionary that maps the detector name to the corresponding
+        input array OR a single array that is used for all the detectors
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     def __init__(
@@ -150,7 +160,8 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
 
             for obs in obs_list:
                 for det_idx in range(obs.n_detectors):
-                    # if input is an array or a list, it will be taken as same for all the detectors available in the observation
+                    # if input is an array or a list, it will be taken as same for all
+                    # the detectors available in the observation
                     block_size.append(obs.n_samples)
 
                     if obs.n_samples not in block_input_dict:
@@ -165,7 +176,8 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
             block_input = block_input_dict
         else:
             raise ValueError(
-                "The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum"
+                "The input must be an array or a list or a dictionary that maps detector "
+                "names to their covariance/power spectrum"
             )
 
         super(LBSim_InvNoiseCovLO_Circulant, self).__init__(
@@ -215,24 +227,31 @@ class LBSim_InvNoiseCovLO_Circulant(BlockDiagInvNoiseCovLO):
 
 
 class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
-    """_summary_
-
-    Note that the observation length is either n or n-1.
+    """A block-diagonal linear operator where each diagonal block
+    represents the inverse of a Toeplitz noise covariance matrix $N^{-1}$.
 
     Parameters
     ----------
-    obs : Union[lbs.Observation, List[lbs.Observation]]
-        _description_
-    input : Union[dict, Union[np.ndarray, List]]
-        _description_
+    obs : lbs.Observation | List[lbs.Observation]
+        An instance of the `Observation` class or a list of the same
+    input : dict | npt.ArrayLike
+        The input array or data defining the operator. It can be a
+        dictionary that maps the detector name to the corresponding
+        input array OR a single array that is used for all the detectors.
+        The length of the input arrays must correspond to the length
+        required by the respective `operator` class
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
-    operator : InvNoiseCovLinearOperator, optional
-        _description_, by default InvNoiseCovLO_Toeplitz01
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
+    operator : type[LinearOperator], optional
+        The type of inverse Toeplitz operator that will be used for each block,
+        by default [`InvNoiseCovLO_Toeplitz01`][brahmap.core.InvNoiseCovLO_Toeplitz01]
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     extra_kwargs : Dict[str, Any], optional
-        _description_, by default {}
+        Additional keyword arguments passed to the `operator`, by default `{}`. Refer
+        to [InvNoiseCovLO_Toeplitz01][brahmap.core.InvNoiseCovLO_Toeplitz01]
+        class for the list of corresponding arguments
     """
 
     def __init__(
@@ -274,7 +293,8 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
 
             for obs in obs_list:
                 for det_idx in range(obs.n_detectors):
-                    # if input is an array or a list, it will be taken as same for all the detectors available in the observation
+                    # if input is an array or a list, it will be taken as same for
+                    # all the detectors available in the observation
                     block_size.append(obs.n_samples)
 
                     if obs.n_samples not in block_input_dict:
@@ -289,7 +309,8 @@ class LBSim_InvNoiseCovLO_Toeplitz(BlockDiagInvNoiseCovLO):
             block_input = block_input_dict
         else:
             raise ValueError(
-                "The input must be an array or a list or a dictionary that maps detector names to their covariance/power spectrum"
+                "The input must be an array or a list or a dictionary that maps "
+                "detector names to their covariance/power spectrum"
             )
 
         super(LBSim_InvNoiseCovLO_Toeplitz, self).__init__(
