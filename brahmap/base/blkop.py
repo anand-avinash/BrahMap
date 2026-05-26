@@ -52,9 +52,12 @@ from .misc import ShapeError
 
 class BlockLinearOperator(LinearOperator):
     """
-    A linear operator defined by blocks. Each block must be a linear operator.
+    A block-linear operator where each block refers to a
+    [`LinearOperator`][..LinearOperator].
 
-    `blocks` should be a list of lists describing the blocks row-wise.
+    The input parameter `blocks` must be a list of lists describing the blocks
+    row-wise.
+
     If there is only one block row, it should be specified as
     `[[b1, b2, ..., bn]]`, not as `[b1, b2, ..., bn]`.
 
@@ -64,12 +67,17 @@ class BlockLinearOperator(LinearOperator):
 
     Parameters
     ----------
-    blocks : List[LinearOperator]
-        _description_
+    blocks : List[List[LinearOperator]]
+        A nested list of linear operators defining the block structure
     symmetric : bool, optional
-        _description_, by default False
-    **kwargs: Any
-        _description_
+        Indicates if the linear operator is symmetric, by default `False`
+    **kwargs : Any
+        Extra keyword arguments
+
+    Attributes
+    ----------
+    blocks : list[list[LinearOperator]]
+        The list of blocks defining the block operator
     """
 
     def __init__(
@@ -80,6 +88,7 @@ class BlockLinearOperator(LinearOperator):
     ) -> None:
         # If building a symmetric operator, fill in the blanks.
         # They're just references to existing objects.
+
         try:
             for block_row in blocks:
                 for block_col in block_row:
@@ -176,7 +185,14 @@ class BlockLinearOperator(LinearOperator):
 
     @property
     def blocks(self) -> List[List[LinearOperator]]:
-        """The list of blocks defining the block operator."""
+        """The list of blocks defining the block operator.
+
+        Returns
+        -------
+        list[list[LinearOperator]]
+            A nested list of linear operators representing the block
+            structure of the operator
+        """
         return self._blocks
 
     def __getitem__(self, indices):
@@ -202,9 +218,20 @@ class BlockDiagonalLinearOperator(LinearOperator):
     Parameters
     ----------
     block_list : List[LinearOperator]
-        _description_
-    **kwargs: Any
-        _description_
+        A flat list of linear operators representing the individual diagonal blocks
+    **kwargs : Any
+        Extra keyword arguments
+
+    Attributes
+    ----------
+    block_list : list[LinearOperator]
+        A flat list of linear operators representing the individual diagonal blocks
+    num_blocks : int
+        The total number of diagonal blocks in the operator
+    row_size : npt.NDArray[np.integer]
+        Array containing the number of rows for each block
+    col_size : npt.NDArray[np.integer]
+        Array containing the number of columns for each block
     """
 
     def __init__(
@@ -260,18 +287,46 @@ class BlockDiagonalLinearOperator(LinearOperator):
 
     @property
     def block_list(self) -> List[LinearOperator]:
+        """A list of linear operators representing the individual diagonal blocks.
+
+        Returns
+        -------
+        list[LinearOperator]
+            A list of linear operators representing the individual diagonal blocks
+        """
         return self.__block_list
 
     @property
     def num_blocks(self) -> int:
+        """The total number of diagonal blocks in the operator.
+
+        Returns
+        -------
+        int
+            The total number of diagonal blocks in the operator
+        """
         return len(self.block_list)
 
     @property
     def row_size(self) -> npt.NDArray[np.integer]:
+        """Array containing the number of rows for each block.
+
+        Returns
+        -------
+        npt.NDArray[np.integer]
+            Array containing the number of rows for each block
+        """
         return self.__row_size
 
     @property
     def col_size(self) -> npt.NDArray[np.integer]:
+        """Array containing the number of columns for each block.
+
+        Returns
+        -------
+        npt.NDArray[np.integer]
+            Array containing the number of columns for each block
+        """
         return self.__col_size
 
     def __getitem__(self, idx):
@@ -311,40 +366,58 @@ class BlockPreconditioner(BlockLinearOperator):
     """An alias for ``BlockLinearOperator``.
 
     Holds an additional ``solve`` method equivalent to ``__mul__``.
-
     """
 
     def solve(self, x):
-        """An alias to __call__."""
+        """Solve the preconditioner system (alias for matrix-vector multiplication).
+
+        Parameters
+        ----------
+        x : npt.NDArray[np.number]
+            The input vector to be multiplied by the preconditioner.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The result of applying the preconditioner to the input vector.
+        """
         return self.__call__(x)
 
 
 class BlockDiagonalPreconditioner(BlockDiagonalLinearOperator):
-    """
-    An alias for ``BlockDiagonalLinearOperator``.
+    """An alias for ``BlockDiagonalLinearOperator``.
 
     Holds an additional ``solve`` method equivalent to ``__mul__``.
-
     """
 
     def solve(self, x):
-        """An alias to __call__."""
+        """Solve the preconditioner system (alias for matrix-vector multiplication).
+
+        Parameters
+        ----------
+        x : npt.NDArray[np.number]
+            The input vector to be multiplied by the preconditioner.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The result of applying the preconditioner to the input vector.
+        """
         return self.__call__(x)
 
 
 class BlockHorizontalLinearOperator(BlockLinearOperator):
-    """
-    A block horizontal linear operator.
+    """A block horizontal linear operator.
 
-    Each block must be a linear operator.
-    The blocks must be specified as one list, e.g., `[A, B, C]`.
+    Each block must be a linear operator. The blocks must be specified as
+    a flat list, e.g., `[A, B, C]`.
 
     Parameters
     ----------
     blocks : List[LinearOperator]
-        _description_
-    **kwargs: Any
-        _description_
+        A flat list of linear operators representing the individual blocks in the row
+    **kwargs : Any
+        Extra keyword arguments
     """
 
     def __init__(
@@ -366,18 +439,18 @@ class BlockHorizontalLinearOperator(BlockLinearOperator):
 
 
 class BlockVerticalLinearOperator(BlockLinearOperator):
-    """
-    A block vertical linear operator.
+    """A block vertical linear operator.
 
-    Each block must be a linear operator.
-    The blocks must be specified as one list, e.g., `[A, B, C]`.
+    Each block must be a linear operator. The blocks must be specified as
+    a flat list, e.g., `[A, B, C]`.
 
     Parameters
     ----------
     blocks : List[LinearOperator]
-        _description_
-    **kwargs: Any
-        _description_
+        A flat list of linear operators representing the individual blocks in the
+        column
+    **kwargs : Any
+        Extra keyword arguments
     """
 
     def __init__(

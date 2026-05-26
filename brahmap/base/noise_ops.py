@@ -13,15 +13,23 @@ class NoiseCovLinearOperator(LinearOperator):
     Parameters
     ----------
     nargin : int
-        _description_
-    matvec : int
-        _description_
-    input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "covariance"
+        The number of rows/columns of the operator
+    matvec : Callable
+        A function that defines the matrix-vector product $x \\mapsto N(x)=Nx$
+    input_type : Literal['covariance', 'power_spectrum'], optional
+        Specifies whether the input is a covariance array or a power spectrum array,
+         by default `"covariance"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
-    **kwargs: Any
-        _description_
+        The data type of the operator, by default `np.float64`
+    **kwargs : Any
+        Extra keyword arguments
+
+    Attributes
+    ----------
+    size : int
+        The dimension i.e. the number of rows/columns of the operator
+    diag : npt.NDArray[np.number]
+        An array containing the diagonal of the operator
     """
 
     def __init__(
@@ -50,13 +58,34 @@ class NoiseCovLinearOperator(LinearOperator):
 
     @property
     def size(self) -> int:
+        """The dimension i.e. the number of rows/columns of the operator
+
+        Returns
+        -------
+        int
+            The size of the operator
+        """
         return self.__size
 
     @property
     def diag(self) -> npt.NDArray[np.number]:  # type: ignore
+        """The diagonal of the operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            An array containing the diagonal of the operator
+        """
         raise NotImplementedError("Please subclass to implement `diag`")
 
     def get_inverse(self) -> "InvNoiseCovLinearOperator":  # type: ignore
+        """Returns the inverse of the operator.
+
+        Returns
+        -------
+        InvNoiseCovLinearOperator
+            The inverse noise covariance operator
+        """
         raise NotImplementedError("Please subclass to implement `get_inverse()`")
 
 
@@ -66,15 +95,17 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
     Parameters
     ----------
     nargin : int
-        _description_
-    matvec : int
-        _description_
-    input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "covariance"
+        The number of rows/columns of the operator
+    matvec : Callable
+        A function that defines the inverse matrix-vector product
+        $x \\mapsto N^{-1}(x)=N^{-1}x$
+    input_type : Literal['covariance', 'power_spectrum'], optional
+        Specifies whether the input is a covariance array or a power spectrum array,
+        by default `"covariance"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
-    **kwargs: Any
-        _description_
+        The data type of the operator, by default `np.float64`
+    **kwargs : Any
+        Extra keyword arguments
     """
 
     def __init__(
@@ -95,14 +126,21 @@ class InvNoiseCovLinearOperator(NoiseCovLinearOperator):
 
 
 class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
-    """Base class for block-diagonal noise covariance operator
+    """Base class for block-diagonal noise covariance operator.
 
     Parameters
     ----------
     block_list : List[NoiseCovLinearOperator]
-        _description_
-    **kwargs: Any
-        _description_
+        A list of linear operators representing the individual diagonal blocks
+    **kwargs : Any
+        Extra keyword arguments
+
+    Attributes
+    ----------
+    size : int
+        An array containing the number of rows/columns for each block
+    diag : npt.NDArray[np.number]
+        An array containing the diagonal of the operator
     """
 
     def __init__(
@@ -119,10 +157,24 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
 
     @property
     def size(self) -> int:
+        """Array containing the number of rows/columns for each block
+
+        Returns
+        -------
+        int
+            Array containing the number of rows/columns for each block
+        """
         return sum(self.col_size)
 
     @property
     def diag(self) -> npt.NDArray[np.number]:
+        """Array containing the diagonal of the operator
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            Array containing the diagonal of the operator
+        """
         diag = np.concatenate(
             [cast(NoiseCovLinearOperator, block).diag for block in self.block_list],
             axis=None,
@@ -130,6 +182,13 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
         return diag
 
     def get_inverse(self) -> "BaseBlockDiagInvNoiseCovLinearOperator":
+        """Returns the inverse block-diagonal covariance operator.
+
+        Returns
+        -------
+        BaseBlockDiagInvNoiseCovLinearOperator
+            The inverse block-diagonal covariance operator
+        """
         inverse_list = [
             cast(NoiseCovLinearOperator, block).get_inverse()
             for block in self.block_list
@@ -140,14 +199,14 @@ class BaseBlockDiagNoiseCovLinearOperator(BlockDiagonalLinearOperator):
 
 
 class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator):
-    """Base class for block-diagonal inverse noise covariance operator
+    """Base class for block-diagonal inverse noise covariance operator.
 
     Parameters
     ----------
     block_list : List[InvNoiseCovLinearOperator]
-        _description_
-    **kwargs: Any
-        _description_
+        A list of linear operators representing the individual diagonal blocks
+    **kwargs : Any
+        Extra keyword arguments
     """
 
     def __init__(
@@ -160,6 +219,13 @@ class BaseBlockDiagInvNoiseCovLinearOperator(BaseBlockDiagNoiseCovLinearOperator
         )
 
     def get_inverse(self) -> "BaseBlockDiagNoiseCovLinearOperator":  # type: ignore
+        """Returns the block-diagonal covariance operator.
+
+        Returns
+        -------
+        BaseBlockDiagNoiseCovLinearOperator
+            The block-diagonal covariance operator
+        """
         inverse_list = [
             cast(InvNoiseCovLinearOperator, block).get_inverse()
             for block in self.block_list
