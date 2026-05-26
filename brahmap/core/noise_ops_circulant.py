@@ -9,18 +9,19 @@ from ..mpi import MPI_UTILS
 
 
 class NoiseCovLO_Circulant(NoiseCovLinearOperator):
-    """Linear operator for Circulant noise covariance
+    """A linear operator representing a circulant noise covariance matrix $N$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default "power_spectrum"
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default np.float64
     """
 
     def __init__(
@@ -60,6 +61,13 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
 
     @property
     def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -69,6 +77,13 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         return factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self) -> "InvNoiseCovLO_Circulant":
+        """Returns the inverse of this circulant noise covariance operator.
+
+        Returns
+        -------
+        InvNoiseCovLO_Circulant
+            The inverse operator $N^{-1}$
+        """
         inv_noise_cov = InvNoiseCovLO_Circulant(
             size=self.size,
             input=self.__input,
@@ -78,6 +93,18 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         return inv_noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,
@@ -93,18 +120,20 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
 
 
 class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
-    """Linear operator for the inverse of Circulant noise covariance
+    """A linear operator representing the inverse of a circulant noise
+    covariance matrix $N^{-1}$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default "power_spectrum"
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default np.float64
     """
 
     def __init__(
@@ -144,6 +173,13 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
 
     @property
     def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the inverse noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -153,6 +189,14 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         return factor * np.ones(self.size, dtype=self.dtype)
 
     def get_inverse(self) -> "NoiseCovLO_Circulant":  # type: ignore
+        """Returns the inverse of this operator, which is the original
+        noise covariance operator.
+
+        Returns
+        -------
+        NoiseCovLO_Circulant
+            The noise covariance operator $N$
+        """
         noise_cov = NoiseCovLO_Circulant(
             size=self.size,
             input=1.0 / self.__input,
@@ -162,6 +206,18 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         return noise_cov
 
     def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,

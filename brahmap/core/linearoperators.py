@@ -13,16 +13,31 @@ from ..mpi import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
-    """Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
-    It constitutes an interface for dealing with the projection operator
-    (pointing matrix).
+    """A linear operator representing the pointing matrix (projection operator) $P$.
+
+    This class encapsulates the highly sparse projection/de-projection
+    operations (scatter/gather) required to map time samples onto sky
+    pixels or vice versa, according to the given pointing information and
+    map-making solver configuration. It excludes bad pointing samples and
+    pathological pixels while performing projection/de-projection
+    operations. The shape of the operator is `[nsamples, new_npix*ncomponents]`
+    where `ncomponents` depends on the number of components being
+    projected on the sky pixels. For instance, for `IQU` map-making,
+    `ncomponents = 3`.
 
     Parameters
     ----------
     processed_samples : ProcessTimeSamples
-        _description_
-    solver_type : Union[None, SolverType], optional
-        _description_, by default None
+        The pre-processed time samples object containing pointing and
+        map-making metadata
+    solver_type : SolverType | None, optional
+        The map-making solver configuration to use. If `None`, it falls
+        back to the `solver_type` of `processed_samples`, by default `None`
+
+    Attributes
+    ----------
+    solver_type : SolverType
+        The current map-making solver configuration
     """
 
     def __init__(
@@ -30,12 +45,16 @@ class PointingLO(LinearOperator):
         processed_samples: ProcessTimeSamples,
         solver_type: None | SolverType = None,
     ) -> None:
+        ### Some of the functionalities of this class are implemented with C++
+        ### extensions. A corresponding full Python implementation is provided in
+        ### `tests/py_PointingLO.py` for reference.
+
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
             if int(processed_samples.solver_type) < int(solver_type):
                 raise ValueError(
-                    "`solver_type` must be lower than or equal to the"
+                    "`solver_type` must be lower than or equal to the "
                     "`solver_type` of `processed_samples` object"
                 )
             self.__solver_type = solver_type
@@ -80,13 +99,18 @@ class PointingLO(LinearOperator):
             )
 
     def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Performs the product of a sparse matrix :math:`Av`,\
-         with :math:`v` a  :mod:`numpy`  array (:math:`dim(v)=n_{pix}`)  .
+        r"""Performs the matrix-vector product $Pv$ for temperature-only ($I$)
+        map-making.
 
-        It extracts the components of :math:`v` corresponding  to the non-null \
-        elements of the operator.
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$ of size `new_npix`
 
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -102,9 +126,18 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Performs the product for the transpose operator :math:`A^T`.
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature-only ($I$) map-making.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `new_npix`
         """
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
@@ -122,12 +155,18 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""Performs :math:`A * v` with :math:`v` being a *polarization* vector.
-        The output array will encode a linear combination of the two Stokes
-        parameters,  (whose components are stored contiguously).
+        r"""Performs the matrix-vector product $Pv$ for linear
+        polarization ($QU$) map-making.
 
-        .. math::
-            d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$ of size `2*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -145,8 +184,18 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        linear polarization ($QU$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
         """
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
@@ -166,19 +215,18 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""Performs the product of a sparse matrix :math:`Av`,
-        with ``v`` a  :mod:`numpy` array containing the
-        three Stokes parameters [IQU] .
+        r"""Performs the matrix-vector product $Pv$ for temperature and
+        linear polarization map-making.
 
-        .. note::
-            Compared to the operation ``mult`` this routine returns a
-            :math:`n_t`-size vector defined as:
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `3*new_npix`
 
-            .. math::
-                d_t= I_p + Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
-
-            with :math:`p` is the pixel observed at time :math:`t` with polarization angle
-            :math:`\phi_t`.
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
@@ -196,11 +244,18 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Performs the product for the transpose operator :math:`A^T` to get a IQU map-like vector.
-        Since this vector resembles the pixel of 3 maps it has 3 times the size ``Npix``.
-        IQU values referring to the same pixel are  contiguously stored in the memory.
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature and linear polarization map-making.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
         """
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
@@ -221,25 +276,38 @@ class PointingLO(LinearOperator):
 
     @property
     def solver_type(self) -> SolverType:
+        """The current map-making solver configuration.
+
+        Returns
+        -------
+        SolverType
+            The map-making solver type
+        """
         return self.__solver_type
 
 
 class BlockDiagonalPreconditionerLO(LinearOperator):
-    r"""
-    Standard preconditioner defined as:
+    r"""A block-diagonal preconditioner operator for iterative map-making solvers.
 
-    $$M_{BD}=( P^T diag(N^{-1}) P)^{-1}$$
+    Computes the standard map-making preconditioner defined as:
 
-    where $P$ is the *pointing matrix* (see `PointingLO`).
-    Such inverse operator  could be easily computed given the structure of the
-    matrix $P$.
+    $$M_{BD} = (P^T \text{diag}(N)^{-1} P)^{-1}$$
+
+    where $P$ is the pointing matrix and $N$ is the
+    noise covariance.
 
     Parameters
     ----------
     processed_samples : ProcessTimeSamples
-        _description_
-    solver_type : Union[None, SolverType], optional
-        _description_, by default None
+        The pre-processed time samples object containing accumulated map-making weights
+    solver_type : SolverType | None, optional
+        The map-making solver configuration to use. If `None`, it falls
+        back to the `solver_type` of `processed_samples`, by default None
+
+    Attributes
+    ----------
+    solver_type : SolverType
+        The active map-making solver configuration
     """
 
     def __init__(
@@ -247,6 +315,10 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         processed_samples: ProcessTimeSamples,
         solver_type: None | SolverType = None,
     ) -> None:
+        ### Some of the functionalities of this class are implemented with C++
+        ### extensions. A corresponding full Python implementation is provided in
+        ### `tests/py_BlkDiagPrecondLO.py` for reference.
+
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
@@ -298,9 +370,20 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
             )
 
     def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+        r"""Applies the block-diagonal preconditioner for temperature-only
+        ($I$) map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `new_npix`
         """
 
         prod = vec / self.weighted_counts
@@ -308,9 +391,20 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         return prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+        r"""Applies the block-diagonal preconditioner for linear
+        polarization ($QU$) map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `2*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
         """
 
         prod = np.zeros(self.size, dtype=self.dtype)
@@ -328,9 +422,20 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         return prod
 
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+        r"""Applies the block-diagonal preconditioner for temperature and
+        linear polarization map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `3*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
         """
 
         prod = np.zeros(self.size, dtype=self.dtype)
@@ -352,4 +457,11 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
     @property
     def solver_type(self) -> SolverType:
+        """The current map-making solver configuration.
+
+        Returns
+        -------
+        SolverType
+            The map-making solver type
+        """
         return self.__solver_type

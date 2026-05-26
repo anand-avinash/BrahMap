@@ -3,6 +3,7 @@ import numpy.typing as npt
 from typing import List, Literal, Dict, Any
 
 from ..base import (
+    LinearOperator,
     BaseBlockDiagNoiseCovLinearOperator,
     BaseBlockDiagInvNoiseCovLinearOperator,  # noqa
 )
@@ -10,27 +11,28 @@ from ..math import DTypeFloat
 
 
 class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
-    """Linear operator for block-diagonal noise covariance
+    """A linear operator representing a block-diagonal noise covariance matrix $N$.
 
     Parameters
     ----------
-    operator : _type_
-        _description_
-    block_size : Union[np.ndarray, List]
-        _description_
-    block_input : Union[List, Dict]
-        _description_
+    operator : type
+        The base operator for the diagonal blocks
+    block_size : npt.NDArray[np.number] | List
+        A list defining the sizes of each diagonal block
+    block_input : List | Dict
+        A list defining the input data for each diagonal block
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     extra_kwargs : Dict[str, Any], optional
-        _description_, by default {}
+        Additional keyword arguments passed to the underlying routines, by default `{}`
     """
 
     def __init__(
         self,
-        operator,
+        operator: type[LinearOperator],
         block_size: npt.NDArray[np.number] | List,
         block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
@@ -127,27 +129,29 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
 
 
 class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
-    """Linear operator for block-diagonal inverse noise covariance
+    """A linear operator representing the inverse of a block-diagonal
+    noise covariance matrix $N^{-1}$.
 
     Parameters
     ----------
-    operator : _type_
-        _description_
-    block_size : Union[np.ndarray, List]
-        _description_
-    block_input : Union[List, Dict]
-        _description_
+    operator : type
+        The base operator for the diagonal blocks
+    block_size : npt.NDArray[np.number] | List
+        A list defining the sizes of each diagonal block
+    block_input : List | Dict
+        A list defining the input data for each diagonal block
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     extra_kwargs : Dict[str, Any], optional
-        _description_, by default {}
+        Additional keyword arguments passed to the underlying routines, by default `{}`
     """
 
     def __init__(
         self,
-        operator,
+        operator: type[LinearOperator],
         block_size: npt.NDArray[np.number] | List,
         block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
