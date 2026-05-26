@@ -7,19 +7,22 @@ from ..base import LinearOperator
 def plot_LinearOperator(
     operator: LinearOperator,
 ) -> None:
-    """A utility function to visualize BrahMap linear operators. Make sure that `matplotlib` is installed if you want to use it.
+    """A utility function to visualize BrahMap linear operators using `matplotlib`.
+
+    Make sure that `matplotlib` is installed to use this function.
 
     !!! Warning
 
         This method first allocates a NumPy array of shape `self.shape`
         and data-type `self.dtype`, and then fills them with numbers. As
-        such it can occupy an enormous amount of memory. Don't use it
-        unless you understand the risk!
+        such, for a large linear operator, it can occupy an enormous
+        amount of memory and crash your system. Don't use it unless you
+        understand the risk!
 
     Parameters
     ----------
     operator : LinearOperator
-        _description_
+        The linear operator to be visualized
     """
     plt.figure()
     plt.imshow(operator.to_array())

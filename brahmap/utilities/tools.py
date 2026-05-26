@@ -5,10 +5,8 @@ from ..math import parallel_norm
 
 
 class bash_colors:
-    """
-    This class contains the necessary definitions to print to bash
-    screen with colors. Sometimes it can be useful...
-    """
+    """A utility class containing ANSI escape codes for printing colored
+    text to the screen."""
 
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -42,7 +40,8 @@ class bash_colors:
 
 
 class modify_numpy_context(object):
-    """A context manager that replaces `np.linalg.norm` with `parallel_norm`"""
+    """A context manager that temporarily replaces `np.linalg.norm` with
+    `brahmap.math.parallel_norm`."""
 
     def __init__(self) -> None:
         self.parallel_norm = parallel_norm
@@ -56,24 +55,24 @@ class modify_numpy_context(object):
 
 
 def profile_run() -> cProfile.Profile:
-    """Profile the execution with module `cProfile`
+    """Profiles the execution of the code using the `cProfile` module.
 
     Returns
     -------
-    _type_
-        _description_
+    cProfile.Profile
+        The active profiling instance
     """
     pr = cProfile.Profile()
     return pr
 
 
 def output_profile(pr: cProfile.Profile) -> None:
-    """Output of the profiling with `profile_run`.
+    """Outputs the collected profiling statistics from `profile_run`.
 
     Parameters
     ----------
-    pr : _type_
-        _description_
+    pr : cProfile.Profile
+        A profiling or logging object used for performance tracking
     """
     import pstats
     import io
