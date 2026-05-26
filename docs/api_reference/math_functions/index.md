@@ -34,7 +34,26 @@ Following functions are available:
 
 ## `dtype` hints
 
-- `DTypeFloat`: type-hint for the `dtype` of floating-point numbers
-- `DTypeInt`: type-hint for the `dtype` of signed integers
-- `DTypeUInit`: type-hint for the `dtype` of unsigned integers
-- `DTypeBool`: type-hint for the `dtype` of bools
+- **`DTypeFloat`**
+
+    ::: brahmap.math.DTypeFloat
+        options:
+          show_root_heading: false
+
+- **`DTypeInt`**
+
+    ::: brahmap.math.DTypeInt
+        options:
+          show_root_heading: false
+
+- **`DTypeUInit`**
+
+    ::: brahmap.math.DTypeUInit
+        options:
+          show_root_heading: false
+
+- **`DTypeBool`**
+
+    ::: brahmap.math.DTypeBool
+        options:
+          show_root_heading: false
