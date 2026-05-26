@@ -301,7 +301,7 @@ ext4 = Extension(
 ext5 = Extension(
     "brahmap.math.linalg_tools",
     sources=[
-        os.path.join("brahmap", "math", "linalg_tools.cpp"),
+        os.path.join("brahmap", "_extensions", "linalg_tools.cpp"),
     ],
     include_dirs=[
         nanobind.include_dir(),
@@ -314,7 +314,7 @@ ext5 = Extension(
 ext6 = Extension(
     "brahmap.math.unary_functions",
     sources=[
-        os.path.join("brahmap", "math", "unary_functions.cpp"),
+        os.path.join("brahmap", "_extensions", "unary_functions.cpp"),
     ],
     include_dirs=[
         nanobind.include_dir(),
