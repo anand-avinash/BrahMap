@@ -41,7 +41,11 @@ MPI_UTILS: _MPI = _MPI(comm=MPI.COMM_WORLD)
 
 
 def Finalize() -> None:
-    """A function to be called at the end of execution. Once registered with `atexit`, it will be called automatically at the end. The user doesn't need to call this function explicitly."""
+    """A cleanup function to be called at the end of execution.
+
+    Once registered with `atexit`, it will be called automatically at the end.
+    The user doesn't need to call this function explicitly.
+    """
     try:
         MPI.Finalize()
     except Exception as e:
@@ -59,7 +63,8 @@ sys_excepthook = sys.excepthook
 # solves the problem by flushing stderr before calling `Abort(1)` on global
 # communicator effectively aborting the MPI execution environment
 def mpi_excepthook(exctype, value, traceback):
-    """Ensure the rank that crashes prints its traceback, then kill all processes."""
+    """Ensures the rank that crashes prints its traceback, then kills all
+    MPI processes upon encountering an exception."""
 
     sys.stderr.write(
         f"\n*** Exception raised by MPI rank {brahmap.MPI_UTILS.rank} ***\n"
