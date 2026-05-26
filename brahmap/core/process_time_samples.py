@@ -15,7 +15,18 @@ from ..math import DTypeFloat
 
 
 class SolverType(IntEnum):
-    """Map-making level: I, QU, or IQU"""
+    """An enumeration defining the map-making solver configuration.
+
+    Attributes
+    ----------
+    I : int
+        Temperature-only map-making (solves for Stokes $I$)
+    QU : int
+        Linear polarization-only map-making (solves for Stokes $Q$ and $U$)
+    IQU : int
+        Temperature and linear polarization map-making (solves for
+        Stokes $I$, $Q$, and $U$)
+    """
 
     I = 1  # noqa: E741
     QU = 2
@@ -23,86 +34,110 @@ class SolverType(IntEnum):
 
 
 class ProcessTimeSamples(object):
-    """
-    A class to store the pre-processed and pre-computed arrays that can be
-    used later.
+    """A data container to store pre-processed pointing information,
+    pre-computed map-making weights and metadata.
+
+    This class ingests raw pointing arrays, polarization angles, and
+    noise weights, and computes the necessary pixel-space representations
+    (such as hit counts and trigonometric weight sums) required for the
+    iterative map-making process. It automatically drops unobserved or
+    pathological pixels to minimize the memory footprint of the container.
+
+    After pre-processing, the container object can be used to create
+    pointing operators, block-diagonal preconditioners, etc. as required
+    for map-making.
 
     Parameters
     ----------
     npix : int
-        Number of pixels on which the map-making has to be done. Equal to
-        `healpy.nside2npix(nside)` for a healpix map of given `nside`
-    pointings : np.ndarray
-        A 1-d array of pointing indices
-    pointings_flag : np.ndarray
-        A 1-d array of pointing flags. `True` means good pointing, `False`
-        means bad pointing.
-    solver_type : SolverType
-        Map-making level: I or QU or IQU
-    pol_angles : np.ndarray | None
-        A 1-d array containing the orientation angles of the detectors
-    noise_weights : np.ndarray | None
-        A 1-d array of noise weights, or the diagonal elements of the inverse
-        of noise covariance matrix
-    threshold : float
-        The threshold to be used to flag pixels in the sky
-    dtype_float : boh
-        `dtype` of the floating point arrays
-    update_pointings_inplace : bool
-        The class does some operations on the pointings array. Do you want to
-        make these operations happen in-place? If yes, you will save a lot of
-        memory. Not recommended if you are willing to use pointing arrays
-        somewhere after doing map-making.
+        Number of pixels on which the map-making has to be done (e.g.
+        `healpy.nside2npix(nside)`)
+    pointings : npt.NDArray[np.integer]
+        A 1-d array of pixel indices pointing to the sky map for each time sample
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        A 1-d boolean array where `True` indicates a valid pointing and
+        `False` flags a bad pointing, by default `None`. If set as `None`,
+        all the pointings are considered valid
+    solver_type : SolverType, optional
+        The level of map-making solver to construct ($I$, $QU$, or
+        $IQU$), by default `SolverType.IQU`
+    pol_angles : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the polarization orientation angles of the
+        detectors for each sample, by default `None`
+    noise_weights : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the inverse noise variance for each time
+        sample, by default `None`. If set as `None`, the inverse noise
+        variance is set to 1 for each time sample
+    threshold : float, optional
+        The condition number threshold used to flag degenerate or
+        under-sampled pixels, by default `1.0e-5`
+    dtype_float : DTypeFloat | None, optional
+        The data type to use for floating point arrays, by default
+        `None`. If set as `None`, the data type is inferred from the input
+        `noise_weights` or `pol_angles` array. If none of them are
+        supplied, it will be set to `np.float64`
+    update_pointings_inplace : bool, optional
+        If `True`, the class will perform operations on the `pointings`
+        array in-place to save memory. This can modify
+        the input array. If `False`, the class will create a copy of the
+        original array. By default `False`
 
     Attributes
     ----------
     npix : int
-        Number of pixels on which the map-making has to be done
-    pointings : np.ndarray
-        A 1-d array of pointing indices
-    pointings_flag : np.ndarray
-        A 1-d array of pointing flags
+        The original number of pixels for the target map resolution
+    pointings : npt.NDArray[np.integer]
+        The 1-d array of pixel pointing indices for each time sample
+    pointings_flag : npt.NDArray[np.bool_]
+        The 1-d array of flags indicating valid (`True`) or discarded
+        (`False`) time samples
     nsamples : int
-        Number of samples on present MPI rank
+        The number of time samples processed by the current MPI rank
     nsamples_global : int
-        Global number of samples
+        The total number of time samples across all MPI ranks
     solver_type : SolverType
-        Level of map-making: I, QU, or IQU
-    pol_angles : np.ndarray
-        A 1-d array containing the orientation angles of detectors
+        The current map-making solver configuration ($I$, $QU$, or $IQU$)
     threshold : float
-        Threshold to be used to flag the pixels in the sky
-    dtype_float : boh
-        `dtype` of the floating point arrays
-    observed_pixels : np.ndarray
-        Pixel indices that are considered for map-making
-    pixel_flag : np.ndarray
-        A 1-d array of size `npix`. `True` indicates that the corresponding
-        pixel index will be dropped in map-making
-    bad_pixels : np.ndarray
-        A 1-d array that contains all the pixel indices that will be excluded
-        in map-making
-    weighted_counts : np.ndarray
-        Weighted counts
-    sin2phi : np.ndarray
-        A 1-d array of $sin(2\\phi)$
-    cos2phi : np.ndarray
-        A 1-d array of $cos(2\\phi)$
-    weighted_sin : np.ndarray
-        Weighted `sin`
-    weighted_cos : np.ndarray
-        Weighted `cos`
-    weighted_sin_sq : np.ndarray
-        Weighted `sin^2`
-    weighted_cos_sq : np.ndarray
-        Weighted `cos^2`
-    weighted_sincos : np.ndarray
-        Weighted `sin.cos`
-    one_over_determinant : np.ndarray
-        Inverse of determinant for each valid pixels
+        The condition number threshold used to flag bad pixels
+    dtype_float : DTypeFloat
+        The inferred or specified data type for floating point arrays
+    observed_pixels : npt.NDArray[np.integer]
+        A 1-d array containing the original indices of the pixels that
+        are fully valid for map-making
+    pixel_flag : npt.NDArray[np.bool_]
+        A 1-d boolean array of size `npix` where `True` indicates a
+        dropped or pathological pixel
+    bad_pixels : npt.NDArray[np.integer]
+        A 1-d array containing the indices of all pathological pixels
+        excluded from the map-making
+    old2new_pixel : npt.NDArray[np.integer]
+        A 1-d array mapping original pixel indices to new pixel indices
+    weighted_counts : npt.NDArray[np.number]
+        A 1-d array accumulating the inverse noise weights per valid pixel
+    sin2phi : npt.NDArray[np.number]
+        A 1-d array containing $\\sin(2\\phi)$ evaluated at the valid time samples
+    cos2phi : npt.NDArray[np.number]
+        A 1-d array containing $\\cos(2\\phi)$ evaluated at the valid time samples
+    weighted_sin : npt.NDArray[np.number]
+        A 1-d array accumulating the noise-weighted $\\sin(2\\phi)$ sum
+        per valid pixel
+    weighted_cos : npt.NDArray[np.number]
+        A 1-d array accumulating the noise-weighted $\\cos(2\\phi)$ sum
+        per valid pixel
+    weighted_sin_sq : npt.NDArray[np.number]
+        A 1-d array accumulating the noise-weighted $\\sin^2(2\\phi)$ sum
+        per valid pixel
+    weighted_cos_sq : npt.NDArray[np.number]
+        A 1-d array accumulating the noise-weighted $\\cos^2(2\\phi)$ sum
+        per valid pixel
+    weighted_sincos : npt.NDArray[np.number]
+        A 1-d array accumulating the noise-weighted $\\sin(2\\phi)\\cos(2\\phi)$
+        sum per valid pixel
+    one_over_determinant : npt.NDArray[np.number]
+        A 1-d array containing the inverse determinant of the
+        block-diagonal operator $P^T diag(N)^{-1} P$
     new_npix : int
-        The number of pixels actually being used in map-making. Equal to
-        `len(observed_pixels)`
+        The number of non-pathological pixels actually being solved for
 
     """
 
@@ -118,6 +153,10 @@ class ProcessTimeSamples(object):
         dtype_float: DTypeFloat | None = None,
         update_pointings_inplace: bool = False,
     ):
+        ### Some of the functionalities of this class are implemented with C++
+        ### extensions. A corresponding full Python implementation is provided in
+        ### `tests/py_ProcessTimeSamples.py` for reference.
+
         self.__npix = npix
         self.__nsamples = len(pointings)
 
@@ -262,39 +301,103 @@ class ProcessTimeSamples(object):
 
     @property
     def npix(self) -> int:
+        """Number of pixels on which the map-making has to be done.
+
+        Returns
+        -------
+        int
+            Number of pixels on which the map-making has to be done
+        """
         return self.__npix
 
     @property
     def nsamples(self) -> int:
+        """The number of time samples processed by the current MPI rank
+
+        Returns
+        -------
+        int
+            Number of samples on current MPI rank
+        """
         return self.__nsamples
 
     @property
     def nsamples_global(self) -> int:
+        """The total number of time samples across all MPI ranks
+
+        Returns
+        -------
+        int
+            Global number of samples
+        """
         return self.__nsamples_global
 
     @property
     def solver_type(self) -> SolverType:
+        """The current map-making solver configuration ($I$, $QU$, or $IQU$)
+
+        Returns
+        -------
+        SolverType
+            Level of map-making: $I$, $QU$, or $IQU$
+        """
         return self.__solver_type
 
     @property
     def threshold(self) -> float:
+        """The condition number threshold used to flag bad pixels
+
+        Returns
+        -------
+        float
+            Threshold to used for flagging the pixels in the sky
+        """
         return self.__threshold
 
     @property
     def dtype_float(self) -> DTypeFloat:
+        """The inferred or specified data type for floating point arrays
+
+        Returns
+        -------
+        DTypeFloat
+            `dtype` of the floating point arrays
+        """
         return self.__dtype_float
 
     @property
+    def bad_pixels(self) -> npt.NDArray[np.integer]:
+        """A 1-d array that contains all the pixel indices that will be excluded
+        in map-making.
+
+        Returns
+        -------
+        npt.NDArray[np.integer]
+            A 1-d array that contains all the pixel indices that will be excluded
+            in map-making
+        """
+        return np.nonzero(~self.pixel_flag)[0]
+
+    @property
     def old2new_pixel(self) -> npt.NDArray[np.integer]:
+        """A 1-d array mapping old pixel indices to new pixel indices.
+
+        Returns
+        -------
+        npt.NDArray[np.integer]
+            A 1-d array mapping old pixel indices to new pixel indices
+        """
         old2new_pixel = np.where(self.pixel_flag, self.__old2new_pixel, -1)
         return old2new_pixel.astype(self.pointings.dtype, copy=False)
 
-    @property
-    def bad_pixels(self) -> npt.NDArray[np.integer]:
-        return np.nonzero(~self.pixel_flag)[0]
-
     def get_hit_counts(self) -> npt.NDArray[np.integer]:
-        """Returns hit counts of the pixel indices"""
+        """Returns hit counts of the pixel indices.
+
+        Returns
+        -------
+        npt.NDArray[np.integer]
+            Hit counts of the pixel indices
+        """
         hit_counts = np.ma.masked_array(
             data=np.zeros(self.npix),
             mask=np.logical_not(self.pixel_flag),
@@ -309,6 +412,20 @@ class ProcessTimeSamples(object):
         pol_angles: npt.NDArray[np.number],
         noise_weights: npt.NDArray[np.number],
     ):
+        """Computes the hit counts, observed pixels, and trigonometric weights for
+        map-making.
+
+        This method allocates internal arrays for weights and accumulates values over
+        all local samples, dispatching to specific C++ extensions based on the
+        value of `solver_type`.
+
+        Parameters
+        ----------
+        pol_angles : npt.NDArray[np.number]
+            The polarization angles for each time sample
+        noise_weights : npt.NDArray[np.number]
+            The inverse noise variance for each time sample
+        """
         self.hit_counts = np.zeros(self.npix, dtype=self.pointings.dtype)
         self.weighted_counts = np.zeros(self.npix, dtype=self.dtype_float)
         self.observed_pixels = np.zeros(self.npix, dtype=self.pointings.dtype)
@@ -397,6 +514,11 @@ class ProcessTimeSamples(object):
         self.observed_pixels.resize(self.new_npix, refcheck=False)
 
     def _repixelization(self):
+        """Drops unobserved or pathological pixels to compress the memory footprint.
+
+        This routine shrinks the allocated weight arrays to only include the `new_npix`
+        observed pixels by mapping original pixel indices to contiguous block indices.
+        """
         if self.solver_type == SolverType.I:
             repixelize.repixelize_pol_I(
                 new_npix=self.new_npix,
@@ -451,6 +573,11 @@ class ProcessTimeSamples(object):
             self.one_over_determinant.resize(self.new_npix, refcheck=False)
 
     def _flag_bad_pixel_samples(self):
+        """Flags individual time samples that correspond to unobserved or bad pixels.
+
+        Updates `pointings_flag` such that any sample corresponding to a discarded
+        pixel is flagged as invalid.
+        """
         repixelize.flag_bad_pixel_samples(
             nsamples=self.nsamples,
             pixel_flag=self.pixel_flag,

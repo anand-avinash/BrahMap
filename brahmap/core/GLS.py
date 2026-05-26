@@ -22,24 +22,27 @@ from ..math import cg, DTypeFloat
 
 @dataclass
 class GLSParameters:
-    """A class to encapsulate the parameters used for GLS map-making
+    """A data class encapsulating the configuration parameters for the
+    Generalized Least Squares (GLS) map-making algorithm.
 
     Attributes
     ----------
     solver_type : SolverType
-        _description_
+        The map-making solver configuration to use (e.g. $I$, $QU$, $IQU$)
     use_iterative_solver : bool
-        _description_
+        Whether to enforce the use of an iterative solver (like PCG) for map-making
     isolver_threshold : float
-        _description_
+        The numerical tolerance threshold for the iterative solver to
+        declare convergence
     isolver_max_iterations : int
-        _description_
+        The maximum number of iterations allowed for the iterative solver
     callback_function : Callable
-        _description_
+        A callable function executed at each iteration of the solver
     return_processed_samples : bool
-        _description_
+        Whether the GLS solver function should return the processed time
+        samples container
     return_hit_map : bool
-        _description_
+        Whether the function should the pixel hit map
     """
 
     solver_type: SolverType = SolverType.IQU
@@ -53,26 +56,27 @@ class GLSParameters:
 
 @dataclass
 class GLSResult:
-    """A class to store the results of the GLS map-making
+    """A data class storing the output results of the Generalized Least
+    Squares (GLS) map-making algorithm.
 
-    Parameters
+    Attributes
     ----------
     solver_type : SolverType
-        _description_
+        The map-making solver configuration (e.g. $I$, $QU$, $IQU$)
     npix : int
-        _description_
+        The number of pixels in the sky map
     new_npix : int
-        _description_
-    GLS_maps : np.ndarray
-        _description_
-    hit_map : np.ndarray
-        _description_
+        The number of valid pixels actually observed and processed
+    GLS_maps : npt.NDArray[np.number]
+        The final Generalized Least Squares (GLS) estimated sky maps
+    hit_map : npt.NDArray[np.number] | None
+        The array representing the total number of hits per pixel
     convergence_status : bool
-        _description_
+        A boolean indicating whether the iterative solver successfully converged
     num_iterations : int
-        _description_
+        The total number of iterations actually performed by the solver before stopping
     GLSParameters : GLSParameters
-        _description_
+        The input parameters configuration used for the GLS map-making
     """
 
     solver_type: SolverType
@@ -89,23 +93,26 @@ def separate_map_vectors(
     map_vector: npt.NDArray[np.number],
     processed_samples: ProcessTimeSamples,
 ) -> npt.NDArray[np.number]:
-    """The output maps of the GLS are in the form
-    [I_1, Q_1, U_1, I_2, Q_2, U_2, ...]. Following the typical conventions,
-    the Stokes parameters have to be separated as [I_1, I_2, ...],
-    [Q_1, Q_2, ...] and [U_1, U_2, ...]. This function performs this operation
-    ane returns the maps of different Stokes parameters separately.
+    r"""Separates the interleaved Stokes parameter maps into distinct components.
+
+    The output maps of the GLS solver are typically interleaved in the form
+    $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$. Following standard conventions,
+    this function reshapes and separates the Stokes parameters into individual
+    maps such as $[I_1, I_2, \dots]$, $[Q_1, Q_2, \dots]$, and $[U_1, U_2, \dots]$.
 
     Parameters
     ----------
-    map_vector : np.ndarray
-        _description_
+    map_vector : npt.NDArray[np.number]
+        The 1D vector representing the flattened interleaved sky map
+
     processed_samples : ProcessTimeSamples
-        _description_
+        The pre-processed time samples object containing pointing and
+        map-making metadata
 
     Returns
     -------
-    np.ndarray
-        _description_
+    npt.NDArray[np.number]
+        The final separated output maps with masked pathological pixels
     """
     try:
         map_vector = np.reshape(
@@ -114,7 +121,8 @@ def separate_map_vectors(
             order="F",
         )
     except TypeError:
-        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should be removed once the support is dropped for lower version
+        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should
+        # be removed once the support is dropped for lower version
         map_vector = np.reshape(
             map_vector,
             newshape=(int(processed_samples.solver_type), processed_samples.new_npix),
@@ -142,32 +150,38 @@ def compute_GLS_maps_from_PTS(
     gls_parameters: GLSParameters = GLSParameters(),
     x0: npt.NDArray[np.number] | None = None,
 ) -> GLSResult:
-    """This function computes the GLS maps given an instance of
-    `ProcessTimeSamples`, TOD, and inverse noise covariance operator
+    r"""Computes the Generalized Least Squares (GLS) maps using a
+    pre-instantiated `ProcessTimeSamples` instance.
 
     Parameters
     ----------
     processed_samples : ProcessTimeSamples
-        _description_
-    time_ordered_data : np.ndarray
-        _description_
-    inv_noise_cov_operator : Union[DTypeNoiseCov, None], optional
-        _description_, by default None
+        The pre-processed time samples object containing pointing and
+        map-making metadata
+    time_ordered_data : npt.NDArray[np.number]
+        The 1D vector representing the time-ordered data (TOD) streams
+    inv_noise_cov_operator : DTypeNoiseCov | None, optional
+        The inverse noise covariance linear operator ($N^{-1}$), by
+        default `None`. If `None`, the identity matrix will be used as the
+        inverse noise covariance.
     gls_parameters : GLSParameters, optional
-        _description_, by default GLSParameters()
-    x0 : np.ndarray, optional
-        Initial guess for GLS solution in the form
-        [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
+        The parameter configuration dictating the map-making behavior, by
+        default `GLSParameters()`
+    x0 : npt.NDArray[np.number] | None, optional
+        Initial guess for the GLS solution in the form of interleaved
+        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$), by default `None`
 
     Returns
     -------
     GLSResult
-        _description_
+        The dataclass containing the final output from the GLS map-maker
     """
     time_ordered_data = np.asarray(time_ordered_data)
     if processed_samples.nsamples != len(time_ordered_data):
         raise ValueError(
-            f"Size of `pointings` must be equal to the size of `time_ordered_data` array:\nlen(pointings) = {processed_samples.nsamples}\nlen(time_ordered_data) = {len(time_ordered_data)}"
+            f"Size of `pointings` must be equal to the size of `time_ordered_data` "
+            f"array:\nlen(pointings) = {processed_samples.nsamples}\n"
+            f"len(time_ordered_data) = {len(time_ordered_data)}"
         )
 
     try:
@@ -176,7 +190,10 @@ def compute_GLS_maps_from_PTS(
         )
     except TypeError:
         raise TypeError(
-            f"The `time_ordered_data` array has higher dtype than `processed_samples.dtype_float={processed_samples.dtype_float}`. Please compute `processed_samples` again with `dtype_float={time_ordered_data.dtype}`"
+            f"The `time_ordered_data` array has higher dtype than "
+            f"`processed_samples.dtype_float={processed_samples.dtype_float}`. "
+            f"Please compute `processed_samples` again with "
+            f"`dtype_float={time_ordered_data.dtype}`"
         )
 
     if inv_noise_cov_operator is None:
@@ -186,7 +203,11 @@ def compute_GLS_maps_from_PTS(
     else:
         if inv_noise_cov_operator.shape[0] != processed_samples.nsamples:
             raise ValueError(
-                f"The shape of `inv_noise_cov_operator` must be same as `(len(time_ordered_data), len(time_ordered_data))`:\nlen(time_ordered_data) = {len(time_ordered_data)}\ninv_noise_cov_operator.shape = ({inv_noise_cov_operator.shape}, {inv_noise_cov_operator.shape})"
+                f"The shape of `inv_noise_cov_operator` must be same as "
+                f"`(len(time_ordered_data), len(time_ordered_data))`:\n"
+                f"len(time_ordered_data) = {len(time_ordered_data)}\n"
+                f"inv_noise_cov_operator.shape = ({inv_noise_cov_operator.shape}, "
+                f"{inv_noise_cov_operator.shape})"
             )
 
     pointing_operator = PointingLO(
@@ -266,38 +287,47 @@ def compute_GLS_maps(
     gls_parameters: GLSParameters = GLSParameters(),
     x0: npt.NDArray[np.number] | None = None,
 ) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
-    """The function to compute the GLS maps given pointing information and TOD
+    r"""Computes the Generalized Least Squares (GLS) maps directly from
+    raw pointing information and time-ordered data.
 
     Parameters
     ----------
     npix : int
-        _description_
-    pointings : np.ndarray
-        _description_
-    time_ordered_data : np.ndarray
-        _description_
-    pointings_flag : Union[np.ndarray, None], optional
-        _description_, by default None
-    pol_angles : Union[np.ndarray, None], optional
-        _description_, by default None
-    inv_noise_cov_operator : Union[DTypeNoiseCov, None], optional
-        _description_, by default None
+        Number of pixels on which the map-making has to be done (e.g.
+        `healpy.nside2npix(nside)`)
+    pointings : npt.NDArray[np.integer]
+        A 1-d array of pixel indices pointing to the sky map for each time sample
+    time_ordered_data : npt.NDArray[np.number]
+        The 1D vector representing the time-ordered data (TOD) streams
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        A 1-d boolean array where `True` indicates a valid pointing and
+        `False` flags a bad pointing, by default `None`. If set as `None`,
+        all the pointings are considered valid
+    pol_angles : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the polarization orientation angles of the
+        detectors for each sample, by default `None`
+    inv_noise_cov_operator : DTypeNoiseCov | None, optional
+        The inverse noise covariance linear operator ($N^{-1}$), by default `None`
     threshold : float, optional
-        _description_, by default 1.0e-5
-    dtype_float : Union[DTypeFloat, None], optional
-        _description_, by default None
+        The condition number threshold used to flag degenerate or
+        under-sampled pixels, by default `1.0e-5`
+    dtype_float : DTypeFloat | None, optional
+        The data type used for floating-point arrays, by default `None`
     update_pointings_inplace : bool, optional
-        _description_, by default True
+        Whether to update the pointing arrays in-place, by default `True`
     gls_parameters : GLSParameters, optional
-        _description_, by default GLSParameters()
-    x0 : np.ndarray, optional
-        Initial guess for GLS solution in the form
-        [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
+        The parameter configuration dictating the map-making behavior, by
+        default `GLSParameters()`
+    x0 : npt.NDArray[np.number] | None, optional
+        Initial guess for the GLS solution in the form of interleaved
+        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$), by default `None`
 
     Returns
     -------
-    Union[GLSResult, tuple[ProcessTimeSamples, GLSResult]]
-        _description_
+    GLSResult | tuple[ProcessTimeSamples, GLSResult]
+        GLSResult
+        The dataclass containing the final output from the GLS map-maker,
+        optionally returning the processed samples container
     """
     if dtype_float is None:
         if pol_angles is None:
