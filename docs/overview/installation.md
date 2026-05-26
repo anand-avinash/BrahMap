@@ -8,7 +8,7 @@ same environment.
 `BrahMap` requires an MPI library to compile the C++ extensions. By default,
 it uses the `mpicxx` compiler wrapper for this task. However, you can override
 this default by setting the `MPICXX` environment variable to your preferred
-compiler. To install `BrahMap`, please follow these steps:
+compiler. To install `BrahMap`, follow these steps:
 
 ```bash
 # Clone the repository
@@ -23,7 +23,7 @@ export MPICXX=mpiicpc
 # Install the package
 pip install .
 
-# Alternatively, do an editable installation for development purpose
+# Alternatively, perform an editable installation for development purposes
 # followed by `pre-commit` install
 pip install -e .
 pre-commit install
