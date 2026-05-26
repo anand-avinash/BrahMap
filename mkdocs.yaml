@@ -108,9 +108,18 @@ plugins:
             # force_inspection: true  # Force import (see if it works for extensions)
             show_signature: true  # show function signature
             show_signature_annotations: true  # show signature annotation
-            inherited_members: false
-            # summary: true
+            summary: true
             show_docstring_raises: false
+            # show_inheritance_diagram: true
+            # inheritance_diagram_direction: LR
+            group_by_category: true
+            show_category_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            inherited_members: true
+            members_order: "source"
+            modernize_annotations: true
+            relative_crossrefs: true
   - search # Enable search
 
 ### Page tree
@@ -162,17 +171,6 @@ nav:
       - separate_map_vectors: api_reference/core/separate_map_vectors.md
       - GLSResult: api_reference/core/GLSResult.md 
     
-    - Math Functions:
-      - api_reference/math_functions/index.md
-      - parallel_norm: api_reference/math_functions/parallel_norm.md
-      - cg: api_reference/math_functions/cg.md
-
-    - Utilities:
-      - api_reference/utilities/index.md
-      - bash_colors: api_reference/utilities/bash_colors.md
-      - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
-      - plot_LinearOperator: api_reference/utilities/plot_LinearOperator.md
-    
     - Base Operators:
       - api_reference/base_operators/index.md
       - BaseLinearOperator: api_reference/base_operators/BaseLinearOperator.md
@@ -192,7 +190,18 @@ nav:
       - NoiseCovLinearOperator: api_reference/base_operators/NoiseCovLinearOperator.md
       - InvNoiseCovLinearOperator: api_reference/base_operators/InvNoiseCovLinearOperator.md
       - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagNoiseCovLinearOperator.md
-      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagInvNoiseCovLinearOperator.md      
+      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagInvNoiseCovLinearOperator.md
+
+    - Math Functions:
+      - api_reference/math_functions/index.md
+      - parallel_norm: api_reference/math_functions/parallel_norm.md
+      - cg: api_reference/math_functions/cg.md
+
+    - Utilities:
+      - api_reference/utilities/index.md
+      - bash_colors: api_reference/utilities/bash_colors.md
+      - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
+      - plot_LinearOperator: api_reference/utilities/plot_LinearOperator.md
 
     - Miscellaneous: 
       - api_reference/misc/index.md
