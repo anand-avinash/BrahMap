@@ -10,18 +10,19 @@ from ..base import LinearOperator
 
 
 def parallel_norm(x: npt.NDArray[np.number]) -> float:
-    """A replacement of `np.linalg.norm` to compute 2-norm of a vector
-    distributed among multiple MPI processes
+    """Computes the 2-norm of a vector distributed among multiple MPI
+    processes as a replacement for
+    [`np.linalg.norm()`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html).
 
     Parameters
     ----------
     x : npt.NDArray[np.number]
-        Input array
+        The input array to compute the norm for
 
     Returns
     -------
     float
-        The norm of vector `x`
+        The final computed 2-norm of the vector $x$
     """
     sqnorm = x.dot(x)
     sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
@@ -39,33 +40,45 @@ def cg(
     callback: Callable | None = None,
     parallel: bool = False,
 ) -> tuple[npt.NDArray[np.number], int]:
-    """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
-    replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
-    is set `True`. Also all the matrices and vectors are assumed to be real.
+    """An MPI-parallelized replacement of
+    [`scipy.sparse.linalg.cg()`](https://docs.scipy.org/doc/scipy-1.17.0/reference/generated/scipy.sparse.linalg.cg.html).
+
+    It provides the conjugate gradient (CG) solver for the linear
+    equation $A \\cdot x = b$ with an optional preconditioner $M$ and an
+    initial guess $x0$.
+
+    This function replaces
+    [`np.linalg.norm()`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
+    with [`brahmap.math.parallel_norm()`][brahmap.math.parallel_norm] when
+    the `parallel` parameter is set to `True`. All matrices and vectors are assumed
+    to be real.
 
     Parameters
     ----------
     A : LinearOperator
-        _description_
+        The primary linear operator or matrix $A$
     b : npt.NDArray[np.number]
-        _description_
-    x0 : npt.NDArray[np.number], optional
-        _description_, by default None
+        The right-hand side vector (RHS) $b$
+    x0 : npt.NDArray[np.number] | None, optional
+        The initial guess for the solution vector $x0$, by default `None`
     atol : float, optional
-        _description_, by default 1.0e-12
+        The absolute tolerance for convergence, by default `1.0e-12`
     maxiter : int, optional
-        _description_, by default 100
-    M : LinearOperator, optional
-        _description_, by default None
-    callback : Callable, optional
-        _description_, by default None
+        The maximum number of iterations allowed, by default `100`
+    M : LinearOperator | None, optional
+        The preconditioner linear operator to accelerate convergence, by default `None`
+    callback : Callable | None, optional
+        A callback function to be called after each iteration, by default `None`
     parallel : bool, optional
-        _description_, by default False
+        Whether to enable MPI parallelized computation of the 2-norm, by
+        default `False`
 
     Returns
     -------
-    _type_
-        _description_
+    tuple[npt.NDArray[np.number], int]
+        A tuple containing the final computed output vector and the
+        convergence status code. The status code 0 implies a successful
+        convergence
     """
     temp_tuple = scipy.sparse.linalg._isolve.utils.make_system(
         A,
