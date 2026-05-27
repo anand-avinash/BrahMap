@@ -81,7 +81,7 @@ def lbsim_data(bench_params):
         detectors=dets,
         num_of_obs_per_detector=3,
         n_blocks_det=1,
-        n_blocks_time=lbs.MPI_COMM_WORLD.Get_size(),
+        n_blocks_time=lbs.MPI_COMM_WORLD.size,
         split_list_over_processes=False,
         tod_dtype=dtype_float,
     )

@@ -6,7 +6,7 @@ from typing import Union
 import py_ComputeWeights as cw
 import py_Repixelization as rp
 
-from brahmap import MPI_UTILS, MPI_RAISE_EXCEPTION, TypeChangeWarning
+from brahmap import MPI_UTILS, TypeChangeWarning
 from brahmap.math import DTypeFloat
 
 from mpi4py import MPI
@@ -65,11 +65,10 @@ class ProcessTimeSamples(object):
         noise_weights = noise_weights.astype(dtype=self.dtype_float, copy=False)
 
         if self.solver_type != 1:
-            MPI_RAISE_EXCEPTION(
-                condition=(len(pol_angles) != self.nsamples),
-                exception=AssertionError,
-                message=f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}",
-            )
+            if len(pol_angles) != self.nsamples:
+                raise AssertionError(
+                    f"Size of `pol_angles` must be equal to the size of `pointings` array:\nlen(pol_angles) = {len(pol_angles)}\nlen(pointings) = {self.nsamples}"
+                )
 
             if pol_angles.dtype != self.dtype_float:
                 if MPI_UTILS.rank == 0:

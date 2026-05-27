@@ -1,82 +1,80 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
-import warnings
-from typing import List, Union, Literal, Callable
+from typing import Literal, Callable, cast
 
-from ..base import TypeChangeWarning
 from ..base import LinearOperator, NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat, cg
-from ..mpi import MPI_RAISE_EXCEPTION
-from ..core import InvNoiseCovLO_Circulant
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_UTILS
+from .noise_ops_circulant import InvNoiseCovLO_Circulant
 
 
 class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
-    """Linear operator for Toeplitz noise covariance
+    """A linear operator representing a Toeplitz noise covariance matrix $N$.
 
-    The input covariance array must be at least of the size n. The input power
-    spectrum array must be of the size 2n-2 or 2n-1.
+    This Toeplitz operator is based on embedding the Toeplitz matrix
+    of size $n$ into a circulant matrix of size $2n$.
+
+    The input covariance array must be at least of the size $n$. The
+    input power spectrum array must be of the size $2n-2$ or $2n-1$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
-        MPI_RAISE_EXCEPTION(
-            condition=(input.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
+        if input.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
 
         if input_type == "covariance":
-            MPI_RAISE_EXCEPTION(
-                condition=(size > input.shape[0]),
-                exception=ValueError,
-                message="The input noise covariance array must be at least of the size of the linear operator",
-            )
+            if size > input.shape[0]:
+                raise ValueError(
+                    "The input noise covariance array must be at least of the size of "
+                    "the linear operator"
+                )
             covariance = input[:size]
         elif input_type == "power_spectrum":
-            MPI_RAISE_EXCEPTION(
-                condition=(
-                    (2 * size - 1 != input.shape[0])
-                    and (2 * size - 2 != input.shape[0])
-                ),
-                exception=ValueError,
-                message="The input power spectrum array must be of the size 2n-2 or 2n-1, where n is the size of the linear operator",
-            )
+            if (2 * size - 1 != input.shape[0]) and (2 * size - 2 != input.shape[0]):
+                raise ValueError(
+                    "The input power spectrum array must be of the size 2n-2 or 2n-1, "
+                    "where n is the size of the linear operator"
+                )
             covariance = scipy.fft.ifft(
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             )[:size]
-            covariance = covariance.real.astype(dtype=dtype, copy=False)
+            covariance = covariance.real.astype(  # type: ignore
+                dtype=dtype,
+                copy=False,
+            )
 
         self.__diag_factor = covariance[0]
         self.__input = np.concatenate([covariance, np.roll(covariance[::-1], 1)])
-        self.__input = scipy.fft.rfft(
+        self.__input = scipy.fft.rfft(  # type: ignore
             self.__input,
             workers=MPI_UTILS.nthreads_per_process,
         )
 
         del covariance
 
-        super(NoiseCovLO_Toeplitz01, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -84,39 +82,53 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         return self.__diag_factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Toeplitz01":
+        """Returns the inverse of this Toeplitz noise covariance operator.
+
+        The inverse operator is based on PCG based Toeplitz system solver.
+
+        Returns
+        -------
+        InvNoiseCovLO_Toeplitz01
+            The inverse operator $N^{-1}$
+        """
         covariance = scipy.fft.irfft(
             self.__input,
             n=2 * self.size,
             workers=MPI_UTILS.nthreads_per_process,
         )[: self.size]
-        covariance = covariance.astype(dtype=self.dtype)
+        covariance = covariance.astype(dtype=self.dtype)  # type: ignore
         inv_noise_cov = InvNoiseCovLO_Toeplitz01(
             size=self.size,
             input=covariance,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Toeplitz` instance.\nShape of `NoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N v$.
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
 
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         prod = np.pad(vec, pad_width=((0, self.size)), mode="constant")
 
         prod = scipy.fft.rfft(
@@ -130,48 +142,54 @@ class NoiseCovLO_Toeplitz01(NoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )[: self.size]
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore
 
 
 class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
-    """Linear operator for the inverse of Toeplitz noise covariance
+    """A linear operator representing the inverse of a Toeplitz noise covariance
+    matrix $N^{-1}$
 
-    The input covariance array must be at least of the size n. The input power
-    spectrum array must be of the size 2n-2 or 2n-1.
+    This inverse operator is based on the PCG based Toeplitz system solver.
+
+    The input covariance array must be at least of the size $n$.
+    The input power spectrum array must be of the size $2n-2$ or $2n-1$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
-    precond_op : Union[ LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"] ], optional
-        _description_, by default None
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
+    precond_op : LinearOperator | Literal[None, "Strang", "TChan", "RChan", "KK2"], optional
+        The preconditioner operator, by default `None`
     precond_maxiter : int, optional
-        _description_, by default 50
+        The maximum number of iterations allowed for the preconditioner, by
+        default `50`
     precond_atol : float, optional
-        _description_, by default 1.0e-10
-    precond_callback : Callable, optional
-        _description_, by default None
+        The absolute tolerance setting for the preconditioner solver, by
+        default `1.0e-10`
+    precond_callback : Callable | None, optional
+        An optional callback function executed within the preconditioner
+        step, by default `None`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
-        precond_op: Union[
-            LinearOperator, Literal[None, "Strang", "TChan", "RChan", "KK2"]
-        ] = None,
+        precond_op: LinearOperator
+        | Literal[None, "Strang", "TChan", "RChan", "KK2"] = None,
         precond_maxiter: int = 50,
         precond_atol: float = 1.0e-10,
-        precond_callback: Callable = None,
+        precond_callback: Callable | None = None,
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         self.__toeplitz_op = NoiseCovLO_Toeplitz01(
             size=size,
             input=input,
@@ -185,7 +203,7 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
 
         self.__previous_num_iterations = 0
 
-        super(InvNoiseCovLO_Toeplitz01, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -204,9 +222,9 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                     input,
                     workers=MPI_UTILS.nthreads_per_process,
                 )[:size]
-                cov = cov.real.astype(dtype=dtype, copy=False)
+                cov = cov.real.astype(dtype=dtype, copy=False)  # type: ignore
             else:
-                cov = input[:size]
+                cov = np.asarray(input, dtype=dtype)[:size]
 
             if precond_op == "Strang":
                 temp_size = int(np.floor(cov.size / 2))
@@ -240,28 +258,38 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
                 dtype=dtype,
             )
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="Invalid preconditioner operator provided!",
-            )
+            raise ValueError("Invalid preconditioner operator provided!")
 
     @property
-    def precond_op(self):
+    def precond_op(self) -> LinearOperator | None:
+        """The preconditioner operator used to accelerate convergence.
+
+        Returns
+        -------
+        LinearOperator | None
+            The preconditioner operator, if set
+        """
         return self.__precond_op
 
     @precond_op.setter
-    def precond_op(self, operator: LinearOperator):
+    def precond_op(self, operator: LinearOperator | None) -> None:
         if operator is not None:
-            MPI_RAISE_EXCEPTION(
-                condition=(self.shape != operator.shape),
-                exception=ValueError,
-                message=f"The shape of the input operator {operator.shape} is not compatible with the shape of inverse Toeplitz operator {self.shape}",
-            )
+            if self.shape != operator.shape:
+                raise ValueError(
+                    f"The shape of the input operator {operator.shape} is not "
+                    f"compatible with the shape of inverse Toeplitz operator {self.shape}"
+                )
         self.__precond_op = operator
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the inverse noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         try:
             diag_arr = getattr(self, "__diag")
         except AttributeError:
@@ -270,37 +298,51 @@ class InvNoiseCovLO_Toeplitz01(InvNoiseCovLinearOperator):
         return diag_arr
 
     @diag.setter
-    def diag(self, diag: np.ndarray):
+    def diag(self, diag: npt.NDArray[np.number]) -> None:
         self.__diag = diag
 
     @property
     def previous_num_iterations(self) -> int:
+        """The number of iterations performed in the last linear solve.
+
+        Returns
+        -------
+        int
+            Number of iterations
+        """
         return self.__previous_num_iterations
 
-    def get_inverse(self):
+    def get_inverse(self) -> "NoiseCovLO_Toeplitz01":  # type: ignore
+        """Returns the inverse of this operator, which is the original
+        noise covariance operator.
+
+        Returns
+        -------
+        NoiseCovLO_Toeplitz01
+            The noise covariance operator $N$
+        """
         return self.__toeplitz_op
 
-    def __callback(self, x, r, norm_residual):
+    def __callback(self, x, r, norm_residual) -> None:
         self.__previous_num_iterations += 1
         if self.precond_callback is not None:
             self.precond_callback(x, r, norm_residual)
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Toeplitz` instance.\nShape of `InvNoiseCovLO_Toeplitz` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $y = N^{-1} v$ by iteratively
+        solving $N y = v$ using PCG.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         self.__previous_num_iterations = 0
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod, _ = cg(
             A=self.__toeplitz_op,

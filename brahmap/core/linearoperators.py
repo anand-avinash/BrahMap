@@ -1,48 +1,62 @@
 import numpy as np
-import warnings
-from typing import Union
+import numpy.typing as npt
 
-from ..base import LinearOperator
+from ..base.linop import LinearOperator
 
-from ..core import SolverType, ProcessTimeSamples
+from .process_time_samples import SolverType, ProcessTimeSamples
 
-from ..base import TypeChangeWarning
 
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
 
-from ..mpi import MPI_RAISE_EXCEPTION
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
-    """Derived class from the one from the  :class:`LinearOperator` in :mod:`linop`.
-    It constitutes an interface for dealing with the projection operator
-    (pointing matrix).
+    """A linear operator representing the pointing matrix (projection operator) $P$.
+
+    This class encapsulates the highly sparse projection/de-projection
+    operations (scatter/gather) required to map time samples onto sky
+    pixels or vice versa, according to the given pointing information and
+    map-making solver configuration. It excludes bad pointing samples and
+    pathological pixels while performing projection/de-projection
+    operations. The shape of the operator is `[nsamples, new_npix*ncomponents]`
+    where `ncomponents` depends on the number of components being
+    projected on the sky pixels. For instance, for `IQU` map-making,
+    `ncomponents = 3`.
 
     Parameters
     ----------
     processed_samples : ProcessTimeSamples
-        _description_
-    solver_type : Union[None, SolverType], optional
-        _description_, by default None
+        The pre-processed time samples object containing pointing and
+        map-making metadata
+    solver_type : SolverType | None, optional
+        The map-making solver configuration to use. If `None`, it falls
+        back to the `solver_type` of `processed_samples`, by default `None`
+
+    Attributes
+    ----------
+    solver_type : SolverType
+        The current map-making solver configuration
     """
 
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
-        solver_type: Union[None, SolverType] = None,
-    ):
+        solver_type: None | SolverType = None,
+    ) -> None:
+        ### Some of the functionalities of this class are implemented with C++
+        ### extensions. A corresponding full Python implementation is provided in
+        ### `tests/py_PointingLO.py` for reference.
+
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=(int(processed_samples.solver_type) < int(solver_type)),
-                exception=ValueError,
-                message="`solver_type` must be lower than or equal to the"
-                "`solver_type` of `processed_samples` object",
-            )
+            if int(processed_samples.solver_type) < int(solver_type):
+                raise ValueError(
+                    "`solver_type` must be lower than or equal to the "
+                    "`solver_type` of `processed_samples` object"
+                )
             self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
@@ -57,7 +71,7 @@ class PointingLO(LinearOperator):
             self.cos2phi = processed_samples.cos2phi
 
         if self.solver_type == 1:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
@@ -66,7 +80,7 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
@@ -75,7 +89,7 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         else:
-            super(PointingLO, self).__init__(
+            super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 matvec=self._mult_IQU,
@@ -84,29 +98,20 @@ class PointingLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
 
-    def _mult_I(self, vec: np.ndarray):
-        r"""
-        Performs the product of a sparse matrix :math:`Av`,\
-         with :math:`v` a  :mod:`numpy`  array (:math:`dim(v)=n_{pix}`)  .
+    def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $Pv$ for temperature-only ($I$)
+        map-making.
 
-        It extracts the components of :math:`v` corresponding  to the non-null \
-        elements of the operator.
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$ of size `new_npix`
 
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
@@ -120,25 +125,20 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_I(self, vec: np.ndarray):
-        r"""
-        Performs the product for the transpose operator :math:`A^T`.
+    def _rmult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature-only ($I$) map-making.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -154,28 +154,20 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _mult_QU(self, vec: np.ndarray):
-        r"""Performs :math:`A * v` with :math:`v` being a *polarization* vector.
-        The output array will encode a linear combination of the two Stokes
-        parameters,  (whose components are stored contiguously).
+    def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $Pv$ for linear
+        polarization ($QU$) map-making.
 
-        .. math::
-            d_t=  Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$ of size `2*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
@@ -191,24 +183,20 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_QU(self, vec: np.ndarray):
-        r"""
-        Performs :math:`A^T * v`. The output vector will be a QU-map-like array.
+    def _rmult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        linear polarization ($QU$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -226,35 +214,20 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _mult_IQU(self, vec: np.ndarray):
-        r"""Performs the product of a sparse matrix :math:`Av`,
-        with ``v`` a  :mod:`numpy` array containing the
-        three Stokes parameters [IQU] .
+    def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $Pv$ for temperature and
+        linear polarization map-making.
 
-        .. note::
-            Compared to the operation ``mult`` this routine returns a
-            :math:`n_t`-size vector defined as:
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `3*new_npix`
 
-            .. math::
-                d_t= I_p + Q_p \cos(2\phi_t)+ U_p \sin(2\phi_t).
-
-            with :math:`p` is the pixel observed at time :math:`t` with polarization angle
-            :math:`\phi_t`.
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `nsamples`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.nrows, dtype=self.dtype)
 
@@ -270,27 +243,20 @@ class PointingLO(LinearOperator):
 
         return prod
 
-    def _rmult_IQU(self, vec: np.ndarray):
-        r"""
-        Performs the product for the transpose operator :math:`A^T` to get a IQU map-like vector.
-        Since this vector resembles the pixel of 3 maps it has 3 times the size ``Npix``.
-        IQU values referring to the same pixel are  contiguously stored in the memory.
+    def _rmult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature and linear polarization map-making.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.ncols, dtype=self.dtype)
 
@@ -309,61 +275,77 @@ class PointingLO(LinearOperator):
         return prod
 
     @property
-    def solver_type(self):
+    def solver_type(self) -> SolverType:
+        """The current map-making solver configuration.
+
+        Returns
+        -------
+        SolverType
+            The map-making solver type
+        """
         return self.__solver_type
 
 
 class BlockDiagonalPreconditionerLO(LinearOperator):
-    r"""
-    Standard preconditioner defined as:
+    r"""A block-diagonal preconditioner operator for iterative map-making solvers.
 
-    $$M_{BD}=( P^T diag(N^{-1}) P)^{-1}$$
+    Computes the standard map-making preconditioner defined as:
 
-    where $P$ is the *pointing matrix* (see `PointingLO`).
-    Such inverse operator  could be easily computed given the structure of the
-    matrix $P$.
+    $$M_{BD} = (P^T \text{diag}(N)^{-1} P)^{-1}$$
+
+    where $P$ is the pointing matrix and $N$ is the
+    noise covariance.
 
     Parameters
     ----------
     processed_samples : ProcessTimeSamples
-        _description_
-    solver_type : Union[None, SolverType], optional
-        _description_, by default None
+        The pre-processed time samples object containing accumulated map-making weights
+    solver_type : SolverType | None, optional
+        The map-making solver configuration to use. If `None`, it falls
+        back to the `solver_type` of `processed_samples`, by default None
+
+    Attributes
+    ----------
+    solver_type : SolverType
+        The active map-making solver configuration
     """
 
     def __init__(
         self,
         processed_samples: ProcessTimeSamples,
-        solver_type: Union[None, SolverType] = None,
-    ):
+        solver_type: None | SolverType = None,
+    ) -> None:
+        ### Some of the functionalities of this class are implemented with C++
+        ### extensions. A corresponding full Python implementation is provided in
+        ### `tests/py_BlkDiagPrecondLO.py` for reference.
+
         if solver_type is None:
             self.__solver_type = processed_samples.solver_type
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=(int(processed_samples.solver_type) < int(solver_type)),
-                exception=ValueError,
-                message="`solver_type` must be lower than or equal to the"
-                "`solver_type` of `processed_samples` object",
-            )
+            if int(processed_samples.solver_type) < int(solver_type):
+                raise ValueError(
+                    "`solver_type` must be lower than or equal to the"
+                    "`solver_type` of `processed_samples` object"
+                )
             self.__solver_type = solver_type
 
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
 
         if self.solver_type == 1:
-            self.weighted_counts = processed_samples.weighted_counts
+            self.weighted_counts = processed_samples.weighted_counts  # type: ignore
         else:
             self.weighted_sin_sq = processed_samples.weighted_sin_sq
             self.weighted_cos_sq = processed_samples.weighted_cos_sq
             self.weighted_sincos = processed_samples.weighted_sincos
             self.one_over_determinant = processed_samples.one_over_determinant
             if self.solver_type == 3:
-                self.weighted_counts = processed_samples.weighted_counts
-                self.weighted_sin = processed_samples.weighted_sin
-                self.weighted_cos = processed_samples.weighted_cos
+                self.weighted_counts = processed_samples.weighted_counts  # type: ignore
+                self.weighted_sin = processed_samples.weighted_sin  # type: ignore
+                self.weighted_cos = processed_samples.weighted_cos  # type: ignore
 
         if self.solver_type == 1:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,
@@ -371,7 +353,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,
@@ -379,7 +361,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
         else:
-            super(BlockDiagonalPreconditionerLO, self).__init__(
+            super().__init__(
                 nargin=self.size,
                 nargout=self.size,
                 symmetric=True,
@@ -387,49 +369,43 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                 dtype=processed_samples.dtype_float,
             )
 
-    def _mult_I(self, vec: np.ndarray):
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+    def _mult_I(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Applies the block-diagonal preconditioner for temperature-only
+        ($I$) map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = vec / self.weighted_counts
 
         return prod
 
-    def _mult_QU(self, vec: np.ndarray):
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+    def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Applies the block-diagonal preconditioner for linear
+        polarization ($QU$) map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `2*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
 
@@ -445,25 +421,22 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
         return prod
 
-    def _mult_IQU(self, vec: np.ndarray):
-        r"""
-        Action of :math:`y=( A  diag(N^{-1}) A^T)^{-1} x`,
-        where :math:`x` is   an :math:`n_{pix}` array.
+    def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Applies the block-diagonal preconditioner for temperature and
+        linear polarization map-making.
+
+        Computes the action of $y = (P^T \text{diag}(N^{-1}) P)^{-1} v$.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector `3*new_npix`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
         """
-
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.size),
-            exception=ValueError,
-            message=f"Dimenstions of `vec` is not compatible with the dimension of this `BlockDiagonalPreconditionerLO` instance.\nShape of `BlockDiagonalPreconditionerLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
 
         prod = np.zeros(self.size, dtype=self.dtype)
 
@@ -483,5 +456,12 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         return prod
 
     @property
-    def solver_type(self):
+    def solver_type(self) -> SolverType:
+        """The current map-making solver configuration.
+
+        Returns
+        -------
+        SolverType
+            The map-making solver type
+        """
         return self.__solver_type

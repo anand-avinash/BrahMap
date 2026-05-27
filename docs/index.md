@@ -9,22 +9,23 @@
 <font color="red"> **This project is currently under active development!!!** </font>
 <!-- markdownlint-enable MD033 -->
 
-`BrahMap` is a scalable and modular map-making framework for the CMB
-experiments. It features user-friendly Python interface for the linear
-operators used in map-making. The Python interface simply handles the workflow
-while delegating the heavy computations to the functions implemented in C++
-extension. In addition to the interface for linear operators, `BrahMap` offers
-a wrapper for Generalized Least Squares (GLS) map-making using the
-Preconditioned Conjugate Gradient (PCG) solver. `BrahMap` is also integrated
-with `litebird_sim` through dedicated wrappers.
+`BrahMap` is a scalable and modular map-making framework for CMB experiments.
+It features a user-friendly Python interface for the linear operators used in
+map-making. The Python interface seamlessly handles the workflow while
+delegating the heavy computations to highly optimized C++ extensions. In
+addition to the core linear operators, `BrahMap` offers a wrapper for
+Generalized Least Squares (GLS) map-making using a Preconditioned Conjugate
+Gradient (PCG) solver. `BrahMap` is also fully integrated with `litebird_sim`
+through dedicated wrappers.
 
-For a quick introduction to map-making with BrahMap, refer to the
+For a quick introduction to map-making with `BrahMap`, refer to the
 [quick start guide](quick_start/index.md).
-For a complete reference of the `BrahMap` API, refer to the
-[API reference](api_reference/index.md). Complete example notebooks and scripts can
-be [found here](https://github.com/anand-avinash/BrahMap/tree/main/examples).
-Performance benchmarks suite for the core numerical routines can be found in the
-[benchmarks](https://github.com/anand-avinash/BrahMap/tree/main/benchmarks) directory.
+For a complete reference to the `BrahMap` API, refer to the
+[API reference](api_reference/index.md). Complete example notebooks and scripts
+can be [found here](https://github.com/anand-avinash/BrahMap/tree/main/examples).
+A performance benchmarking suite for the core numerical routines can be found in
+the [benchmarks](https://github.com/anand-avinash/BrahMap/tree/main/benchmarks)
+directory.
 
 You can find detailed information on the implementation and features of
 `BrahMap` at [arXiv:2501.16122](https://arxiv.org/abs/2501.16122).

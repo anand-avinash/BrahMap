@@ -18,7 +18,7 @@ if MPI.Is_initialized() is False:
     MPI.Init_thread(required=MPI.THREAD_FUNNELED)
 
 
-from .mpi import MPI_UTILS, Finalize, MPI_RAISE_EXCEPTION  # noqa: E402
+from .mpi import MPI_UTILS, Finalize  # noqa: E402
 
 from . import base, _extensions, core, utilities, math  # noqa: E402
 
@@ -76,7 +76,6 @@ __all__ = __all__ + [
     # ./mpi.py
     "MPI_UTILS",
     "Finalize",
-    "MPI_RAISE_EXCEPTION",
     # ./base/
     "base",
     "TypeChangeWarning",

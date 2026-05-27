@@ -1,6 +1,6 @@
 # Base Operators
 
-## `linop` sub-module
+## `linop` sub-module — basic linear operators
 
 - [`BaseLinearOperator`](BaseLinearOperator.md)
 - [`LinearOperator`](LinearOperator.md)
@@ -13,7 +13,7 @@
 - [`SymmetricallyReducedLinearOperator`](SymmetricallyReducedLinearOperator.md)
 - [`aslinearoperator`](aslinearoperator.md)
 
-## `blkop` sub-module
+## `blkop` sub-module — block-linear operators
 
 - [`BlockLinearOperator`](BlockLinearOperator.md)
 - [`BlockDiagonalLinearOperator`](BlockDiagonalLinearOperator.md)

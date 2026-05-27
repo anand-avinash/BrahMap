@@ -1,11 +1,13 @@
 import gc
-from typing import List, Union, Optional
+from typing import List
 from dataclasses import dataclass, asdict
-
 import numpy as np
+import numpy.typing as npt
 import litebird_sim as lbs
 
-from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS, DTypeNoiseCov
+from ..base import DTypeNoiseCov
+
+from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS
 
 from ..lbsim import LBSimProcessTimeSamples, DTypeLBSNoiseCov
 
@@ -14,29 +16,29 @@ from ..math import DTypeFloat
 
 @dataclass
 class LBSimGLSParameters(GLSParameters):
-    """A class to encapsulate the parameters used for GLS map-making with
-    `litebird_sim` data
+    """A data class encapsulating the configuration parameters for the
+    Generalized Least Squares (GLS) map-making algorithm with `litebird_sim` data.
 
-    Parameters
+    Attributes
     ----------
     solver_type : SolverType
-        _description_
+        The map-making solver configuration to use (e.g. $I$, $QU$, $IQU$)
     use_iterative_solver : bool
-        _description_
+        Whether to enforce the use of an iterative solver (like PCG) for map-making
     isolver_threshold : float
-        _description_
+        The numerical tolerance threshold for the iterative solver to
+        declare convergence
     isolver_max_iterations : int
-        _description_
+        The maximum number of iterations allowed for the iterative solver
     callback_function : Callable
-        _description_
+        A callable function executed at each iteration of the solver
     return_processed_samples : bool
-        _description_
+        Whether the GLS solver function should return the processed time
+        samples container
     return_hit_map : bool
-        _description_
-    return_processed_samples : bool
-        _description_
+        Whether the function should return the pixel hit map
     output_coordinate_system : lbs.CoordinateSystem
-        _description_
+        The celestial coordinate system to use for the generated output maps
     """
 
     return_processed_samples: bool = False
@@ -45,30 +47,33 @@ class LBSimGLSParameters(GLSParameters):
 
 @dataclass
 class LBSimGLSResult(GLSResult):
-    """A class to store the results of the GLs map-making done with `litebird_sim` data
+    """A data class storing the output results of the GLS map-making done with
+    `litebird_sim` data.
 
-    Parameters
+    Attributes
     ----------
     solver_type : SolverType
-        _description_
+        The map-making solver configuration (e.g. $I$, $QU$, $IQU$)
     npix : int
-        _description_
+        The number of pixels in the sky map
     new_npix : int
-        _description_
-    GLS_maps : np.ndarray
-        _description_
-    hit_map : np.ndarray
-        _description_
+        The number of valid pixels actually observed and processed
+    GLS_maps : npt.NDArray[np.number]
+        The final Generalized Least Squares (GLS) estimated sky maps
+    hit_map : npt.NDArray[np.number] | None
+        The array representing the total number of hits per pixel
     convergence_status : bool
-        _description_
+        A boolean indicating whether the iterative solver successfully converged
     num_iterations : int
-        _description_
-    GLSParameters : GLSParameters
-        _description_
+        The total number of iterations actually performed by the solver before stopping
+    GLSParameters : LBSimGLSParameters
+        The input parameters configuration used for the GLS map-making
     nside : int
-        _description_
+        The HEALPix resolution parameter defining the number of pixels
     coordinate_system : lbs.CoordinateSystem
-        _description_
+        The coordinate system to use for map-making (e.g., Galactic, Ecliptic)
+    GLSParameters : GLSParameters
+        The input parameters configuration used for the GLS map-making
     """
 
     nside: int
@@ -77,49 +82,59 @@ class LBSimGLSResult(GLSResult):
 
 def LBSim_compute_GLS_maps(
     nside: int,
-    observations: Union[lbs.Observation, List[lbs.Observation]],
-    pointings: Union[np.ndarray, List[np.ndarray], None] = None,
-    hwp: Optional[lbs.HWP] = None,
-    components: Union[str, List[str]] = "tod",
-    pointings_flag: Optional[np.ndarray] = None,
-    inv_noise_cov_operator: Union[DTypeNoiseCov, DTypeLBSNoiseCov, None] = None,
+    observations: lbs.Observation | List[lbs.Observation],
+    pointings: npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None = None,
+    hwp: lbs.HWP | None = None,
+    components: str | List[str] = "tod",
+    pointings_flag: npt.NDArray[np.bool_] | None = None,
+    inv_noise_cov_operator: DTypeNoiseCov | DTypeLBSNoiseCov | None = None,
     threshold: float = 1.0e-5,
-    dtype_float: Optional[DTypeFloat] = None,
+    dtype_float: DTypeFloat = np.float64,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
-    x0: Union[np.ndarray, None] = None,
-) -> Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]:
-    """_summary_
+    x0: npt.NDArray[np.number] | None = None,
+) -> LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]:
+    """Computes the Generalized Least Squares (GLS) maps from
+    `litebird_sim` observations.
 
     Parameters
     ----------
     nside : int
-        _description_
-    observations : Union[lbs.Observation, List[lbs.Observation]]
-        _description_
-    pointings : Union[np.ndarray, List[np.ndarray], None], optional
-        _description_, by default None
-    hwp : Optional[lbs.HWP], optional
-        _description_, by default None
-    components : Union[str, List[str]], optional
-        _description_, by default "tod"
-    pointings_flag : Optional[np.ndarray], optional
-        _description_, by default None
-    inv_noise_cov_operator : Union[DTypeNoiseCov, DTypeLBSNoiseCov, None], optional
-        _description_, by default None
+        The HEALPix $N_{side}$ resolution parameter defining the number of pixels
+    observations : lbs.Observation | List[lbs.Observation]
+        An instance of the `Observation` class or a list of the same
+    pointings : npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None, optional
+        Array of detector pointing indices mapping time samples to observed sky pixels,
+        by default `None`
+    hwp : lbs.HWP | None, optional
+        The Half-Wave Plate (HWP) angles or configuration, by default `None`
+    components : str | List[str], optional
+        A string or list defining the TOD components to be used for map-making, by
+        default `"tod"`
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        Boolean array indicating valid pointing samples, by default `None`.
+        The `True` value indicates a valid pointing, and the `False`
+        value indicates a bad pointing. If set as `None`, all the
+        pointings are considered valid
+    inv_noise_cov_operator : DTypeNoiseCov | DTypeLBSNoiseCov | None, optional
+        The inverse noise covariance linear operator ($N^{-1}$), by default `None`
     threshold : float, optional
-        _description_, by default 1.0e-5
-    dtype_float : Optional[DTypeFloat], optional
-        _description_, by default None
+        The condition number threshold used to flag degenerate or
+        under-sampled pixels, by default `1.0e-5`
+    dtype_float : DTypeFloat, optional
+        The data type to use for floating point arrays, by default
+        `np.float64`
     LBSim_gls_parameters : LBSimGLSParameters, optional
-        _description_, by default LBSimGLSParameters()
-    x0 : np.ndarray, optional
-        Initial guess for the GLS solution in the form 
-        [I_1, Q_1, U_1, I_2, Q_2, U_2, ...], by default None
+        The parameter configuration dictating the map-making behavior, by
+        default `LBSimGLSParameters()`
+    x0 : npt.NDArray[np.number] | None, optional
+        Initial guess for the GLS solution in the form of interleaved
+        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, \\dots]$), by default `None`
 
     Returns
     -------
-    Union[LBSimGLSResult, tuple[LBSimProcessTimeSamples, LBSimGLSResult]]
-        _description_
+    LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]
+        The dataclass containing the final output from the GLS map-maker,
+        optionally returning the processed samples container
     """
     if inv_noise_cov_operator is None:
         noise_weights = None
@@ -162,15 +177,15 @@ def LBSim_compute_GLS_maps(
         x0=x0,
     )
 
-    gls_result = LBSimGLSResult(
+    lbsim_gls_result = LBSimGLSResult(
         nside=nside,
         coordinate_system=LBSim_gls_parameters.output_coordinate_system,
         **asdict(gls_result),
     )
 
     if LBSim_gls_parameters.return_processed_samples:
-        return processed_samples, gls_result
+        return processed_samples, lbsim_gls_result
     else:
         del processed_samples
         gc.collect()
-        return gls_result
+        return lbsim_gls_result

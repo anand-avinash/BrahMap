@@ -1,65 +1,58 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
-import warnings
-from typing import List, Union, Literal
+from typing import Literal, cast
 
-from ..base import TypeChangeWarning
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 from ..math import DTypeFloat
-from ..mpi import MPI_RAISE_EXCEPTION
-
-from brahmap import MPI_UTILS
+from ..mpi import MPI_UTILS
 
 
 class NoiseCovLO_Circulant(NoiseCovLinearOperator):
-    """Linear operator for Circulant noise covariance
+    """A linear operator representing a circulant noise covariance matrix $N$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default "power_spectrum"
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default np.float64
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
-        MPI_RAISE_EXCEPTION(
-            condition=(input.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
+        if input.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
 
         if input_type == "covariance":
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0]),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator",
-            )
-            self.__input = scipy.fft.rfft(
+            if size != input.shape[0]:
+                raise ValueError(
+                    "The input array size must be same as the size of the linear operator"
+                )
+            self.__input = scipy.fft.rfft(  # type: ignore
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             ).real.astype(dtype=dtype, copy=False)
         elif input_type == "power_spectrum":
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0] and input.shape[0] != size // 2 + 1),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)",
-            )
+            if size != input.shape[0] and input.shape[0] != size // 2 + 1:
+                raise ValueError(
+                    "The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)"
+                )
             self.__input = input[: size // 2 + 1]
 
-        super(NoiseCovLO_Circulant, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -67,7 +60,14 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -76,30 +76,35 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
         factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Circulant":
+        """Returns the inverse of this circulant noise covariance operator.
+
+        Returns
+        -------
+        InvNoiseCovLO_Circulant
+            The inverse operator $N^{-1}$
+        """
         inv_noise_cov = InvNoiseCovLO_Circulant(
             size=self.size,
             input=self.__input,
             input_type="power_spectrum",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `NoiseCovLO_Circulant` instance.\nShape of `NoiseCovLO_Circulant` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N v$.
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
 
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,
@@ -111,58 +116,55 @@ class NoiseCovLO_Circulant(NoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore
 
 
 class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
-    """Linear operator for the inverse of Circulant noise covariance
+    """A linear operator representing the inverse of a circulant noise
+    covariance matrix $N^{-1}$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List]
-        _description_
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike
+        The input array or data defining the operator
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default "power_spectrum"
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default np.float64
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List],
+        input: npt.ArrayLike,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         input = np.asarray(a=input, dtype=dtype)
 
-        MPI_RAISE_EXCEPTION(
-            condition=(input.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
+        if input.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
 
         if input_type == "covariance":
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0]),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator",
-            )
-            self.__input = 1.0 / scipy.fft.rfft(
+            if size != input.shape[0]:
+                raise ValueError(
+                    "The input array size must be same as the size of the linear operator"
+                )
+            self.__input = 1.0 / scipy.fft.rfft(  # type: ignore
                 input,
                 workers=MPI_UTILS.nthreads_per_process,
             ).real.astype(dtype=dtype, copy=False)
         elif input_type == "power_spectrum":
-            MPI_RAISE_EXCEPTION(
-                condition=(size != input.shape[0] and input.shape[0] != size // 2 + 1),
-                exception=ValueError,
-                message="The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)",
-            )
+            if size != input.shape[0] and input.shape[0] != size // 2 + 1:
+                raise ValueError(
+                    "The input array size must be same as the size of the linear operator, or exactly half-size (N//2 + 1)"
+                )
             self.__input = 1.0 / input[: size // 2 + 1]
 
-        super(InvNoiseCovLO_Circulant, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -170,7 +172,14 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the inverse noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         if self.size % 2 == 0:
             total_sum = 2 * np.sum(self.__input) - self.__input[0] - self.__input[-1]
         else:
@@ -179,30 +188,36 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
         factor = total_sum / self.size
         return factor * np.ones(self.size, dtype=self.dtype)
 
-    def get_inverse(self):
+    def get_inverse(self) -> "NoiseCovLO_Circulant":  # type: ignore
+        """Returns the inverse of this operator, which is the original
+        noise covariance operator.
+
+        Returns
+        -------
+        NoiseCovLO_Circulant
+            The noise covariance operator $N$
+        """
         noise_cov = NoiseCovLO_Circulant(
             size=self.size,
             input=1.0 / self.__input,
             input_type="power_spectrum",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Circulant` instance.\nShape of `InvNoiseCovLO_Circulant` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N^{-1} v$.
 
-        if vec.dtype != self.dtype:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype, copy=False)
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
 
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         prod = scipy.fft.rfft(
             vec,
             workers=MPI_UTILS.nthreads_per_process,
@@ -214,4 +229,4 @@ class InvNoiseCovLO_Circulant(InvNoiseCovLinearOperator):
             workers=MPI_UTILS.nthreads_per_process,
         )
 
-        return prod.astype(dtype=self.dtype, copy=False)
+        return prod.astype(dtype=self.dtype, copy=False)  # type: ignore

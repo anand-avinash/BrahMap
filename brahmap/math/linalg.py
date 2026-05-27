@@ -1,26 +1,28 @@
 from typing import Callable
 import numpy as np
+import numpy.typing as npt
 import scipy
 import scipy.sparse
 import scipy.sparse.linalg
 
-from brahmap import MPI_UTILS
+from ..mpi import MPI_UTILS
 from ..base import LinearOperator
 
 
-def parallel_norm(x: np.ndarray) -> float:
-    """A replacement of `np.linalg.norm` to compute 2-norm of a vector
-    distributed among multiple MPI processes
+def parallel_norm(x: npt.NDArray[np.number]) -> float:
+    """Computes the 2-norm of a vector distributed among multiple MPI
+    processes as a replacement for
+    [`np.linalg.norm()`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html).
 
     Parameters
     ----------
-    x : np.ndarray
-        Input array
+    x : npt.NDArray[np.number]
+        The input array to compute the norm for
 
     Returns
     -------
     float
-        The norm of vector `x`
+        The final computed 2-norm of the vector $x$
     """
     sqnorm = x.dot(x)
     sqnorm = MPI_UTILS.comm.allreduce(sqnorm)
@@ -30,41 +32,53 @@ def parallel_norm(x: np.ndarray) -> float:
 
 def cg(
     A: LinearOperator,
-    b: np.ndarray,
-    x0: np.ndarray = None,
+    b: npt.NDArray[np.number],
+    x0: npt.NDArray[np.number] | None = None,
     atol: float = 1.0e-12,
     maxiter: int = 100,
-    M: LinearOperator = None,
-    callback: Callable = None,
+    M: LinearOperator | None = None,
+    callback: Callable | None = None,
     parallel: bool = False,
-):
-    """A replacement of `scipy.sparse.linalg.cg` where `np.linalg.norm` is
-    replaced with `brahmap.math.parallel_norm` when the parameter `parallel`
-    is set `True`. Also all the matrices and vectors are assumed to be real.
+) -> tuple[npt.NDArray[np.number], int]:
+    """An MPI-parallelized replacement of
+    [`scipy.sparse.linalg.cg()`](https://docs.scipy.org/doc/scipy-1.17.0/reference/generated/scipy.sparse.linalg.cg.html).
+
+    It provides the conjugate gradient (CG) solver for the linear
+    equation $A \\cdot x = b$ with an optional preconditioner $M$ and an
+    initial guess $x0$.
+
+    This function replaces
+    [`np.linalg.norm()`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
+    with [`brahmap.math.parallel_norm()`][brahmap.math.parallel_norm] when
+    the `parallel` parameter is set to `True`. All matrices and vectors are assumed
+    to be real.
 
     Parameters
     ----------
     A : LinearOperator
-        _description_
-    b : np.ndarray
-        _description_
-    x0 : np.ndarray, optional
-        _description_, by default None
+        The primary linear operator or matrix $A$
+    b : npt.NDArray[np.number]
+        The right-hand side vector (RHS) $b$
+    x0 : npt.NDArray[np.number] | None, optional
+        The initial guess for the solution vector $x0$, by default `None`
     atol : float, optional
-        _description_, by default 1.0e-12
+        The absolute tolerance for convergence, by default `1.0e-12`
     maxiter : int, optional
-        _description_, by default 100
-    M : LinearOperator, optional
-        _description_, by default None
-    callback : Callable, optional
-        _description_, by default None
+        The maximum number of iterations allowed, by default `100`
+    M : LinearOperator | None, optional
+        The preconditioner linear operator to accelerate convergence, by default `None`
+    callback : Callable | None, optional
+        A callback function to be called after each iteration, by default `None`
     parallel : bool, optional
-        _description_, by default False
+        Whether to enable MPI parallelized computation of the 2-norm, by
+        default `False`
 
     Returns
     -------
-    _type_
-        _description_
+    tuple[npt.NDArray[np.number], int]
+        A tuple containing the final computed output vector and the
+        convergence status code. The status code 0 implies a successful
+        convergence
     """
     temp_tuple = scipy.sparse.linalg._isolve.utils.make_system(
         A,
@@ -78,15 +92,17 @@ def cg(
     # use. The following unpacking ensures compatibility across all versions.
     # This logic can be simplified once support for versions below 1.16.0 is
     # dropped.
-    A = temp_tuple[0]
-    M = temp_tuple[1]
+    A = temp_tuple[0]  # type: ignore
+    M = temp_tuple[1]  # type: ignore
     x = temp_tuple[2]
     b = temp_tuple[3]
 
     if parallel:
         norm_function: Callable = parallel_norm
     else:
-        def norm_function(x): return np.sqrt(x.dot(x))
+
+        def norm_function(x: npt.NDArray[np.number]) -> float:
+            return np.sqrt(x.dot(x))
 
     b_norm = norm_function(b)
 
@@ -105,14 +121,14 @@ def cg(
         if norm_residual < atol:
             return x, 0
 
-        z = M * r
-        rho_cur = np.dot(r, z)
+        z = M * r  # type: ignore
+        rho_cur = np.dot(r, z)  # type: ignore
         if iteration > 0:
             beta = rho_cur / rho_prev
             p *= beta
             p += z
         else:
-            p = z.copy()
+            p = z.copy()  # type: ignore
 
         q = A * p
         alpha = rho_cur / np.dot(p, q)

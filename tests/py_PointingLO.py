@@ -1,11 +1,8 @@
 import numpy as np
-import warnings
 
 from brahmap import (
     MPI_UTILS,
-    MPI_RAISE_EXCEPTION,
     ProcessTimeSamples,
-    TypeChangeWarning,
 )
 
 from brahmap.base import LinearOperator
@@ -60,20 +57,6 @@ class PointingLO(LinearOperator):
             )
 
     def _mult_I(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_mult_I(
             nrows=self.nrows,
             pointings=self.pointings,
@@ -84,20 +67,6 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_I(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_rmult_I(
             nrows=self.nrows,
             ncols=self.ncols,
@@ -110,20 +79,6 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_QU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_mult_QU(
             nrows=self.nrows,
             pointings=self.pointings,
@@ -136,20 +91,6 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_QU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_rmult_QU(
             nrows=self.nrows,
             ncols=self.ncols,
@@ -164,20 +105,6 @@ class PointingLO(LinearOperator):
         return prod
 
     def _mult_IQU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.ncols),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_mult_IQU(
             nrows=self.nrows,
             pointings=self.pointings,
@@ -190,20 +117,6 @@ class PointingLO(LinearOperator):
         return prod
 
     def _rmult_IQU(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.nrows),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimension of this `PointingLO` instance.\nShape of `PointingLO` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
-
-        if vec.dtype != self.dtype_float:
-            if MPI_UTILS.rank == 0:
-                warnings.warn(
-                    f"dtype of `vec` will be changed to {self.dtype_float}",
-                    TypeChangeWarning,
-                )
-            vec = vec.astype(dtype=self.dtype_float, copy=False)
-
         prod = hplo_tools.PLO_rmult_IQU(
             nrows=self.nrows,
             ncols=self.ncols,

@@ -1,6 +1,7 @@
-from typing import List, Union, Optional
+from typing import List, Any
 
 import numpy as np
+import numpy.typing as npt
 import healpy as hp
 import litebird_sim as lbs
 
@@ -9,44 +10,60 @@ from ..math import DTypeFloat
 
 
 class LBSimProcessTimeSamples(ProcessTimeSamples):
-    """A class to store the pre-processed and pre-computed arrays from `litebird_sim` observations.
+    """A data container to store the pre-processed and pre-computed arrays and
+    metadata from `litebird_sim` observations.
+
+    Similar to [`ProcessTimeSamples`][brahmap.core.ProcessTimeSamples],
+    this container object can be used to create pointing operators,
+    block-diagonal preconditioners, etc. as required for map-making.
 
     Parameters
     ----------
     nside : int
-        Nside of the healpix map
-    observations : Union[lbs.Observation, List[lbs.Observation]]
+        The HEALPix $N_{side}$ resolution parameter defining the number of pixels
+    observations : lbs.Observation | List[lbs.Observation]
         An instance of the `Observation` class or a list of the same
-    pointings : Union[np.ndarray, List[np.ndarray], None], optional
-        _description_, by default None
-    hwp : Optional[lbs.HWP], optional
-        _description_, by default None
-    pointings_flag : Optional[np.ndarray], optional
-        _description_, by default None
+    pointings : npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None, optional
+        Array of detector pointing indices mapping time samples to observed sky pixels,
+        by default `None`
+    hwp : lbs.HWP | None, optional
+        The Half-Wave Plate (HWP) angles or configuration, by default `None`
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        Boolean array indicating valid pointing samples, by default `None`.
+        The `True` value indicates a valid pointing, and the `False`
+        value indicates a bad pointing. If set as `None`, all the
+        pointings are considered valid
     solver_type : SolverType, optional
-        _description_, by default SolverType.IQU
-    noise_weights : Optional[np.ndarray], optional
-        _description_, by default None
+        The level of map-making solver to construct ($I$, $QU$, or
+        $IQU$), by default `SolverType.IQU`
+    noise_weights : npt.NDArray[np.number] | None, optional
+        Array of noise inverse noise variance for each time sample, by
+        default `None`. If set as `None`, inverse noise variance is set to 1 for each
+        time sample
     output_coordinate_system : lbs.CoordinateSystem, optional
-        _description_, by default lbs.CoordinateSystem.Galactic
+        The celestial coordinate system to use for the generated output maps, by
+        default `lbs.CoordinateSystem.Galactic`
     threshold : float, optional
-        _description_, by default 1.0e-5
+        The condition number threshold used to flag degenerate or under-sampled
+        pixels, by default `1.0e-5`
     dtype_float : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type to use for floating point arrays, by default
+        `np.float64`
     """
+
     def __init__(
         self,
         nside: int,
-        observations: Union[lbs.Observation, List[lbs.Observation]],
-        pointings: Union[np.ndarray, List[np.ndarray], None] = None,
-        hwp: Optional[lbs.HWP] = None,
-        pointings_flag: Optional[np.ndarray] = None,
+        observations: lbs.Observation | List[lbs.Observation],
+        pointings: npt.NDArray[np.number] | List[npt.NDArray[np.number]] | None = None,
+        hwp: lbs.HWP | None = None,
+        pointings_flag: npt.NDArray[np.bool_] | None = None,
         solver_type: SolverType = SolverType.IQU,
-        noise_weights: Optional[np.ndarray] = None,
+        noise_weights: npt.NDArray[np.number] | None = None,
         output_coordinate_system: lbs.CoordinateSystem = lbs.CoordinateSystem.Galactic,
         threshold: float = 1.0e-5,
         dtype_float: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         self.__nside = nside
         self.__coordinate_system = output_coordinate_system
         npix = hp.nside2npix(self.nside)
@@ -74,6 +91,8 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                 hwp_angle = lbs.pointings_in_obs._get_hwp_angle(
                     obs=obs, hwp=hwp, pointing_dtype=dtype_float
                 )
+
+            curr_pointings_det: Any = None
 
             for det_idx in range(obs.n_detectors):
                 (
@@ -118,16 +137,34 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         )
 
     @property
-    def obs_list(self):
-        """List of the instances of `Observation` class"""
+    def obs_list(self) -> List[lbs.Observation]:
+        """A list of the parsed `litebird_sim` observations.
+
+        Returns
+        -------
+        List[lbs.Observation]
+            The list of observations
+        """
         return self.__obs_list
 
     @property
-    def nside(self):
-        """Nside parameter of the healpix map"""
+    def nside(self) -> int:
+        """The HEALPix resolution parameter.
+
+        Returns
+        -------
+        int
+            The $N_{side}$ parameter
+        """
         return self.__nside
 
     @property
-    def coordinate_system(self):
-        """Coordinate system used in data-processing"""
+    def coordinate_system(self) -> lbs.CoordinateSystem:
+        """The output celestial coordinate system used in data processing.
+
+        Returns
+        -------
+        lbs.CoordinateSystem
+            The configured coordinate system
+        """
         return self.__coordinate_system

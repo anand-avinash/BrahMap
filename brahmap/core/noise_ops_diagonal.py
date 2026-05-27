@@ -1,59 +1,62 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.fft
 from numbers import Number
-from typing import List, Union, Literal
+from typing import Literal, cast
 
 
 from ..math import DTypeFloat, linalg_tools
 
-from ..mpi import MPI_RAISE_EXCEPTION
 
 from ..base import NoiseCovLinearOperator, InvNoiseCovLinearOperator
 
 
 class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
-    """Linear operator for diagonal noise covariance
+    """A linear operator representing a diagonal noise covariance matrix $N$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List, DTypeFloat], optional
-        _description_, by default 1.0
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike, optional
+        The input array or data defining the operator. If `input` is a
+        single number, it is taken as a constant variance. By default `1.0`
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "covariance"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"covariance"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input: npt.ArrayLike = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(input, Number) and input_type == "covariance":
-            self.__noise_covariance = np.full(shape=size, fill_value=input, dtype=dtype)
+            self.__noise_covariance = np.full(
+                shape=size,
+                fill_value=input,
+                dtype=dtype,
+            )
         elif input_type == "covariance":
             self.__noise_covariance = np.ascontiguousarray(a=input, dtype=dtype)
         elif input_type == "power_spectrum":
             self.__noise_covariance = np.ascontiguousarray(
-                scipy.fft.ifft(input).real, dtype=dtype
+                scipy.fft.ifft(input).real,  # type: ignore
+                dtype=dtype,
             )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.__noise_covariance.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != self.__noise_covariance.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
+        if self.__noise_covariance.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
+        if size != self.__noise_covariance.shape[0]:
+            raise ValueError(
+                "The input array size must be same as the size of the linear operator"
+            )
 
-        super(NoiseCovLO_Diagonal, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -61,25 +64,45 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         return self.__noise_covariance
 
-    def get_inverse(self):
+    def get_inverse(self) -> "InvNoiseCovLO_Diagonal":
+        """Returns the inverse of this diagonal noise covariance operator.
+
+        Returns
+        -------
+        InvNoiseCovLO_Diagonal
+            The inverse operator $N^{-1}$
+        """
         inv_noise_cov = InvNoiseCovLO_Diagonal(
             size=self.shape[0],
             input=self.__noise_covariance,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return inv_noise_cov
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N v$.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
         prod = np.zeros(self.shape[0], dtype=self.dtype)
 
@@ -94,27 +117,30 @@ class NoiseCovLO_Diagonal(NoiseCovLinearOperator):
 
 
 class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
-    """Linear operator for the inverse of diagonal noise covariance
+    """A linear operator representing the inverse of a diagonal noise
+    covariance matrix $N^{-1}$.
 
     Parameters
     ----------
     size : int
-        _description_
-    input : Union[np.ndarray, List, DTypeFloat], optional
-        _description_, by default 1.0
+        The size (dimension) of the linear operator
+    input : npt.ArrayLike, optional
+        The input array or data defining the operator. If `input` is a
+        single number, it is taken as a constant variance. By default `1.0`
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "covariance"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"covariance"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     """
 
     def __init__(
         self,
         size: int,
-        input: Union[np.ndarray, List, DTypeFloat] = 1.0,
+        input: npt.ArrayLike = 1.0,
         input_type: Literal["covariance", "power_spectrum"] = "covariance",
         dtype: DTypeFloat = np.float64,
-    ):
+    ) -> None:
         if isinstance(input, Number) and input_type == "covariance":
             self.__inv_noise_cov = np.full(
                 shape=size, fill_value=1.0 / input, dtype=dtype
@@ -125,21 +151,18 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
             )
         elif input_type == "power_spectrum":
             self.__inv_noise_cov = np.ascontiguousarray(
-                1.0 / scipy.fft.ifft(input).real, dtype=dtype
+                1.0 / scipy.fft.ifft(input).real,  # type: ignore
+                dtype=dtype,
             )
 
-        MPI_RAISE_EXCEPTION(
-            condition=(self.__inv_noise_cov.ndim != 1),
-            exception=ValueError,
-            message="The `input` array must be a 1-d vector",
-        )
-        MPI_RAISE_EXCEPTION(
-            condition=(size != self.__inv_noise_cov.shape[0]),
-            exception=ValueError,
-            message="The input array size must be same as the size of the linear operator",
-        )
+        if self.__inv_noise_cov.ndim != 1:
+            raise ValueError("The `input` array must be a 1-d vector")
+        if size != self.__inv_noise_cov.shape[0]:
+            raise ValueError(
+                "The input array size must be same as the size of the linear operator"
+            )
 
-        super(InvNoiseCovLO_Diagonal, self).__init__(
+        super().__init__(
             nargin=size,
             matvec=self._mult,
             input_type=input_type,
@@ -147,25 +170,46 @@ class InvNoiseCovLO_Diagonal(InvNoiseCovLinearOperator):
         )
 
     @property
-    def diag(self) -> np.ndarray:
+    def diag(self) -> npt.NDArray[np.number]:
+        """The diagonal elements of the inverse noise covariance operator.
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            A 1-d array containing the diagonal elements
+        """
         return self.__inv_noise_cov
 
-    def get_inverse(self):
+    def get_inverse(self) -> "NoiseCovLO_Diagonal":  # type: ignore
+        """Returns the inverse of this operator, which is the original
+        noise covariance operator.
+
+        Returns
+        -------
+        NoiseCovLO_Diagonal
+            The noise covariance operator $N$
+        """
         noise_cov = NoiseCovLO_Diagonal(
             size=self.shape[0],
             input=1.0 / self.__inv_noise_cov,
             input_type="covariance",
-            dtype=self.dtype,
+            dtype=cast(DTypeFloat, self.dtype),
         )
         return noise_cov
 
-    def _mult(self, vec: np.ndarray):
-        MPI_RAISE_EXCEPTION(
-            condition=(len(vec) != self.shape[0]),
-            exception=ValueError,
-            message=f"Dimensions of `vec` is not compatible with the dimensions of this `InvNoiseCovLO_Diagonal` instance.\nShape of `InvNoiseCovLO_Diagonal` instance: {self.shape}\nShape of `vec`: {vec.shape}",
-        )
+    def _mult(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the matrix-vector product $N^{-1} v$.
 
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector $v$
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector
+        """
         vec = np.ascontiguousarray(vec, dtype=self.dtype)
 
         prod = np.zeros(self.shape[0], dtype=self.dtype)

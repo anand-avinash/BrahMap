@@ -27,18 +27,18 @@
 <font color="red"> **This project is currently under active development!!!** </font>
 <!-- markdownlint-enable MD033 -->
 
-`BrahMap` is a scalable and modular map-making framework for the CMB
-experiments. It features user-friendly Python interface for the linear
-operators used in map-making. The Python interface simply handles the workflow
-while delegating the heavy computations to the functions implemented in C++
-extension. In addition to the interface for linear operators, `BrahMap` offers
-a wrapper for Generalized Least Squares (GLS) map-making using the
-Preconditioned Conjugate Gradient (PCG) solver. `BrahMap` is also integrated
-with `litebird_sim` through dedicated wrappers.
+`BrahMap` is a scalable and modular map-making framework for CMB experiments.
+It features a user-friendly Python interface for the linear operators used in
+map-making. The Python interface seamlessly handles the workflow while
+delegating the heavy computations to highly optimized C++ extensions. In
+addition to the core linear operators, `BrahMap` offers a wrapper for
+Generalized Least Squares (GLS) map-making using a Preconditioned Conjugate
+Gradient (PCG) solver. `BrahMap` is also fully integrated with `litebird_sim`
+through dedicated wrappers.
 
 For a quick introduction to map-making with `BrahMap`, refer to the
 [quick start guide](https://anand-avinash.github.io/BrahMap/quick_start/).
-For a complete reference of the `BrahMap` API, refer to the
+For a complete reference to the `BrahMap` API, refer to the
 [API reference](https://anand-avinash.github.io/BrahMap/api_reference/).
 Complete example notebooks and scripts can be
 [found here](./examples).
@@ -86,9 +86,12 @@ pre-commit install
 
 ## Benchmarking
 
-BrahMap includes a comprehensive benchmarking suite to evaluate the performance of its numerical routines and linear operators. The benchmarks are based on `pytest-benchmark` and support both serial and MPI-parallel execution.
+BrahMap includes a comprehensive benchmarking suite to evaluate the performance
+of its numerical routines and linear operators. The benchmarks are based on
+`pytest-benchmark` and support both serial and MPI-parallel execution.
 
-For detailed instructions on how to run and customize the benchmarks, refer to the [benchmarks documentation](./benchmarks/README.md).
+For detailed instructions on how to run and customize the benchmarks, refer to
+the [benchmarks documentation](./benchmarks/README.md).
 
 ## Citation
 

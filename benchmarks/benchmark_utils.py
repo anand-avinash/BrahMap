@@ -1,3 +1,4 @@
+from typing import Dict, List
 import numpy as np
 import brahmap
 from brahmap.core import SolverType
@@ -11,10 +12,30 @@ BENCHMARK_SIZES = {
 
 
 def setup_common_data(
-    params: dict,
-    gen_pol_angles=True,
-    gen_noise_weights=True,
-):
+    params: Dict,
+    gen_pol_angles: bool = True,
+    gen_noise_weights: bool = True,
+) -> Dict:
+    """Generates synthetic data arrays and MPI configurations for the
+    performance benchmarking suite.
+
+    Parameters
+    ----------
+    params : Dict
+        A dictionary containing the benchmark configuration parsed from
+        the command line
+    gen_pol_angles : bool, optional
+        Whether to generate the synthetic polarization angles array, by default `True`
+    gen_noise_weights : bool, optional
+        Whether to generate the synthetic inverse noise variance weights
+        array, by default `True`
+
+    Returns
+    -------
+    Dict
+        A dictionary containing the initialized synthetic pointings,
+        flags, arrays, and configuration metadata
+    """
     benchmark_size = params.get("benchmark_size", "medium")
     if benchmark_size in BENCHMARK_SIZES:
         config = BENCHMARK_SIZES[benchmark_size].copy()
@@ -64,8 +85,13 @@ def setup_common_data(
         pol_angles = rng.uniform(-np.pi / 2, np.pi / 2, local_nsamples).astype(
             dtype=dtype_float,
         )
+    else:
+        pol_angles = None
+
     if gen_noise_weights:
         noise_weights = rng.random(local_nsamples).astype(dtype=dtype_float)
+    else:
+        noise_weights = None
 
     return {
         "npix": npix,
@@ -74,13 +100,22 @@ def setup_common_data(
         "nsamples": local_nsamples,
         "pointings": pointings,
         "pointings_flag": pointings_flag,
-        "pol_angles": pol_angles if gen_pol_angles else None,
-        "noise_weights": noise_weights if gen_noise_weights else None,
+        "pol_angles": pol_angles,
+        "noise_weights": noise_weights,
         "dtype_int": dtype_int,
         "dtype_float": dtype_float,
         "rng": rng,
     }
 
 
-def get_solver_types():
+def get_solver_types() -> List:
+    """Retrieves the list of supported map-making solver types for
+    parameterized testing.
+
+    Returns
+    -------
+    List
+        A list containing the `SolverType` enum variants for
+        parameterized execution
+    """
     return [SolverType.I, SolverType.QU, SolverType.IQU]

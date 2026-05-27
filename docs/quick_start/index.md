@@ -3,7 +3,7 @@
 Complete example scripts and notebooks can be found
 [here](https://github.com/anand-avinash/BrahMap/tree/main/examples).
 
-By default, `BrahMap` performs all the operations over global MPI communicator
+By default, `BrahMap` performs all operations over the global MPI communicator
 (`MPI.COMM_WORLD`). To modify this behavior, one can specify a different MPI
 communicator through the function
 `brahmap.MPI_UTILS.update_communicator(comm=...)`. This function must be
@@ -11,9 +11,9 @@ called before calling any other `BrahMap` functions.
 
 ## General map-making
 
-A generic map-making using `BrahMap` roughly involve four steps:
+A generic map-making process using `BrahMap` roughly involves four steps:
 
-1. Pre-processing the pointing information (assuming that signal contains
+1. Pre-processing the pointing information (assuming that the signal contains
    uncorrelated noise)
 
     ```python
@@ -32,7 +32,7 @@ A generic map-making using `BrahMap` roughly involve four steps:
         npix=npix,                  # Number of pixels on which the map-making 
                                     # has to be done
 
-        pointings=pointings,        # A 1-d of pointing indices
+        pointings=pointings,        # A 1-d array of pointing indices
 
         pol_angles=pol_angles,      # A 1-d array containing the polarization angles
                                     # of the detectors
@@ -66,8 +66,8 @@ A generic map-making using `BrahMap` roughly involve four steps:
     ```
 
 4. Post-processing to produce the sky maps. Note that `map_vector` from
-   previous step contains maps in the form $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$.
-   This has to be separated into I, Q, and U maps while taking care of the
+   the previous step contains maps in the form $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$.
+   These have to be separated into I, Q, and U maps while taking care of the
    unobserved (masked) pixels.
 
     ```python
@@ -99,7 +99,7 @@ gls_result = brahmap.compute_GLS_maps(
     npix=npix,                      # Number of pixels on which the map-making
                                     # has to be done
 
-    pointings=pointings,            # A 1-d of pointing indices
+    pointings=pointings,            # A 1-d array of pointing indices
 
     time_ordered_data=tod_array,    # A 1-d array of time-ordered-data
 
@@ -123,12 +123,12 @@ list of `Observation` instances and a suitable inverse noise covariance
 operator to produce the sky maps.
 
 The MPI communicator used in map-making must be the one that contains
-exclusively all the data needed for map-making. In case of `litebird_sim`, the
+exclusively all the data needed for map-making. In the case of `litebird_sim`, the
 communicator `lbs.MPI_COMM_GRID.COMM_OBS_GRID` is a subset of
 `lbs.MPI_COMM_WORLD`, and it excludes the MPI processes that do not contain
-any detectors (and TODs). Therefore, it is a suitable communicator to be
-used in map-making. Therefore, communicator used by
-`BrahMap` must be updated as following before using any other `BrahMap`
+any detectors (and TODs). Therefore, it is the suitable communicator for
+map-making. The communicator used by
+`BrahMap` must be updated as follows before using any other `BrahMap`
 function with `litebird_sim` data:
 `brahmap.MPI_UTILS.update_communicator(comm=lbs.MPI_COMM_GRID.COMM_OBS_GRID)`
 

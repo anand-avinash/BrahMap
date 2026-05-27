@@ -1,49 +1,50 @@
 import numpy as np
-from typing import List, Union, Literal, Dict, Any
+import numpy.typing as npt
+from typing import List, Literal, Dict, Any
 
 from ..base import (
+    LinearOperator,
     BaseBlockDiagNoiseCovLinearOperator,
     BaseBlockDiagInvNoiseCovLinearOperator,  # noqa
 )
 from ..math import DTypeFloat
-from ..mpi import MPI_RAISE_EXCEPTION
 
 
 class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
-    """Linear operator for block-diagonal noise covariance
+    """A linear operator representing a block-diagonal noise covariance matrix $N$.
 
     Parameters
     ----------
-    operator : _type_
-        _description_
-    block_size : Union[np.ndarray, List]
-        _description_
-    block_input : Union[List, Dict]
-        _description_
+    operator : type
+        The base operator for the diagonal blocks
+    block_size : npt.NDArray[np.number] | List
+        A list defining the sizes of each diagonal block
+    block_input : List | Dict
+        A list defining the input data for each diagonal block
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     extra_kwargs : Dict[str, Any], optional
-        _description_, by default {}
+        Additional keyword arguments passed to the underlying routines, by default `{}`
     """
 
     def __init__(
         self,
-        operator,
-        block_size: Union[np.ndarray, List],
-        block_input: Union[List, Dict],
+        operator: type[LinearOperator],
+        block_size: npt.NDArray[np.number] | List,
+        block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},
     ):
         if isinstance(block_input, list):
-            MPI_RAISE_EXCEPTION(
-                condition=(len(block_size) != len(block_input)),
-                exception=ValueError,
-                message="The number of blocks listed in `block_size` is different"
-                " from the number of blocks provided in `block_input`",
-            )
+            if len(block_size) != len(block_input):
+                raise ValueError(
+                    "The number of blocks listed in `block_size` is different"
+                    " from the number of blocks provided in `block_input`"
+                )
 
             block_list = self.__build_blocks_from_list(
                 operator=operator,
@@ -65,22 +66,20 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
             )
 
         else:
-            MPI_RAISE_EXCEPTION(
-                condition=True,
-                exception=ValueError,
-                message="`block_input` must be either a list of arrays or list"
-                " OR a dictionary that maps operator size to an array or a list",
+            raise ValueError(
+                "`block_input` must be either a list of arrays or list"
+                " OR a dictionary that maps operator size to an array or a list"
             )
 
-        super(BlockDiagNoiseCovLO, self).__init__(
-            block_list=block_list,
+        super().__init__(
+            block_list=block_list,  # type: ignore
         )
 
     def __build_blocks_from_list(
         self,
         operator,
         block_input: List,
-        block_size: Union[np.ndarray, List],
+        block_size: npt.NDArray[np.number] | List,
         input_type,
         dtype,
         extra_kwargs,
@@ -102,7 +101,7 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
         self,
         operator,
         block_input: Dict,
-        block_size: Union[np.ndarray, List],
+        block_size: npt.NDArray[np.number] | List,
         input_type,
         dtype,
         extra_kwargs,
@@ -122,39 +121,39 @@ class BlockDiagNoiseCovLO(BaseBlockDiagNoiseCovLinearOperator):
             if shape in op_dict.keys():
                 block_list.append(op_dict[shape])
             else:
-                MPI_RAISE_EXCEPTION(
-                    condition=True,
-                    exception=ValueError,
-                    message=f"Operator for shape {shape} is missing from the input dictionary",
+                raise ValueError(
+                    f"Operator for shape {shape} is missing from the input dictionary"
                 )
 
         return block_list
 
 
 class BlockDiagInvNoiseCovLO(BlockDiagNoiseCovLO):
-    """Linear operator for block-diagonal inverse noise covariance
+    """A linear operator representing the inverse of a block-diagonal
+    noise covariance matrix $N^{-1}$.
 
     Parameters
     ----------
-    operator : _type_
-        _description_
-    block_size : Union[np.ndarray, List]
-        _description_
-    block_input : Union[List, Dict]
-        _description_
+    operator : type
+        The base operator for the diagonal blocks
+    block_size : npt.NDArray[np.number] | List
+        A list defining the sizes of each diagonal block
+    block_input : List | Dict
+        A list defining the input data for each diagonal block
     input_type : Literal["covariance", "power_spectrum"], optional
-        _description_, by default "power_spectrum"
+        Specifies whether the `input` is a covariance array or a power
+        spectrum array, by default `"power_spectrum"`
     dtype : DTypeFloat, optional
-        _description_, by default np.float64
+        The data type of the operator, by default `np.float64`
     extra_kwargs : Dict[str, Any], optional
-        _description_, by default {}
+        Additional keyword arguments passed to the underlying routines, by default `{}`
     """
 
     def __init__(
         self,
-        operator,
-        block_size: Union[np.ndarray, List],
-        block_input: Union[List, Dict],
+        operator: type[LinearOperator],
+        block_size: npt.NDArray[np.number] | List,
+        block_input: List | Dict,
         input_type: Literal["covariance", "power_spectrum"] = "power_spectrum",
         dtype: DTypeFloat = np.float64,
         extra_kwargs: Dict[str, Any] = {},

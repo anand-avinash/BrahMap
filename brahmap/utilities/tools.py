@@ -1,12 +1,12 @@
+import cProfile
+from typing import Any
 import numpy as np
 from ..math import parallel_norm
 
 
 class bash_colors:
-    """
-    This class contains the necessary definitions to print to bash
-    screen with colors. Sometimes it can be useful...
-    """
+    """A utility class containing ANSI escape codes for printing colored
+    text to the screen."""
 
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -17,63 +17,62 @@ class bash_colors:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
-    def header(self, string):
+    def header(self, string: Any) -> str:
         return self.HEADER + str(string) + self.ENDC
 
-    def blue(self, string):
+    def blue(self, string: Any) -> str:
         return self.OKBLUE + str(string) + self.ENDC
 
-    def green(self, string):
+    def green(self, string: Any) -> str:
         return self.OKGREEN + str(string) + self.ENDC
 
-    def warning(self, string):
+    def warning(self, string: Any) -> str:
         return self.WARNING + str(string) + self.ENDC
 
-    def fail(self, string):
+    def fail(self, string: Any) -> str:
         return self.FAIL + str(string) + self.ENDC
 
-    def bold(self, string):
+    def bold(self, string: Any) -> str:
         return self.BOLD + str(string) + self.ENDC
 
-    def underline(self, string):
+    def underline(self, string: Any) -> str:
         return self.UNDERLINE + str(string) + self.ENDC
 
 
 class modify_numpy_context(object):
-    """A context manager that replaces `np.linalg.norm` with `parallel_norm`"""
+    """A context manager that temporarily replaces `np.linalg.norm` with
+    `brahmap.math.parallel_norm`."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.parallel_norm = parallel_norm
         self.original_norm = np.linalg.norm
 
-    def __enter__(self):
-        np.linalg.norm = self.parallel_norm
+    def __enter__(self) -> None:
+        setattr(np.linalg, "norm", self.parallel_norm)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        np.linalg.norm = self.original_norm
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        setattr(np.linalg, "norm", self.original_norm)
 
 
-def profile_run():
-    """Profile the execution with module `cProfile`
+def profile_run() -> cProfile.Profile:
+    """Profiles the execution of the code using the `cProfile` module.
 
     Returns
     -------
-    _type_
-        _description_
+    cProfile.Profile
+        The active profiling instance
     """
-    import cProfile
-
     pr = cProfile.Profile()
     return pr
 
 
-def output_profile(pr):
-    """Output of the profiling with `profile_run`.
+def output_profile(pr: cProfile.Profile) -> None:
+    """Outputs the collected profiling statistics from `profile_run`.
 
     Parameters
     ----------
-    pr : _type_
-        _description_
+    pr : cProfile.Profile
+        A profiling or logging object used for performance tracking
     """
     import pstats
     import io
