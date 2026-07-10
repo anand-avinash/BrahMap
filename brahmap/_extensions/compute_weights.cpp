@@ -51,7 +51,7 @@ dint compute_weights_pol_I(                 //
       pixel_flag[idx] = true;
       ++new_npix;
     } // if
-  } // for
+  }   // for
 
   return new_npix;
 
@@ -76,16 +76,23 @@ void compute_weights_pol_QU(                 //
     const MPI_Comm comm                      //
 ) {
 
+#pragma omp parallel for simd
+  for (ssize_t idx = 0; idx < nsamples; ++idx) {
+    dfloat angle = pol_angles[idx];
+    sin2phi[idx] = std::sin(2.0 * angle);
+    cos2phi[idx] = std::cos(2.0 * angle);
+  } // for
+
   accumulate_weights_pol_QU<dint, dfloat>( //
       nsamples,                            //
       pointings,                           //
       pointings_flag,                      //
       noise_weights,                       //
       pol_angles,                          //
-      hit_counts,                          //
-      weighted_counts,                     //
       sin2phi,                             //
       cos2phi,                             //
+      hit_counts,                          //
+      weighted_counts,                     //
       weighted_sin_sq,                     //
       weighted_cos_sq,                     //
       weighted_sincos                      //
@@ -135,16 +142,23 @@ void compute_weights_pol_IQU(                //
     const MPI_Comm comm                      //
 ) {
 
+#pragma omp parallel for simd
+  for (ssize_t idx = 0; idx < nsamples; ++idx) {
+    dfloat angle = pol_angles[idx];
+    sin2phi[idx] = std::sin(2.0 * angle);
+    cos2phi[idx] = std::cos(2.0 * angle);
+  } // for
+
   accumulate_weights_pol_IQU<dint, dfloat>( //
       nsamples,                             //
       pointings,                            //
       pointings_flag,                       //
       noise_weights,                        //
       pol_angles,                           //
-      hit_counts,                           //
-      weighted_counts,                      //
       sin2phi,                              //
       cos2phi,                              //
+      hit_counts,                           //
+      weighted_counts,                      //
       weighted_sin_sq,                      //
       weighted_cos_sq,                      //
       weighted_sincos,                      //

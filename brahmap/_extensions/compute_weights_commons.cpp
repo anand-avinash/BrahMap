@@ -38,21 +38,14 @@ void accumulate_weights_pol_QU(             //
     const bool *__restrict pointings_flag,  //
     const dfloat *__restrict noise_weights, //
     const dfloat *__restrict pol_angles,    //
+    const dfloat *__restrict sin2phi,       //
+    const dfloat *__restrict cos2phi,       //
     dint *__restrict hit_counts,            //
     dfloat *__restrict weighted_counts,     //
-    dfloat *__restrict sin2phi,             //
-    dfloat *__restrict cos2phi,             //
     dfloat *__restrict weighted_sin_sq,     //
     dfloat *__restrict weighted_cos_sq,     //
     dfloat *__restrict weighted_sincos      //
 ) {
-
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    dfloat angle = pol_angles[idx];
-    sin2phi[idx] = std::sin(2.0 * angle);
-    cos2phi[idx] = std::cos(2.0 * angle);
-  } // for
 
 #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
@@ -87,23 +80,16 @@ void accumulate_weights_pol_IQU(            //
     const bool *__restrict pointings_flag,  //
     const dfloat *__restrict noise_weights, //
     const dfloat *__restrict pol_angles,    //
+    const dfloat *__restrict sin2phi,       //
+    const dfloat *__restrict cos2phi,       //
     dint *__restrict hit_counts,            //
     dfloat *__restrict weighted_counts,     //
-    dfloat *__restrict sin2phi,             //
-    dfloat *__restrict cos2phi,             //
     dfloat *__restrict weighted_sin_sq,     //
     dfloat *__restrict weighted_cos_sq,     //
     dfloat *__restrict weighted_sincos,     //
     dfloat *__restrict weighted_sin,        //
     dfloat *__restrict weighted_cos         //
 ) {
-
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    dfloat angle = pol_angles[idx];
-    sin2phi[idx] = std::sin(2.0 * angle);
-    cos2phi[idx] = std::cos(2.0 * angle);
-  } // for
 
 #pragma omp parallel for simd
   for (ssize_t idx = 0; idx < nsamples; ++idx) {
