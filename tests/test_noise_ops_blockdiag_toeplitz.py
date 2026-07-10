@@ -33,6 +33,7 @@ class BlockDiagNoiseOps_Toeplitz(BaseTestNoiseLO):
 
         for idx in range(nblocks):
             covariance = rng.random(block_size[idx], dtype=dtype)
+            covariance[0] += np.sum(np.abs(covariance))
             extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
             power_spec = scipy.fft.fft(extended_covariance).real.astype(
                 dtype
