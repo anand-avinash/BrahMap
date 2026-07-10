@@ -211,7 +211,10 @@ class brahmap_build_ext(build_ext):
             + linker_flags
             + LDFLAGS,
         )
-        self.compiler.set_executable("compiler_so_cxx", self.compiler.compiler_so)
+        try:
+            self.compiler.set_executable("compiler_so_cxx", self.compiler.compiler_so)
+        except (ValueError, KeyError, AttributeError):
+            pass
 
         # The following is meant for C compilation, but keeping it for the
         # sake of completeness
