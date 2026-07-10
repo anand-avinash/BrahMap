@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
@@ -7,9 +5,14 @@
 #include <omp.h>
 #endif
 
+#include "compute_weights_commons.cpp"
 #include "mpi_utils.hpp"
 
 namespace nb = nanobind;
+
+///////////////////////////////
+// Compute weights functions //
+///////////////////////////////
 
 template <typename dint, typename dfloat>
 dint compute_weights_pol_I(                 //
@@ -26,17 +29,14 @@ dint compute_weights_pol_I(                 //
     const MPI_Comm comm                     //
 ) {
 
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    ssize_t pixel = pointings[idx];
-    dfloat weight = pointings_flag[idx] * noise_weights[idx];
-
-#pragma omp atomic update
-    hit_counts[pixel] += pointings_flag[idx];
-#pragma omp atomic update
-    weighted_counts[pixel] += weight;
-
-  } // for
+  accumulate_weights_pol_I<dint, dfloat>( //
+      nsamples,                           //
+      pointings,                          //
+      pointings_flag,                     //
+      noise_weights,                      //
+      hit_counts,                         //
+      weighted_counts                     //
+  );
 
   MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
                 comm);
@@ -76,34 +76,20 @@ void compute_weights_pol_QU(                 //
     const MPI_Comm comm                      //
 ) {
 
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    dfloat angle = pol_angles[idx];
-    sin2phi[idx] = std::sin(2.0 * angle);
-    cos2phi[idx] = std::cos(2.0 * angle);
-  } // for
-
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    ssize_t pixel = pointings[idx];
-    dfloat weight = pointings_flag[idx] * noise_weights[idx];
-
-    dfloat wsin_sq = weight * sin2phi[idx] * sin2phi[idx];
-    dfloat wcos_sq = weight * cos2phi[idx] * cos2phi[idx];
-    dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
-
-#pragma omp atomic update
-    hit_counts[pixel] += pointings_flag[idx];
-#pragma omp atomic update
-    weighted_counts[pixel] += weight;
-#pragma omp atomic update
-    weighted_sin_sq[pixel] += wsin_sq;
-#pragma omp atomic update
-    weighted_cos_sq[pixel] += wcos_sq;
-#pragma omp atomic update
-    weighted_sincos[pixel] += wsincos;
-
-  } // for
+  accumulate_weights_pol_QU<dint, dfloat>( //
+      nsamples,                            //
+      pointings,                           //
+      pointings_flag,                      //
+      noise_weights,                       //
+      pol_angles,                          //
+      hit_counts,                          //
+      weighted_counts,                     //
+      sin2phi,                             //
+      cos2phi,                             //
+      weighted_sin_sq,                     //
+      weighted_cos_sq,                     //
+      weighted_sincos                      //
+  );
 
   MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
                 comm);
@@ -116,13 +102,13 @@ void compute_weights_pol_QU(                 //
   MPI_Allreduce(MPI_IN_PLACE, weighted_sincos, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
 
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < npix; ++idx) {
-    dfloat determinant = weighted_sin_sq[idx] * weighted_cos_sq[idx] -
-                         weighted_sincos[idx] * weighted_sincos[idx];
-
-    one_over_determinant[idx] = determinant;
-  } // for
+  compute_determinants_pol_QU<dint, dfloat>( //
+      npix,                                  //
+      weighted_sin_sq,                       //
+      weighted_cos_sq,                       //
+      weighted_sincos,                       //
+      one_over_determinant                   //
+  );
 
   return;
 
@@ -149,40 +135,22 @@ void compute_weights_pol_IQU(                //
     const MPI_Comm comm                      //
 ) {
 
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    dfloat angle = pol_angles[idx];
-    sin2phi[idx] = std::sin(2.0 * angle);
-    cos2phi[idx] = std::cos(2.0 * angle);
-  } // for
-
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < nsamples; ++idx) {
-    ssize_t pixel = pointings[idx];
-    dfloat weight = pointings_flag[idx] * noise_weights[idx];
-
-    dfloat wsin = weight * sin2phi[idx];
-    dfloat wsin_sq = weight * sin2phi[idx] * sin2phi[idx];
-    dfloat wcos = weight * cos2phi[idx];
-    dfloat wcos_sq = weight * cos2phi[idx] * cos2phi[idx];
-    dfloat wsincos = weight * sin2phi[idx] * cos2phi[idx];
-
-#pragma omp atomic update
-    hit_counts[pixel] += pointings_flag[idx];
-#pragma omp atomic update
-    weighted_counts[pixel] += weight;
-#pragma omp atomic update
-    weighted_sin[pixel] += wsin;
-#pragma omp atomic update
-    weighted_sin_sq[pixel] += wsin_sq;
-#pragma omp atomic update
-    weighted_cos[pixel] += wcos;
-#pragma omp atomic update
-    weighted_cos_sq[pixel] += wcos_sq;
-#pragma omp atomic update
-    weighted_sincos[pixel] += wsincos;
-
-  } // for
+  accumulate_weights_pol_IQU<dint, dfloat>( //
+      nsamples,                             //
+      pointings,                            //
+      pointings_flag,                       //
+      noise_weights,                        //
+      pol_angles,                           //
+      hit_counts,                           //
+      weighted_counts,                      //
+      sin2phi,                              //
+      cos2phi,                              //
+      weighted_sin_sq,                      //
+      weighted_cos_sq,                      //
+      weighted_sincos,                      //
+      weighted_sin,                         //
+      weighted_cos                          //
+  );
 
   MPI_Allreduce(MPI_IN_PLACE, hit_counts, npix, mpi_get_type<dint>(), MPI_SUM,
                 comm);
@@ -199,17 +167,16 @@ void compute_weights_pol_IQU(                //
   MPI_Allreduce(MPI_IN_PLACE, weighted_sincos, npix, mpi_get_type<dfloat>(),
                 MPI_SUM, comm);
 
-#pragma omp parallel for simd
-  for (ssize_t idx = 0; idx < npix; ++idx) {
-    dfloat determinant =
-        weighted_counts[idx] * weighted_cos_sq[idx] * weighted_sin_sq[idx] +
-        2.0 * weighted_cos[idx] * weighted_sin[idx] * weighted_sincos[idx] -
-        weighted_counts[idx] * weighted_sincos[idx] * weighted_sincos[idx] -
-        weighted_cos[idx] * weighted_cos[idx] * weighted_sin_sq[idx] -
-        weighted_sin[idx] * weighted_sin[idx] * weighted_cos_sq[idx];
-
-    one_over_determinant[idx] = determinant;
-  } // for
+  compute_determinants_pol_IQU<dint, dfloat>( //
+      npix,                                   //
+      weighted_counts,                        //
+      weighted_sin_sq,                        //
+      weighted_cos_sq,                        //
+      weighted_sincos,                        //
+      weighted_sin,                           //
+      weighted_cos,                           //
+      one_over_determinant                    //
+  );
 
   return;
 
@@ -247,6 +214,10 @@ dint get_pixel_mask_pol(                           //
   return new_npix;
 
 } // get_pixel_mask_pol()
+
+/////////////////////////////////////
+// nanobind registration functions //
+/////////////////////////////////////
 
 template <typename dint, typename dfloat, typename device> //
 void register_compute_weights(nb::module_ &m) {
@@ -448,6 +419,10 @@ void register_compute_weights(nb::module_ &m) {
       nb::arg("pixel_flag").noconvert()            //
   );
 }
+
+///////////////////////
+// Module definition //
+///////////////////////
 
 NB_MODULE(compute_weights, m) {
   m.doc() = "compute_weights";
