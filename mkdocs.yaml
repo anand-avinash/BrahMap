@@ -155,6 +155,7 @@ nav:
       - api_reference/core/index.md
       - SolverType: api_reference/core/SolverType.md
       - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
+      - SharedMemProcessTimeSamples: api_reference/core/SharedMemProcessTimeSamples.md
       - PointingLO: api_reference/core/PointingLO.md
       - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
       - NoiseCovLO_Diagonal: api_reference/core/NoiseCovLO_Diagonal.md
@@ -171,26 +172,27 @@ nav:
       - separate_map_vectors: api_reference/core/separate_map_vectors.md
       - GLSResult: api_reference/core/GLSResult.md 
     
-    - Base Operators:
-      - api_reference/base_operators/index.md
-      - BaseLinearOperator: api_reference/base_operators/BaseLinearOperator.md
-      - LinearOperator: api_reference/base_operators/LinearOperator.md
-      - IdentityOperator: api_reference/base_operators/IdentityOperator.md
-      - DiagonalOperator: api_reference/base_operators/DiagonalOperator.md
-      - MatrixLinearOperator: api_reference/base_operators/MatrixLinearOperator.md
-      - ZeroOperator: api_reference/base_operators/ZeroOperator.md
-      - InverseLO: api_reference/base_operators/InverseLO.md
-      - ReducedLinearOperator: api_reference/base_operators/ReducedLinearOperator.md
-      - SymmetricallyReducedLinearOperator: api_reference/base_operators/SymmetricallyReducedLinearOperator.md
-      - aslinearoperator: api_reference/base_operators/aslinearoperator.md
-      - BlockLinearOperator: api_reference/base_operators/BlockLinearOperator.md
-      - BlockDiagonalLinearOperator: api_reference/base_operators/BlockDiagonalLinearOperator.md
-      - BlockHorizontalLinearOperator: api_reference/base_operators/BlockHorizontalLinearOperator.md
-      - BlockVerticalLinearOperator: api_reference/base_operators/BlockVerticalLinearOperator.md
-      - NoiseCovLinearOperator: api_reference/base_operators/NoiseCovLinearOperator.md
-      - InvNoiseCovLinearOperator: api_reference/base_operators/InvNoiseCovLinearOperator.md
-      - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagNoiseCovLinearOperator.md
-      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagInvNoiseCovLinearOperator.md
+    - Base Classes:
+      - api_reference/base_classes/index.md
+      - BaseLinearOperator: api_reference/base_classes/BaseLinearOperator.md
+      - LinearOperator: api_reference/base_classes/LinearOperator.md
+      - IdentityOperator: api_reference/base_classes/IdentityOperator.md
+      - DiagonalOperator: api_reference/base_classes/DiagonalOperator.md
+      - MatrixLinearOperator: api_reference/base_classes/MatrixLinearOperator.md
+      - ZeroOperator: api_reference/base_classes/ZeroOperator.md
+      - InverseLO: api_reference/base_classes/InverseLO.md
+      - ReducedLinearOperator: api_reference/base_classes/ReducedLinearOperator.md
+      - SymmetricallyReducedLinearOperator: api_reference/base_classes/SymmetricallyReducedLinearOperator.md
+      - aslinearoperator: api_reference/base_classes/aslinearoperator.md
+      - BlockLinearOperator: api_reference/base_classes/BlockLinearOperator.md
+      - BlockDiagonalLinearOperator: api_reference/base_classes/BlockDiagonalLinearOperator.md
+      - BlockHorizontalLinearOperator: api_reference/base_classes/BlockHorizontalLinearOperator.md
+      - BlockVerticalLinearOperator: api_reference/base_classes/BlockVerticalLinearOperator.md
+      - NoiseCovLinearOperator: api_reference/base_classes/NoiseCovLinearOperator.md
+      - InvNoiseCovLinearOperator: api_reference/base_classes/InvNoiseCovLinearOperator.md
+      - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_classes/BaseBlockDiagNoiseCovLinearOperator.md
+      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_classes/BaseBlockDiagInvNoiseCovLinearOperator.md
+      - BaseProcessTimeSamples: api_reference/base_classes/BaseProcessTimeSamples.md
 
     - Math Functions:
       - api_reference/math_functions/index.md

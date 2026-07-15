@@ -4,6 +4,7 @@
 
 - [`SolverType`](SolverType.md)
 - [`ProcessTimeSamples`](ProcessTimeSamples.md)
+- [`SharedMemProcessTimeSamples`](SharedMemProcessTimeSamples.md)
 
 ## Linear operators for map-making
 

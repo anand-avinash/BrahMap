@@ -12,7 +12,7 @@
 
 ## Base API
 
-- [Base Operators](./base_operators/index.md)
+- [Base Classes](./base_classes/index.md)
 - [Miscellaneous](./misc/index.md)
 
 ## C++ API
