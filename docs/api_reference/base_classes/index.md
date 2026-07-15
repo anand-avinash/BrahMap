@@ -26,3 +26,7 @@
 - [`InvNoiseCovLinearOperator`](InvNoiseCovLinearOperator.md)
 - [`BaseBlockDiagNoiseCovLinearOperator`](BaseBlockDiagNoiseCovLinearOperator.md)
 - [`BaseBlockDiagInvNoiseCovLinearOperator`](BaseBlockDiagInvNoiseCovLinearOperator.md)
+
+## Base class for processing the time samples
+
+- [`BaseProcessTimeSamples`](BaseProcessTimeSamples.md)
