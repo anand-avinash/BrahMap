@@ -327,11 +327,26 @@ ext6 = Extension(
     extra_link_args=linker_so_args,
 )
 
+ext7 = Extension(
+    "brahmap._extensions.compute_weights_shared",
+    sources=[
+        os.path.join("brahmap", "_extensions", "compute_weights_shared.cpp"),
+    ],
+    include_dirs=[
+        os.path.join("brahmap", "_extensions"),
+        nanobind.include_dir(),
+        _nb_tsl_include,
+        os.path.join(mpi4py.get_include()),
+    ],
+    define_macros=None,
+    extra_link_args=linker_so_args,
+)
+
 # updating the git hash
 update_git_hash()
 
 setup(
-    ext_modules=[ext1, ext2, ext3, ext4, ext5, ext6],
+    ext_modules=[ext1, ext2, ext3, ext4, ext5, ext6, ext7],
     cmdclass={"build_ext": brahmap_build_ext},
     # include_package_data=True,
 )
