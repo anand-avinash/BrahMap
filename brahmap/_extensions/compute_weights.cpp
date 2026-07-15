@@ -196,39 +196,6 @@ void compute_weights_pol_IQU(                //
 
 } // compute_weights_pol_IQU()
 
-template <typename dint, typename dfloat>
-dint get_pixel_mask_pol(                           //
-    const int solver_type,                         //
-    const ssize_t npix,                            //
-    const dfloat threshold,                        //
-    const dint *__restrict hit_counts,             //
-    const dfloat *__restrict one_over_determinant, //
-    dint *__restrict observed_pixels,              //
-    dint *__restrict __old2new_pixel,              //
-    bool *__restrict pixel_flag                    //
-) {
-
-  int hit_threshold = solver_type - 1;
-
-  dint new_npix = 0;
-  for (ssize_t idx = 0; idx < npix; ++idx) {
-
-    dint hits = hit_counts[idx];
-    dfloat determinant = one_over_determinant[idx];
-
-    if ((abs(determinant) > threshold) && (hits > hit_threshold)) {
-      observed_pixels[new_npix] = idx;
-      __old2new_pixel[idx] = new_npix;
-      pixel_flag[idx] = true;
-      ++new_npix;
-    } // if
-
-  } // for
-
-  return new_npix;
-
-} // get_pixel_mask_pol()
-
 /////////////////////////////////////
 // nanobind registration functions //
 /////////////////////////////////////
