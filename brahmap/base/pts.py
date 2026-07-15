@@ -29,18 +29,15 @@ class SolverType(IntEnum):
 
 
 class BaseProcessTimeSamples(object):
-    """A data container to store pre-processed pointing information,
-    pre-computed map-making weights and metadata.
+    """Base class for processing pointing information and pre-computing
+    map-making weights.
 
-    This class ingests raw pointing arrays, polarization angles, and
-    noise weights, and computes the necessary pixel-space representations
-    (such as hit counts and trigonometric weight sums) required for the
-    iterative map-making process. It automatically drops unobserved or
-    pathological pixels to minimize the memory footprint of the container.
+    This class provides the core container structure, properties, and
+    basic verification logic for pointing arrays, polarization orientation
+    angles, and noise weights.
 
-    After pre-processing, the container object can be used to create
-    pointing operators, block-diagonal preconditioners, etc. as required
-    for map-making.
+    Specific weight accumulation and repixelization routines are implemented
+    by its subclasses.
 
     Parameters
     ----------
