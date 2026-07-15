@@ -15,8 +15,8 @@ from ..base import SolverType, BaseProcessTimeSamples
 
 
 class ProcessTimeSamples(BaseProcessTimeSamples):
-    """A data container to store pre-processed pointing information,
-    pre-computed map-making weights and metadata.
+    """A standard process-time-samples data container to store pre-processed
+    pointing information, pre-computed map-making weights and metadata.
 
     This class ingests raw pointing arrays, polarization angles, and
     noise weights, and computes the necessary pixel-space representations
@@ -27,6 +27,46 @@ class ProcessTimeSamples(BaseProcessTimeSamples):
     After pre-processing, the container object can be used to create
     pointing operators, block-diagonal preconditioners, etc. as required
     for map-making.
+
+    This container manages pixel-space hit counts and trigonometric
+    weight sums on each MPI process. It uses standard MPI collectives (like
+    `MPI_Allreduce`) to globally synchronize and check observed pixels and
+    calculate pixel-space map objects.
+
+    Parameters
+    ----------
+    npix : int
+        Number of pixels on which the map-making has to be done (e.g.
+        `healpy.nside2npix(nside)`)
+    pointings : npt.NDArray[np.integer]
+        A 1-d array of pixel indices pointing to the sky map for each time sample
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        A 1-d boolean array where `True` indicates a valid pointing and
+        `False` flags a bad pointing, by default `None`. If set as `None`,
+        all the pointings are considered valid
+    solver_type : SolverType, optional
+        The level of map-making solver to construct ($I$, $QU$, or
+        $IQU$), by default `SolverType.IQU`
+    pol_angles : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the polarization orientation angles of the
+        detectors for each sample, by default `None`
+    noise_weights : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the inverse noise variance for each time
+        sample, by default `None`. If set as `None`, the inverse noise
+        variance is set to 1 for each time sample
+    threshold : float, optional
+        The condition number threshold used to flag degenerate or
+        under-sampled pixels, by default `1.0e-5`
+    dtype_float : DTypeFloat | None, optional
+        The data type to use for floating point arrays, by default
+        `None`. If set as `None`, the data type is inferred from the input
+        `noise_weights` or `pol_angles` array. If none of them are
+        supplied, it will be set to `np.float64`
+    update_pointings_inplace : bool, optional
+        If `True`, the class will perform operations on the `pointings`
+        array in-place to save memory. This can modify
+        the input array. If `False`, the class will create a copy of the
+        original array. By default `False`
     """
 
     def __init__(
@@ -201,18 +241,75 @@ class ProcessTimeSamples(BaseProcessTimeSamples):
 
 
 class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
-    """A data container to store pre-processed pointing information,
-    pre-computed map-making weights and metadata.
+    """An MPI shared-memory optimized data container, analogous to
+    `ProcessTimeSamples`.
 
-    This class ingests raw pointing arrays, polarization angles, and
-    noise weights, and computes the necessary pixel-space representations
-    (such as hit counts and trigonometric weight sums) required for the
-    iterative map-making process. It automatically drops unobserved or
-    pathological pixels to minimize the memory footprint of the container.
+    This container utilizes node-level shared-memory windows (via
+    `SharedMemoryManager`) to store the pixel-space hit counts and
+    trigonometric weight sums, only once per compute node, drastically
+    reducing the overall memory footprint compared to the standard
+    `ProcessTimeSamples` container. It manages the shared memory windows and
+    updates them in parallel via a tree-like MPI communication.
+
+    Similar to `ProcessTimeSamples` this class ingests raw pointing arrays,
+    polarization angles, and noise weights, and computes the necessary
+    pixel-space representations (such as hit counts and trigonometric weight
+    sums) required for the iterative map-making process. It automatically
+    drops unobserved or pathological pixels to minimize the memory footprint
+    of the container.
 
     After pre-processing, the container object can be used to create
     pointing operators, block-diagonal preconditioners, etc. as required
     for map-making.
+
+    Parameters
+    ----------
+    npix : int
+        Number of pixels on which the map-making has to be done (e.g.
+        `healpy.nside2npix(nside)`)
+    pointings : npt.NDArray[np.integer]
+        A 1-d array of pixel indices pointing to the sky map for each time sample
+    pointings_flag : npt.NDArray[np.bool_] | None, optional
+        A 1-d boolean array where `True` indicates a valid pointing and
+        `False` flags a bad pointing, by default `None`. If set as `None`,
+        all the pointings are considered valid
+    solver_type : SolverType, optional
+        The level of map-making solver to construct ($I$, $QU$, or
+        $IQU$), by default `SolverType.IQU`
+    pol_angles : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the polarization orientation angles of the
+        detectors for each sample, by default `None`
+    noise_weights : npt.NDArray[np.number] | None, optional
+        A 1-d array containing the inverse noise variance for each time
+        sample, by default `None`. If set as `None`, the inverse noise
+        variance is set to 1 for each time sample
+    threshold : float, optional
+        The condition number threshold used to flag degenerate or
+        under-sampled pixels, by default `1.0e-5`
+    dtype_float : DTypeFloat | None, optional
+        The data type to use for floating point arrays, by default
+        `None`. If set as `None`, the data type is inferred from the input
+        `noise_weights` or `pol_angles` array. If none of them are
+        supplied, it will be set to `np.float64`
+    update_pointings_inplace : bool, optional
+        If `True`, the class will perform operations on the `pointings`
+        array in-place to save memory. This can modify
+        the input array. If `False`, the class will create a copy of the
+        original array. By default `False`
+    nproc_reduce : int, optional
+        The size of each sub-communicator group within the node-level
+        communicator. This container accumulates hit counts and weight sums
+        into node-level shared memory arrays in chunks defined by this group
+        size. Within each group/sub-communicator, the accumulation happens
+        sequentially across the participating MPI processes to ensure
+        thread-safe updates to the shared memory window, before a final
+        reduction is performed across group roots. A value higher than 1 is
+        recommended to reduce memory usage in the intermediate data
+        reduction steps. By default `1`
+    shared_mem_root : int, optional
+        The designated root rank within the node-level shared memory
+        communicator responsible for managing the shared memory windows.
+        By default `0`
     """
 
     def __init__(
