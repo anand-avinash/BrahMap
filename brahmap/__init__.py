@@ -27,6 +27,7 @@ from .base import TypeChangeWarning, LowerTypeCastWarning, ShapeError  # noqa: E
 from .core import (  # noqa: E402
     SolverType,
     ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
     PointingLO,
     BlockDiagonalPreconditionerLO,
     NoiseCovLO_Diagonal,
@@ -87,6 +88,7 @@ __all__ = __all__ + [
     "core",
     "SolverType",
     "ProcessTimeSamples",
+    "SharedMemProcessTimeSamples",
     "PointingLO",
     "BlockDiagonalPreconditionerLO",
     "NoiseCovLO_Diagonal",
