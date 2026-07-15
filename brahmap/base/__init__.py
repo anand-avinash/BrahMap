@@ -73,6 +73,8 @@ from .noise_ops import (
     DTypeNoiseCov,
 )
 
+from .pts import SolverType, BaseProcessTimeSamples
+
 __all__ = [
     # misc.py
     "TypeChangeWarning",
@@ -104,4 +106,7 @@ __all__ = [
     "BaseBlockDiagNoiseCovLinearOperator",
     "BaseBlockDiagInvNoiseCovLinearOperator",
     "DTypeNoiseCov",
+    # pts.py
+    "SolverType",
+    "BaseProcessTimeSamples",
 ]
