@@ -1,0 +1,92 @@
+"""compute_weights_shared"""
+
+from typing import Any
+
+import numpy
+from numpy.typing import NDArray
+
+def compute_weights_shmem_pol_I(
+    npix: int,
+    nsamples: int,
+    pointings: NDArray[Any],
+    pointings_flag: NDArray[numpy.bool_] | None,
+    noise_weights: NDArray[Any],
+    node_hit_counts: NDArray[Any],
+    win_hit_counts: object,
+    node_weighted_counts: NDArray[Any],
+    win_weighted_counts: object,
+    observed_pixels: NDArray[Any],
+    __old2new_pixel: NDArray[Any],  # type: ignore
+    pixel_flag: NDArray[numpy.bool_],
+    node_root: int,
+    tree_grp_comm: object,
+    tree_grp_root_comm: object,
+    node_comm: object,
+    node_root_comm: object,
+) -> int: ...
+def compute_weights_shmem_pol_QU(
+    npix: int,
+    nsamples: int,
+    pointings: NDArray[Any],
+    pointings_flag: NDArray[numpy.bool_] | None,
+    noise_weights: NDArray[Any],
+    pol_angles: NDArray[Any],
+    node_hit_counts: NDArray[Any],
+    win_hit_counts: object,
+    node_weighted_counts: NDArray[Any],
+    win_weighted_counts: object,
+    sin2phi: NDArray[Any],
+    cos2phi: NDArray[Any],
+    node_weighted_sin_sq: NDArray[Any],
+    win_weighted_sin_sq: object,
+    node_weighted_cos_sq: NDArray[Any],
+    win_weighted_cos_sq: object,
+    node_weighted_sincos: NDArray[Any],
+    win_weighted_sincos: object,
+    one_over_determinant: NDArray[Any],
+    node_root: int,
+    tree_grp_comm: object,
+    tree_grp_root_comm: object,
+    node_comm: object,
+    node_root_comm: object,
+) -> None: ...
+def compute_weights_shmem_pol_IQU(
+    npix: int,
+    nsamples: int,
+    pointings: NDArray[Any],
+    pointings_flag: NDArray[numpy.bool_] | None,
+    noise_weights: NDArray[Any],
+    pol_angles: NDArray[Any],
+    node_hit_counts: NDArray[Any],
+    win_hit_counts: object,
+    node_weighted_counts: NDArray[Any],
+    win_weighted_counts: object,
+    sin2phi: NDArray[Any],
+    cos2phi: NDArray[Any],
+    node_weighted_sin_sq: NDArray[Any],
+    win_weighted_sin_sq: object,
+    node_weighted_cos_sq: NDArray[Any],
+    win_weighted_cos_sq: object,
+    node_weighted_sincos: NDArray[Any],
+    win_weighted_sincos: object,
+    node_weighted_sin: NDArray[Any],
+    win_weighted_sin: object,
+    node_weighted_cos: NDArray[Any],
+    win_weighted_cos: object,
+    one_over_determinant: NDArray[Any],
+    node_root: int,
+    tree_grp_comm: object,
+    tree_grp_root_comm: object,
+    node_comm: object,
+    node_root_comm: object,
+) -> None: ...
+def get_pixel_mask_pol(
+    solver_type: int,
+    npix: int,
+    threshold: float,
+    hit_counts: NDArray[Any],
+    one_over_determinant: NDArray[Any],
+    observed_pixels: NDArray[Any],
+    __old2new_pixel: NDArray[Any],  # type: ignore
+    pixel_flag: NDArray[numpy.bool_],
+) -> int: ...
