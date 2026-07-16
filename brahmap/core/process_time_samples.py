@@ -242,21 +242,21 @@ class ProcessTimeSamples(BaseProcessTimeSamples):
 
 class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
     """An MPI shared-memory optimized data container, analogous to
-    `ProcessTimeSamples`.
+    [`ProcessTimeSamples`][brahmap.core.ProcessTimeSamples].
 
     This container utilizes node-level shared-memory windows (via
-    `SharedMemoryManager`) to store the pixel-space hit counts and
-    trigonometric weight sums, only once per compute node, drastically
-    reducing the overall memory footprint compared to the standard
-    `ProcessTimeSamples` container. It manages the shared memory windows and
-    updates them in parallel via a tree-like MPI communication.
+    [`SharedMemoryManager`][brahmap.mpi.SharedMemoryManager]) to store the
+    pixel-space hit counts and trigonometric weight sums, only once per
+    compute node, drastically reducing the overall memory footprint compared
+    to the standard [`ProcessTimeSamples`][brahmap.core.ProcessTimeSamples]
+    container. It manages the shared memory windows and updates them in parallel via a tree-like MPI communication.
 
-    Similar to `ProcessTimeSamples` this class ingests raw pointing arrays,
-    polarization angles, and noise weights, and computes the necessary
-    pixel-space representations (such as hit counts and trigonometric weight
-    sums) required for the iterative map-making process. It automatically
-    drops unobserved or pathological pixels to minimize the memory footprint
-    of the container.
+    Similar to [`ProcessTimeSamples`][brahmap.core.ProcessTimeSamples] this
+    class ingests raw pointing arrays, polarization angles, and noise
+    weights, and computes the necessary pixel-space representations (such as
+    hit counts and trigonometric weight sums) required for the iterative
+    map-making process. It automatically drops unobserved or pathological
+    pixels to minimize the memory footprint of the container.
 
     After pre-processing, the container object can be used to create
     pointing operators, block-diagonal preconditioners, etc. as required
@@ -343,6 +343,46 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             dtype_float=dtype_float,
             update_pointings_inplace=update_pointings_inplace,
         )
+
+    @property
+    def nproc_reduce(self) -> int:
+        """The size of each sub-communicator group within the node-level
+        communicator
+
+        Returns
+        -------
+        int
+            The group size for local reductions
+        """
+        return self.__nproc_reduce
+
+    @property
+    def shared_mem_root(self) -> int:
+        """The designated root rank within the node-level shared memory
+        communicator
+
+        Returns
+        -------
+        int
+            The root rank
+        """
+        return self.__shared_mem_manager.node_root
+
+    @property
+    def shared_mem_manager(self) -> SharedMemoryManager:
+        """The manager class for MPI shared-memory communicators and windows
+
+        Returns
+        -------
+        SharedMemoryManager
+            The shared memory manager object.
+        """
+        return self.__shared_mem_manager
+
+    def __del__(self) -> None:
+        if hasattr(self, "_ProcessTimeSamples__shared_mem_manager"):
+            if self.__shared_mem_manager is not None:
+                self.__shared_mem_manager.free_shared_arrays()
 
     def _allocate_shmem_arrays(
         self, mgr: SharedMemoryManager, dint, dfloat, comm, comm_root
