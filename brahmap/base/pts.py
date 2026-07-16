@@ -163,7 +163,7 @@ class BaseProcessTimeSamples(object):
         self._weighted_cos_sq: npt.NDArray[np.number] = np.empty(0)
         self._weighted_sincos: npt.NDArray[np.number] = np.empty(0)
         self._one_over_determinant: npt.NDArray[np.number] = np.empty(0)
-        self._dtype_float: npt.DTypeLike = np.float64
+        self._dtype_float: DTypeFloat = np.float64
 
         if update_pointings_inplace:
             self._pointings = pointings
@@ -200,16 +200,16 @@ class BaseProcessTimeSamples(object):
         if dtype_float is not None:
             self._dtype_float = dtype_float  # type: ignore
         elif noise_weights is not None and pol_angles is not None:
-            self._dtype_float = np.promote_types(
+            self._dtype_float = np.promote_types(  # type: ignore
                 noise_weights.dtype,
                 pol_angles.dtype,
             )
         elif noise_weights is not None:
-            self._dtype_float = noise_weights.dtype
+            self._dtype_float = noise_weights.dtype  # type: ignore
         elif pol_angles is not None:
-            self._dtype_float = pol_angles.dtype
+            self._dtype_float = pol_angles.dtype  # type: ignore
         else:
-            self._dtype_float = np.float64
+            self._dtype_float = np.float64  # type: ignore
 
         if noise_weights is None:
             noise_weights = np.ones(self._nsamples, dtype=self._dtype_float)

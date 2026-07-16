@@ -1,6 +1,6 @@
 import gc
 from typing import List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 import litebird_sim as lbs
@@ -180,7 +180,7 @@ def LBSim_compute_GLS_maps(
     lbsim_gls_result = LBSimGLSResult(
         nside=nside,
         coordinate_system=LBSim_gls_parameters.output_coordinate_system,
-        **asdict(gls_result),
+        **gls_result.__dict__,
     )
 
     if LBSim_gls_parameters.return_processed_samples:
