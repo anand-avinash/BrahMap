@@ -22,47 +22,52 @@ class SharedMemoryManager(object):
     Parameters
     ----------
     base_comm : Intracomm
-        The base MPI communicator (typically `MPI.COMM_WORLD`).
+        The base MPI communicator (typically `MPI.COMM_WORLD`)
     nproc_reduce : int, optional
-        The process group size per node used for local tree-like MPI reductions, by default `1`.
+        The size of each local tree group sub-communicator split from the
+        node-level communicator. This group size determines how the
+        node-local processes are partitioned into smaller sub-communicator
+        chunks. It is typically used by calling containers to orchestrate
+        sequential shared-memory accumulations within each sub-communicator
+        and group-wise reductions across group roots. By default `1`
     node_root : int, optional
         The designated root rank within the node-level shared memory
-        communicator. By default `0`.
+        communicator. By default `0`
 
     Attributes
     ----------
     base_comm : Intracomm
-        The base MPI communicator.
+        The base MPI communicator
     node_comm : Intracomm
-        The node-level shared-memory MPI communicator.
+        The node-level shared-memory MPI communicator
     node_rank : int
-        The process rank within the node-level communicator.
+        The process rank within the node-level communicator
     node_size : int
-        The total number of processes on the current node.
+        The total number of processes on the current node
     nproc_reduce : int
-        The group size used for sub-communicator chunking during tree-like
-        reductions.
+        The size of each local tree group sub-communicator split from the
+        node-level communicator
     node_root : int
-        The root rank on the current node communicator.
+        The root rank on the current node communicator
     node_root_comm : Comm or None
         Communicator containing only the root ranks of each node, used for
-        inter-node communication.
+        inter-node communication
     tree_grp_comm : Intracomm
-        Sub-communicator group for local serialized accumulations.
+        Sub-communicator group for local serialized accumulations
     tree_grp_rank : int
-        The rank within the local tree group communicator.
+        The rank within the local tree group communicator
     tree_grp_size : int
-        The size of the local tree group communicator.
+        The size of the local tree group communicator
     tree_grp_root : int
-        The designated root rank of the tree group (usually 0).
+        The designated root rank of the tree group (usually 0)
     tree_grp_root_comm : Intracomm
         Communicator containing only the tree group roots on this node, used
-        for intra-node aggregation.
+        for intra-node aggregation
     list_windows : dict[Intracomm, list[MPI.Win]]
-        Tracks allocated shared-memory MPI windows mapped by communicator.
+        Tracks allocated shared-memory MPI windows mapped by communicator
     list_arrays : dict[Intracomm, list[npt.NDArray]]
         Tracks allocated shared-memory NumPy array views mapped by
-        communicator.
+        communicator
     """
 
     def __init__(
@@ -152,13 +157,13 @@ class SharedMemoryManager(object):
 
     @property
     def nproc_reduce(self) -> int:
-        """The group size used for node-level sub-communicator chunking
-        during tree-like reductions
+        """The size of each local tree group sub-communicator split from the
+        node-level communicator
 
         Returns
         -------
         int
-            Group size of the local tree group
+            Size of the local tree group
         """
         return self._nproc_reduce
 
@@ -241,6 +246,19 @@ class SharedMemoryManager(object):
             The tree group root communicator
         """
         return self._tree_grp_root_comm
+
+    @property
+    def list_windows(self) -> dict:
+        """The dictionary mapping communicators to list of allocated
+        shared-memory windows for that communicator
+
+        Returns
+        -------
+        dict
+            The dictionary mapping communicators to list of allocated
+            shared-memory windows for that communicator
+        """
+        return self._list_windows
 
     @property
     def list_arrays(self) -> dict:

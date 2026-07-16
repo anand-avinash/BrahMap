@@ -1,5 +1,9 @@
 # Utilities
 
+## Shared memory management
+
+- [`SharedMemoryManager`](SharedMemoryManager.md)
+
 ## Tools
 
 - [`bash_colors`](bash_colors.md)

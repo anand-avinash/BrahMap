@@ -201,6 +201,7 @@ nav:
 
     - Utilities:
       - api_reference/utilities/index.md
+      - SharedMemoryManager: api_reference/utilities/SharedMemoryManager.md
       - bash_colors: api_reference/utilities/bash_colors.md
       - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
       - plot_LinearOperator: api_reference/utilities/plot_LinearOperator.md
