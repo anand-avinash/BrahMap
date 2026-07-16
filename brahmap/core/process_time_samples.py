@@ -382,48 +382,54 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
     def __del__(self) -> None:
         if hasattr(self, "_ProcessTimeSamples__shared_mem_manager"):
             if self.__shared_mem_manager is not None:
-                self.__shared_mem_manager.free_shared_arrays()
+                self.__shared_mem_manager.free_shared_arrays_all()
 
-    def _allocate_shmem_arrays(
-        self, mgr: SharedMemoryManager, dint, dfloat, comm, comm_root
+    def _allocate_shmem_arrays_node(
+        self,
+        mgr: SharedMemoryManager,
+        dint,
+        dfloat,
     ):
-        self._observed_pixels, self._win_observed_pixels = mgr.alloc_shared_array(
-            self.npix, dint, mgr.node_comm, mgr.node_root
+        self._observed_pixels, self._win_observed_pixels = mgr.alloc_shared_array_node(
+            self.npix, dint
         )
-        self._old2new_pixel, self._win_old2new_pixel = mgr.alloc_shared_array(
-            self.npix, dint, mgr.node_comm, mgr.node_root
+        self._old2new_pixel, self._win_old2new_pixel = mgr.alloc_shared_array_node(
+            self.npix, dint
         )
-        self._pixel_flag, self._win_pixel_flag = mgr.alloc_shared_array(
-            self.npix, bool, mgr.node_comm, mgr.node_root
+        self._pixel_flag, self._win_pixel_flag = mgr.alloc_shared_array_node(
+            self.npix, bool
         )
-        self._hit_counts, self._win_hit_counts = mgr.alloc_shared_array(
-            self.npix, dint, comm, comm_root
+        self._hit_counts, self._win_hit_counts = mgr.alloc_shared_array_node(
+            self.npix, dint
         )
-        self._weighted_counts, self._win_weighted_counts = mgr.alloc_shared_array(
-            self.npix, dfloat, comm, comm_root
+        self._weighted_counts, self._win_weighted_counts = mgr.alloc_shared_array_node(
+            self.npix, dfloat
         )
 
         if self.solver_type != SolverType.I:
-            self._weighted_sin_sq, self._win_weighted_sin_sq = mgr.alloc_shared_array(
-                self.npix, dfloat, comm, comm_root
-            )
-            self._weighted_cos_sq, self._win_weighted_cos_sq = mgr.alloc_shared_array(
-                self.npix, dfloat, comm, comm_root
-            )
-            self._weighted_sincos, self._win_weighted_sincos = mgr.alloc_shared_array(
-                self.npix, dfloat, comm, comm_root
-            )
+            (
+                self._weighted_sin_sq,
+                self._win_weighted_sin_sq,
+            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            (
+                self._weighted_cos_sq,
+                self._win_weighted_cos_sq,
+            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            (
+                self._weighted_sincos,
+                self._win_weighted_sincos,
+            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
             (
                 self._one_over_determinant,
                 self._win_one_over_determinant,
-            ) = mgr.alloc_shared_array(self.npix, dfloat, mgr.node_comm, mgr.node_root)
+            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
 
         if self.solver_type == SolverType.IQU:
-            self._weighted_sin, self._win_weighted_sin = mgr.alloc_shared_array(
-                self.npix, dfloat, comm, comm_root
+            self._weighted_sin, self._win_weighted_sin = mgr.alloc_shared_array_node(
+                self.npix, dfloat
             )
-            self._weighted_cos, self._win_weighted_cos = mgr.alloc_shared_array(
-                self.npix, dfloat, comm, comm_root
+            self._weighted_cos, self._win_weighted_cos = mgr.alloc_shared_array_node(
+                self.npix, dfloat
             )
 
     def _compute_weights(
@@ -435,12 +441,10 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         dint = self._pointings.dtype
         dfloat = self.dtype_float
 
-        self._allocate_shmem_arrays(
+        self._allocate_shmem_arrays_node(
             mgr,
             dint,
             dfloat,
-            mgr.node_comm,
-            mgr.node_root,
         )
 
         if self.solver_type != SolverType.I:
@@ -595,9 +599,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         mgr.node_comm.Barrier()
 
         def _realloc_shared(old_arr, old_win, size, dtype):
-            new_arr, new_win = mgr.alloc_shared_array(
-                size, dtype, comm=mgr.node_comm, comm_root=mgr.node_root
-            )
+            new_arr, new_win = mgr.alloc_shared_array_node(size, dtype)
             if mgr.node_rank == 0:
                 new_arr[:] = old_arr[:size]
                 old_win.Free()
