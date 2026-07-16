@@ -273,7 +273,7 @@ class SharedMemoryManager(object):
         """
         return self._list_arrays
 
-    def alloc_shared_array(
+    def alloc_shared_array_comm(
         self,
         size: int,
         dtype: npt.DTypeLike,
@@ -286,21 +286,21 @@ class SharedMemoryManager(object):
         Parameters
         ----------
         size : int
-            The size of the array.
+            The size of the array
         dtype : npt.DTypeLike
-            The data type of the array.
+            The data type of the array
         comm : Intracomm
             The MPI communicator over which the shared memory window is
-            allocated.
+            allocated
         comm_root : int, optional
-            The root rank in `comm` that allocates the actual memory buffer,
-            by default `0`.
+            The root rank in `comm` that allocates the actual memory buffer.
+            By default `0`
 
         Returns
         -------
         tuple[npt.NDArray, MPI.Win]
             A tuple containing the shared NumPy array view and the backing
-            MPI window object.
+            MPI window object
         """
         dtype = np.dtype(dtype)
         dtype_bytes = dtype.itemsize
@@ -324,7 +324,35 @@ class SharedMemoryManager(object):
         self._list_arrays[comm].append(array)
         return array, win
 
-    def free_shared_arrays(self) -> None:
+    def alloc_shared_array_node(
+        self,
+        size: int,
+        dtype: npt.DTypeLike,
+    ) -> tuple[npt.NDArray, MPI.Win]:
+        """Allocates a shared-memory MPI window-backed 1D NumPy array for the
+        node-level communicator
+
+        Parameters
+        ----------
+        size : int
+            The size of the array
+        dtype : npt.DTypeLike
+            The data type of the array
+
+        Returns
+        -------
+        tuple[npt.NDArray, MPI.Win]
+            A tuple containing the shared NumPy array view and the backing
+            MPI window object
+        """
+        return self.alloc_shared_array_comm(
+            size=size,
+            dtype=dtype,
+            comm=self.node_comm,
+            comm_root=self.node_root,
+        )
+
+    def free_shared_arrays_all(self) -> None:
         """Frees all allocated shared-memory MPI windows and clears manager
         state.
 
@@ -365,6 +393,32 @@ class SharedMemoryManager(object):
             del self._list_windows[comm]
         if comm in self._list_arrays:
             del self._list_arrays[comm]
+
+    def free_shared_array(self, comm: Intracomm, win: MPI.Win) -> None:
+        """Frees a specific shared-memory MPI window and removes its associated
+        array view and window from the manager's tracking lists.
+
+        Parameters
+        ----------
+        comm : Intracomm
+            The MPI communicator over which the shared memory window was
+            allocated
+        win : MPI.Win
+            The MPI window object to be freed
+
+        Returns
+        -------
+        None
+        """
+        if comm in self._list_windows and win in self._list_windows[comm]:
+            idx = self._list_windows[comm].index(win)
+            win.Free()
+            self._list_windows[comm].pop(idx)
+            self._list_arrays[comm].pop(idx)
+            if not self._list_windows[comm]:
+                del self._list_windows[comm]
+            if not self._list_arrays[comm]:
+                del self._list_arrays[comm]
 
 
 class _MPI(object):
