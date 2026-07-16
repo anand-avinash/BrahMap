@@ -114,20 +114,11 @@ def separate_map_vectors(
     npt.NDArray[np.number]
         The final separated output maps with masked pathological pixels
     """
-    try:
-        map_vector = np.reshape(
-            map_vector,
-            (int(processed_samples.solver_type), processed_samples.new_npix),
-            order="F",
-        )
-    except TypeError:
-        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should
-        # be removed once the support is dropped for lower version
-        map_vector = np.reshape(
-            map_vector,
-            newshape=(int(processed_samples.solver_type), processed_samples.new_npix),
-            order="F",
-        )
+    map_vector = np.reshape(
+        map_vector,
+        (int(processed_samples.solver_type), processed_samples.new_npix),
+        order="F",
+    )
 
     output_maps = np.ma.MaskedArray(
         data=np.empty(processed_samples.npix, dtype=processed_samples.dtype_float),
