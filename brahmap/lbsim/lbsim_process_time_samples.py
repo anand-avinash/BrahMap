@@ -10,6 +10,7 @@ from ..core import SolverType, ProcessTimeSamples
 from ..math import DTypeFloat
 from ..mpi import MPI_UTILS
 
+# For backwards compatibility with lbs v0.17.0 and earlier
 if hasattr(lbs, "observation_utilities"):
     pointing_tools = lbs.observation_utilities
 else:
