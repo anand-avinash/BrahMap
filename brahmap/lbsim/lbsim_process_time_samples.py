@@ -4,9 +4,11 @@ import numpy as np
 import numpy.typing as npt
 import healpy as hp
 import litebird_sim as lbs
+from ducc0.healpix import Healpix_Base
 
 from ..core import SolverType, ProcessTimeSamples
 from ..math import DTypeFloat
+from ..mpi import MPI_UTILS
 
 if hasattr(lbs, "observation_utilities"):
     pointing_tools = lbs.observation_utilities
@@ -72,6 +74,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         self.__nside = nside
         self.__coordinate_system = output_coordinate_system
         npix = hp.nside2npix(self.nside)
+        hpx = Healpix_Base(nside, "RING")
 
         (
             self.__obs_list,
@@ -109,6 +112,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                     hwp_angle=hwp_angle,
                     output_coordinate_system=output_coordinate_system,
                     pointings_dtype=dtype_float,
+                    nthreads=MPI_UTILS.nthreads_per_process,
                 )
 
                 end_idx += obs.n_samples
@@ -119,8 +123,9 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                     pol_angle_detectors=obs.pol_angle_rad[det_idx],
                 )
 
-                pix_indices[start_idx:end_idx] = hp.ang2pix(
-                    nside, curr_pointings_det[:, 0], curr_pointings_det[:, 1]
+                pix_indices[start_idx:end_idx] = hpx.ang2pix(
+                    curr_pointings_det[:, :2],
+                    nthreads=MPI_UTILS.nthreads_per_process,
                 )
 
                 start_idx = end_idx
