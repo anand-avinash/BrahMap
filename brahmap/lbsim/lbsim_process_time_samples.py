@@ -8,6 +8,11 @@ import litebird_sim as lbs
 from ..core import SolverType, ProcessTimeSamples
 from ..math import DTypeFloat
 
+if hasattr(lbs, "observation_utilities"):
+    pointing_tools = lbs.observation_utilities
+else:
+    pointing_tools = lbs.pointings_in_obs
+
 
 class LBSimProcessTimeSamples(ProcessTimeSamples):
     """A data container to store the pre-processed and pre-computed arrays and
@@ -71,7 +76,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
         (
             self.__obs_list,
             ptg_list,
-        ) = lbs.pointings_in_obs._normalize_observations_and_pointings(
+        ) = pointing_tools._normalize_observations_and_pointings(
             observations=observations, pointings=pointings
         )
 
@@ -88,7 +93,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
             if hwp is None:
                 hwp_angle = None
             else:
-                hwp_angle = lbs.pointings_in_obs._get_hwp_angle(
+                hwp_angle = pointing_tools._get_hwp_angle(
                     obs=obs, hwp=hwp, pointing_dtype=dtype_float
                 )
 
@@ -98,7 +103,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
                 (
                     curr_pointings_det,
                     hwp_angle,
-                ) = lbs.pointings_in_obs._get_pointings_array(
+                ) = pointing_tools._get_pointings_array(
                     detector_idx=det_idx,
                     pointings=curr_pointings,
                     hwp_angle=hwp_angle,
@@ -108,7 +113,7 @@ class LBSimProcessTimeSamples(ProcessTimeSamples):
 
                 end_idx += obs.n_samples
 
-                pol_angles[start_idx:end_idx] = lbs.pointings_in_obs._get_pol_angle(
+                pol_angles[start_idx:end_idx] = pointing_tools._get_pol_angle(
                     curr_pointings_det=curr_pointings_det,
                     hwp_angle=hwp_angle,
                     pol_angle_detectors=obs.pol_angle_rad[det_idx],
