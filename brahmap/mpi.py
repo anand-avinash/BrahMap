@@ -425,6 +425,30 @@ class SharedMemoryManager(object):
 
 
 class _MPI(object):
+    """A helper class to manage basic MPI environment state and
+    configurations within BrahMap.
+
+    This class wraps an MPI communicator to query rank and size information
+    and retrieves process-level thread configurations.
+
+    Parameters
+    ----------
+    comm : Intracomm
+        The initial MPI communicator to wrap
+
+    Attributes
+    ----------
+    comm : Intracomm
+        The wrapped MPI communicator
+    size : int
+        The number of processes in the communicator
+    rank : int
+        The rank of the current process in the communicator
+    nthreads_per_process : int
+        The number of OpenMP threads allocated per process, read from the
+        `OMP_NUM_THREADS` environment variable. Defaults to `1` if not set.
+    """
+
     def __init__(
         self,
         comm: Intracomm,
@@ -432,29 +456,74 @@ class _MPI(object):
         self.update_communicator(comm=comm)
 
     def update_communicator(self, comm: Intracomm) -> None:
+        """Updates the internal MPI communicator and refreshes the rank and size values
+
+        Parameters
+        ----------
+        comm : Intracomm
+            The new MPI communicator to wrap
+        """
         self.__comm = comm
         self.__size = comm.size
         self.__rank = comm.rank
 
     @property
     def comm(self) -> Intracomm:
+        """The wrapped MPI communicator
+
+        Returns
+        -------
+        MPI.Intracomm
+            The wrapped MPI communicator
+        """
         return self.__comm
 
     @property
     def size(self) -> int:
+        """The number of processes in the communicator
+
+        Returns
+        -------
+        int
+            The size of the communicator
+        """
         return self.__size
 
     @property
     def rank(self) -> int:
+        """The rank of the current process in the communicator
+
+        Returns
+        -------
+        int
+            The rank of the current process
+        """
         return self.__rank
 
     @property
     def nthreads_per_process(self) -> int:
+        """The number of OpenMP threads allocated per process, read from the
+        `OMP_NUM_THREADS` environment variable. Defaults to `1` if not set.
+
+        Returns
+        -------
+        int
+            The number of OpenMP threads per process
+        """
         value = int(os.environ.get("OMP_NUM_THREADS", 1))
         return value
 
 
+# Global MPI utilities instance initialized with `MPI.COMM_WORLD`
 MPI_UTILS: _MPI = _MPI(comm=MPI.COMM_WORLD)
+"""An instance of `brahmap.mpi._MPI` that provides global access to basic MPI 
+environment parameters and utilities for BrahMap. 
+
+It wraps the global MPI communicator (`MPI.COMM_WORLD`) by default, and 
+provides access to its rank, size, and thread configurations. The underlying 
+MPI communicator can be updated using the 
+`brahmap.MPI_UTILS.update_communicator(comm=...)` function.
+"""
 
 
 def Finalize() -> None:
