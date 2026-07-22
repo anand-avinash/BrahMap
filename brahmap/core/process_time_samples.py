@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-from mpi4py import MPI
 
 
 from .._extensions import compute_weights_shared
@@ -452,7 +451,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             self._cos2phi = np.zeros(self.nsamples, dtype=dfloat)
 
         if mgr.node_rank == 0:
-            for array in mgr.list_arrays[mgr.node_comm]:
+            for array in mgr.list_arrays[mgr.node_comm.handle]:
                 array[:] = 0
 
         mgr.node_comm.Barrier()
@@ -553,7 +552,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             else:
                 self._new_npix = 0
 
-            mgr.node_comm.Bcast([self._new_npix, MPI.INT], root=mgr.node_root)
+            self._new_npix = mgr.node_comm.bcast(self._new_npix, root=mgr.node_root)
 
     def _repixelization(self):
         mgr = self.__shared_mem_manager
@@ -602,7 +601,8 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             new_arr, new_win = mgr.alloc_shared_array_node(size, dtype)
             if mgr.node_rank == 0:
                 new_arr[:] = old_arr[:size]
-                old_win.Free()
+            mgr.node_comm.Barrier()
+            mgr.free_shared_array(mgr.node_comm, old_win)
             return new_arr, new_win
 
         self._observed_pixels, self._win_observed_pixels = _realloc_shared(
