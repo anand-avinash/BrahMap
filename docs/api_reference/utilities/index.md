@@ -1,7 +1,8 @@
 # Utilities
 
-## Shared memory management
+## Parallel execution utilities
 
+- [`MPI_UTILS`](MPI_UTILS.md)
 - [`SharedMemoryManager`](SharedMemoryManager.md)
 
 ## Tools

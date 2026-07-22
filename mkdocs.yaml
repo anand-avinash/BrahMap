@@ -201,6 +201,7 @@ nav:
 
     - Utilities:
       - api_reference/utilities/index.md
+      - MPI_UTILS: api_reference/utilities/MPI_UTILS.md
       - SharedMemoryManager: api_reference/utilities/SharedMemoryManager.md
       - bash_colors: api_reference/utilities/bash_colors.md
       - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
