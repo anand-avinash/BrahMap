@@ -81,7 +81,14 @@ class TestSharedMemoryManager:
     )
     def test_shared_memory_manager_allocations(self, dtype):
         comm = brahmap.MPI_UTILS.comm
-        mgr = SharedMemoryManager(base_comm=comm, nproc_reduce=1)
+        nproc_reduce = 2
+        node_root = 0 if comm.size == 1 else 1
+
+        mgr = SharedMemoryManager(
+            base_comm=comm,
+            nproc_reduce=nproc_reduce,
+            node_root=node_root,
+        )
 
         size = 100
         array, win = mgr.alloc_shared_array_node(size, dtype)
@@ -120,7 +127,14 @@ class TestSharedMemoryManager:
 
     def test_shared_memory_manager_free_methods(self):
         comm = brahmap.MPI_UTILS.comm
-        mgr = SharedMemoryManager(base_comm=comm, nproc_reduce=1)
+        nproc_reduce = 2
+        node_root = 0 if comm.size == 1 else 1
+
+        mgr = SharedMemoryManager(
+            base_comm=comm,
+            nproc_reduce=nproc_reduce,
+            node_root=node_root,
+        )
 
         arr1, win1 = mgr.alloc_shared_array_node(10, np.float64)
         arr2, win2 = mgr.alloc_shared_array_node(20, np.int32)
