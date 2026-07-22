@@ -63,11 +63,11 @@ class SharedMemoryManager(object):
     tree_grp_root_comm : Intracomm
         Communicator containing only the tree group roots on this node, used
         for intra-node aggregation
-    list_windows : dict[Intracomm, list[MPI.Win]]
-        Tracks allocated shared-memory MPI windows mapped by communicator
-    list_arrays : dict[Intracomm, list[npt.NDArray]]
+    list_windows : dict[int, list[MPI.Win]]
+        Tracks allocated shared-memory MPI windows mapped by communicator handle
+    list_arrays : dict[int, list[npt.NDArray]]
         Tracks allocated shared-memory NumPy array views mapped by
-        communicator
+        communicator handle
     """
 
     def __init__(
@@ -108,8 +108,8 @@ class SharedMemoryManager(object):
         )
 
         # List of MPI shared memory windows
-        self._list_windows: dict[Intracomm, list[MPI.Win]] = {}
-        self._list_arrays: dict[Intracomm, list[npt.NDArray]] = {}
+        self._list_windows: dict[int, list[MPI.Win]] = {}
+        self._list_arrays: dict[int, list[npt.NDArray]] = {}
 
     @property
     def base_comm(self) -> Intracomm:
@@ -315,13 +315,14 @@ class SharedMemoryManager(object):
         # np.ndarray provides the view, it doesn't owns the memory
         array = np.ndarray(shape=size, dtype=dtype, buffer=buf)
 
-        if comm not in self._list_windows:
-            self._list_windows[comm] = []
-        if comm not in self._list_arrays:
-            self._list_arrays[comm] = []
+        handle = comm.handle
+        if handle not in self._list_windows:
+            self._list_windows[handle] = []
+        if handle not in self._list_arrays:
+            self._list_arrays[handle] = []
 
-        self._list_windows[comm].append(win)
-        self._list_arrays[comm].append(array)
+        self._list_windows[handle].append(win)
+        self._list_arrays[handle].append(array)
         return array, win
 
     def alloc_shared_array_node(
@@ -387,12 +388,13 @@ class SharedMemoryManager(object):
         -------
         None
         """
-        if comm in self._list_windows:
-            for win in self._list_windows[comm]:
+        handle = comm.handle
+        if handle in self._list_windows:
+            for win in self._list_windows[handle]:
                 win.Free()
-            del self._list_windows[comm]
-        if comm in self._list_arrays:
-            del self._list_arrays[comm]
+            del self._list_windows[handle]
+        if handle in self._list_arrays:
+            del self._list_arrays[handle]
 
     def free_shared_array(self, comm: Intracomm, win: MPI.Win) -> None:
         """Frees a specific shared-memory MPI window and removes its associated
@@ -410,15 +412,16 @@ class SharedMemoryManager(object):
         -------
         None
         """
-        if comm in self._list_windows and win in self._list_windows[comm]:
-            idx = self._list_windows[comm].index(win)
+        handle = comm.handle
+        if handle in self._list_windows and win in self._list_windows[handle]:
+            idx = self._list_windows[handle].index(win)
             win.Free()
-            self._list_windows[comm].pop(idx)
-            self._list_arrays[comm].pop(idx)
-            if not self._list_windows[comm]:
-                del self._list_windows[comm]
-            if not self._list_arrays[comm]:
-                del self._list_arrays[comm]
+            self._list_windows[handle].pop(idx)
+            self._list_arrays[handle].pop(idx)
+            if not self._list_windows[handle]:
+                del self._list_windows[handle]
+            if not self._list_arrays[handle]:
+                del self._list_arrays[handle]
 
 
 class _MPI(object):
