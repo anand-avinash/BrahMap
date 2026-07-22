@@ -9,6 +9,10 @@ class TestMPIUtils:
     def test_mpi_utils(self, monkeypatch):
         from brahmap.mpi import _MPI
 
+        # start with a global MPI communicator. An explicit communicator
+        # update is required to avoid global state pollution
+        brahmap.MPI_UTILS.update_communicator(MPI.COMM_WORLD)
+
         # Test the global MPI_UTILS properties
         assert brahmap.MPI_UTILS.comm == MPI.COMM_WORLD
         assert brahmap.MPI_UTILS.size == MPI.COMM_WORLD.size
