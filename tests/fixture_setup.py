@@ -33,6 +33,12 @@ def setup_linalg_tools(request):
         (np.int32, np.float64),
         (np.int64, np.float64),
     ],
+    ids=[
+        "int32-float32",
+        "int64-float32",
+        "int32-float64",
+        "int64-float64",
+    ],
 )
 def setup_scan(request):
     import numpy as np
