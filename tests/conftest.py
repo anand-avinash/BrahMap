@@ -5,6 +5,8 @@ test_results_status = {}
 test_param_counts = {}
 forced_skipped_tests = set()
 
+pytest_plugins = ["fixture_setup"]
+
 
 def pytest_configure(config):
     # By default, pytest

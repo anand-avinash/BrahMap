@@ -15,53 +15,25 @@ import numpy as np
 
 from brahmap.math import linalg_tools
 
-import brahmap
+
+TOLERANCES = {
+    np.float32: {"rtol": 1.5e-4, "atol": 1.0e-5},
+    np.float64: {"rtol": 1.5e-5, "atol": 1.0e-10},
+}
 
 
-class InitCommonParams:
-    np.random.seed(12343 + brahmap.MPI_UTILS.rank)
-    nsamples_global = 1280
+class TestLinAlg_tools:
+    def test_mult(self, setup_linalg_tools):
+        initfloat = setup_linalg_tools
 
-    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
-    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
 
-
-class InitFloat32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float32
-        self.diag = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-        self.vec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-
-
-class InitFloat64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float64
-        self.diag = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-        self.vec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-
-
-# Initializing the parameter classes
-initfloat32 = InitFloat32Params()
-initfloat64 = InitFloat64Params()
-
-
-@pytest.mark.parametrize(
-    "initfloat, rtol, atol",
-    [
-        (initfloat32, 1.5e-4, 1.0e-5),
-        (initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestLinAlg_tools(InitCommonParams):
-    def test_mult(self, initfloat, rtol, atol):
-        cpp_prod = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        nsamples = initfloat.nsamples
+        cpp_prod = np.zeros(nsamples, dtype=initfloat.dtype)
 
         linalg_tools.multiply_array(
-            nsamples=self.nsamples,
+            nsamples=nsamples,
             diag=initfloat.diag,
             vec=initfloat.vec,
             prod=cpp_prod,
@@ -69,6 +41,7 @@ class TestLinAlg_tools(InitCommonParams):
 
         py_prod = initfloat.diag * initfloat.vec
 
+        tol = TOLERANCES[initfloat.dtype]
         np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
 
 
