@@ -25,97 +25,30 @@ from brahmap.mpi import SharedMemoryManager
 import py_ComputeWeights as cw
 
 
-class InitCommonParams:
-    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
-    npix = 128
-    nsamples_global = npix * 6
-
-    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
-    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
-
-    nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
-    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
-
-    pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
-    pointings_flag[bad_samples] = False
+TOLERANCES = {
+    np.float32: {"rtol": 1.5e-3, "atol": 1.0e-5},
+    np.float64: {"rtol": 1.5e-5, "atol": 1.0e-10},
+}
 
 
-class InitInt32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
+class TestComputeWeightsShared:
+    def test_compute_weights_shmem_pol_I(self, setup_scan):
+        initint, initfloat = setup_scan
 
-        self.dtype = np.int32
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitInt64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.int64
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitFloat32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float32
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-
-class InitFloat64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float64
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-
-# Initializing the parameter classes
-initint32 = InitInt32Params()
-initint64 = InitInt64Params()
-initfloat32 = InitFloat32Params()
-initfloat64 = InitFloat64Params()
-
-
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-3, 1.0e-5),
-        (initint64, initfloat32, 1.5e-3, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestComputeWeightsShared(InitCommonParams):
-    def test_compute_weights_shmem_pol_I(self, initint, initfloat, rtol, atol):
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
 
-        cpp_observed_pixels, _ = mgr.alloc_shared_array_node(self.npix, initint.dtype)
-        cpp_old2new_pixel, _ = mgr.alloc_shared_array_node(self.npix, initint.dtype)
-        cpp_pixel_flag, _ = mgr.alloc_shared_array_node(self.npix, bool)
+        cpp_observed_pixels, _ = mgr.alloc_shared_array_node(
+            initint.npix, initint.dtype
+        )
+        cpp_old2new_pixel, _ = mgr.alloc_shared_array_node(initint.npix, initint.dtype)
+        cpp_pixel_flag, _ = mgr.alloc_shared_array_node(initint.npix, bool)
         cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            self.npix, initint.dtype
+            initint.npix, initint.dtype
         )
         cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
 
         if mgr.node_rank == 0:
@@ -127,10 +60,10 @@ class TestComputeWeightsShared(InitCommonParams):
         mgr.node_comm.Barrier()
 
         cpp_new_npix = compute_weights_shared.compute_weights_shmem_pol_I(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             cpp_hit_counts,
             win_hit_counts,
@@ -155,10 +88,10 @@ class TestComputeWeightsShared(InitCommonParams):
             py_old2new_pixel,
             py_pixel_flag,
         ) = cw.computeweights_pol_I(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             dtype_float=initfloat.dtype,
             comm=brahmap.MPI_UTILS.comm,
@@ -177,29 +110,33 @@ class TestComputeWeightsShared(InitCommonParams):
 
         mgr.free_shared_arrays_all()
 
-    def test_compute_weights_shmem_pol_QU(self, initint, initfloat, rtol, atol):
+    def test_compute_weights_shmem_pol_QU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
 
-        cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
-        cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        cpp_sin2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
+        cpp_cos2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
         cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            self.npix, initint.dtype
+            initint.npix, initint.dtype
         )
         cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_one_over_determinant, _ = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
 
         if mgr.node_rank == 0:
@@ -212,10 +149,10 @@ class TestComputeWeightsShared(InitCommonParams):
         mgr.node_comm.Barrier()
 
         compute_weights_shared.compute_weights_shmem_pol_QU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             cpp_hit_counts,
@@ -249,10 +186,10 @@ class TestComputeWeightsShared(InitCommonParams):
             py_weighted_sincos,
             __,
         ) = cw.computeweights_pol_QU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
@@ -277,35 +214,39 @@ class TestComputeWeightsShared(InitCommonParams):
 
         mgr.free_shared_arrays_all()
 
-    def test_compute_weights_shmem_pol_IQU(self, initint, initfloat, rtol, atol):
+    def test_compute_weights_shmem_pol_IQU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
 
-        cpp_sin2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
-        cpp_cos2phi = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        cpp_sin2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
+        cpp_cos2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
         cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            self.npix, initint.dtype
+            initint.npix, initint.dtype
         )
         cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_sin, win_weighted_sin = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_weighted_cos, win_weighted_cos = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
         cpp_one_over_determinant, _ = mgr.alloc_shared_array_node(
-            self.npix, initfloat.dtype
+            initint.npix, initfloat.dtype
         )
 
         if mgr.node_rank == 0:
@@ -320,10 +261,10 @@ class TestComputeWeightsShared(InitCommonParams):
         mgr.node_comm.Barrier()
 
         compute_weights_shared.compute_weights_shmem_pol_IQU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             cpp_hit_counts,
@@ -363,10 +304,10 @@ class TestComputeWeightsShared(InitCommonParams):
             py_weighted_cos,
             __,
         ) = cw.computeweights_pol_IQU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
@@ -397,7 +338,8 @@ class TestComputeWeightsShared(InitCommonParams):
 
         mgr.free_shared_arrays_all()
 
-    def test_get_pix_mask_pol_QU(self, initint, initfloat, rtol, atol):
+    def test_get_pix_mask_pol_QU(self, setup_scan):
+        initint, initfloat = setup_scan
         (
             hit_counts,
             __,
@@ -408,25 +350,25 @@ class TestComputeWeightsShared(InitCommonParams):
             __,
             one_over_determinant,
         ) = cw.computeweights_pol_QU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        cpp_observed_pixels = np.zeros(self.npix, initint.dtype)
-        cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
-        cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
+        cpp_observed_pixels = np.zeros(initint.npix, initint.dtype)
+        cpp_old2new_pixel = np.zeros(initint.npix, dtype=initint.dtype)
+        cpp_pixel_flag = np.zeros(initint.npix, dtype=bool)
 
         hit_counts = hit_counts.astype(dtype=initint.dtype)
 
         cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
             2,
-            self.npix,
+            initint.npix,
             1.0e3,
             hit_counts,
             one_over_determinant,
@@ -443,7 +385,7 @@ class TestComputeWeightsShared(InitCommonParams):
             py_old2new_pixel,
             py_pixel_flag,
         ) = cw.get_pix_mask_pol(
-            self.npix,
+            initint.npix,
             2,
             1.0e3,
             hit_counts,
@@ -456,7 +398,8 @@ class TestComputeWeightsShared(InitCommonParams):
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
-    def test_get_pix_mask_pol_IQU(self, initint, initfloat, rtol, atol):
+    def test_get_pix_mask_pol_IQU(self, setup_scan):
+        initint, initfloat = setup_scan
         (
             hit_counts,
             __,
@@ -469,25 +412,25 @@ class TestComputeWeightsShared(InitCommonParams):
             __,
             one_over_determinant,
         ) = cw.computeweights_pol_IQU(
-            self.npix,
-            self.nsamples,
+            initint.npix,
+            initint.nsamples,
             initint.pointings,
-            self.pointings_flag,
+            initint.pointings_flag,
             initfloat.noise_weights,
             initfloat.pol_angles,
             dtype_float=initfloat.dtype,
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        cpp_observed_pixels = np.zeros(self.npix, initint.dtype)
-        cpp_old2new_pixel = np.zeros(self.npix, dtype=initint.dtype)
-        cpp_pixel_flag = np.zeros(self.npix, dtype=bool)
+        cpp_observed_pixels = np.zeros(initint.npix, initint.dtype)
+        cpp_old2new_pixel = np.zeros(initint.npix, dtype=initint.dtype)
+        cpp_pixel_flag = np.zeros(initint.npix, dtype=bool)
 
         hit_counts = hit_counts.astype(dtype=initint.dtype)
 
         cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
             3,
-            self.npix,
+            initint.npix,
             1.0e3,
             hit_counts,
             one_over_determinant,
@@ -504,7 +447,7 @@ class TestComputeWeightsShared(InitCommonParams):
             py_old2new_pixel,
             py_pixel_flag,
         ) = cw.get_pix_mask_pol(
-            self.npix,
+            initint.npix,
             3,
             1.0e3,
             hit_counts,
