@@ -36,7 +36,9 @@ def pytest_collection_modifyitems(items):
     """This function counts the number of parameters for a parameterized
     test"""
     for item in items:
-        if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
+        # Every parameterized function has an attribute `callspec`, whether
+        # it is parameterized through decorators or fixtures
+        if hasattr(item, "callspec") and "ignore_param_count" not in item.keywords:
             base_nodeid = get_base_nodeid(item.nodeid)
             if base_nodeid not in test_param_counts:
                 test_param_counts[base_nodeid] = 0
@@ -51,7 +53,7 @@ def pytest_runtest_call(item):
     outcome = yield
 
     # Only process parametrized tests
-    if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
+    if hasattr(item, "callspec") and "ignore_param_count" not in item.keywords:
         base_nodeid = get_base_nodeid(item.nodeid)
 
         # Initialize the list for this test function if not already done
