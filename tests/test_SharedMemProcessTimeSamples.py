@@ -1,34 +1,30 @@
 import pytest
 import numpy as np
 import brahmap
-from test_ProcessTimeSamples import (
-    InitCommonParams,
-    initint32,
-    initint64,
-    initfloat32,
-    initfloat64,
-)
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, nproc_reduce, rtol, atol",
-    [
-        (initint32, initfloat32, 1, 1.5e-3, 1.0e-5),
-        (initint32, initfloat32, 2, 1.5e-3, 1.0e-5),
-        (initint64, initfloat64, 1, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 2, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestSharedMemProcessTimeSamples(InitCommonParams):
-    def test_SharedMemProcessTimeSamples_I(
-        self, initint, initfloat, nproc_reduce, rtol, atol
-    ):
+TOLERANCES = {
+    np.float32: {"rtol": 1.5e-3, "atol": 1.0e-5},
+    np.float64: {"rtol": 1.5e-5, "atol": 1.0e-10},
+}
+
+
+class TestSharedMemProcessTimeSamples:
+    def test_SharedMemProcessTimeSamples_I(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        # for comm_size = 1, it will be adopted as 1,
+        # for comm_size > 1, it will be adopted as 2
+        nproc_reduce = 2
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.I
 
         shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -37,9 +33,9 @@ class TestSharedMemProcessTimeSamples(InitCommonParams):
         )
 
         std_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -59,15 +55,18 @@ class TestSharedMemProcessTimeSamples(InitCommonParams):
         np.testing.assert_array_equal(shm_PTS.pixel_flag, std_PTS.pixel_flag)
         np.testing.assert_array_equal(shm_PTS.old2new_pixel, std_PTS.old2new_pixel)
 
-    def test_SharedMemProcessTimeSamples_QU(
-        self, initint, initfloat, nproc_reduce, rtol, atol
-    ):
+    def test_SharedMemProcessTimeSamples_QU(self, setup_scan):
+        initint, initfloat = setup_scan
+        nproc_reduce = 2
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.QU
 
         shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -77,9 +76,9 @@ class TestSharedMemProcessTimeSamples(InitCommonParams):
         )
 
         std_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -136,15 +135,18 @@ class TestSharedMemProcessTimeSamples(InitCommonParams):
         np.testing.assert_array_equal(shm_PTS.pixel_flag, std_PTS.pixel_flag)
         np.testing.assert_array_equal(shm_PTS.old2new_pixel, std_PTS.old2new_pixel)
 
-    def test_SharedMemProcessTimeSamples_IQU(
-        self, initint, initfloat, nproc_reduce, rtol, atol
-    ):
+    def test_SharedMemProcessTimeSamples_IQU(self, setup_scan):
+        initint, initfloat = setup_scan
+        nproc_reduce = 2
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.IQU
 
         shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -154,9 +156,9 @@ class TestSharedMemProcessTimeSamples(InitCommonParams):
         )
 
         std_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
