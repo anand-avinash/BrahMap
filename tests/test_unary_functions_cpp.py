@@ -11,193 +11,49 @@ class InitParams:
     input_vec_f32 = rng.uniform(low=-1.0, high=1.0, size=size).astype(dtype=np.float32)
     input_vec_f64 = rng.uniform(low=-1.0, high=1.0, size=size).astype(dtype=np.float64)
 
-    brahmap_vec_f32 = np.empty_like(input_vec_f32)
-    brahmap_vec_f64 = np.empty_like(input_vec_f64)
-
-    numpy_vec_f32 = np.empty_like(input_vec_f32)
-    numpy_vec_f64 = np.empty_like(input_vec_f64)
-
 
 class TestUnaryFunctions(InitParams):
-    def test_sin(self):
-        math.sin(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.sin(self.input_vec_f32, self.numpy_vec_f32)
+    @pytest.mark.parametrize(
+        "func_name",
+        [
+            "sin",
+            "cos",
+            "tan",
+            "arcsin",
+            "arccos",
+            "arctan",
+            "exp",
+            "exp2",
+            "log",
+            "log2",
+            "sqrt",
+            "cbrt",
+        ],
+    )
+    def test_unary_function(self, func_name):
+        # Determine the input vectors
+        if func_name in ["log", "log2", "sqrt"]:
+            input_f32 = np.abs(self.input_vec_f32)
+            input_f64 = np.abs(self.input_vec_f64)
+        else:
+            input_f32 = self.input_vec_f32
+            input_f64 = self.input_vec_f64
 
-        math.sin(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.sin(self.input_vec_f64, self.numpy_vec_f64)
+        # Resolve function references
+        brahmap_func = getattr(math, func_name)
+        numpy_func = getattr(np, func_name)
 
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
+        brahmap_vec_f32 = np.empty_like(input_f32)
+        brahmap_vec_f64 = np.empty_like(input_f64)
 
-    def test_cos(self):
-        math.cos(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.cos(self.input_vec_f32, self.numpy_vec_f32)
+        numpy_vec_f32 = np.empty_like(input_f32)
+        numpy_vec_f64 = np.empty_like(input_f64)
 
-        math.cos(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.cos(self.input_vec_f64, self.numpy_vec_f64)
+        brahmap_func(self.size, input_f32, brahmap_vec_f32)
+        numpy_func(input_f32, numpy_vec_f32)
 
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
+        brahmap_func(self.size, input_f64, brahmap_vec_f64)
+        numpy_func(input_f64, numpy_vec_f64)
 
-    def test_tan(self):
-        math.tan(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.tan(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.tan(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.tan(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_arcsin(self):
-        math.arcsin(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.arcsin(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.arcsin(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.arcsin(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_arccos(self):
-        math.arccos(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.arccos(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.arccos(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.arccos(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_arctan(self):
-        math.arctan(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.arctan(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.arctan(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.arctan(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_exp(self):
-        math.exp(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.exp(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.exp(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.exp(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_exp2(self):
-        math.exp2(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.exp2(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.exp2(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.exp2(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_log(self):
-        math.log(self.size, np.abs(self.input_vec_f32), self.brahmap_vec_f32)
-        np.log(np.abs(self.input_vec_f32), self.numpy_vec_f32)
-
-        math.log(self.size, np.abs(self.input_vec_f64), self.brahmap_vec_f64)
-        np.log(np.abs(self.input_vec_f64), self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_log2(self):
-        math.log2(self.size, np.abs(self.input_vec_f32), self.brahmap_vec_f32)
-        np.log2(np.abs(self.input_vec_f32), self.numpy_vec_f32)
-
-        math.log2(self.size, np.abs(self.input_vec_f64), self.brahmap_vec_f64)
-        np.log2(np.abs(self.input_vec_f64), self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_sqrt(self):
-        math.sqrt(self.size, np.abs(self.input_vec_f32), self.brahmap_vec_f32)
-        np.sqrt(np.abs(self.input_vec_f32), self.numpy_vec_f32)
-
-        math.sqrt(self.size, np.abs(self.input_vec_f64), self.brahmap_vec_f64)
-        np.sqrt(np.abs(self.input_vec_f64), self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-    def test_cbrt(self):
-        math.cbrt(self.size, self.input_vec_f32, self.brahmap_vec_f32)
-        np.cbrt(self.input_vec_f32, self.numpy_vec_f32)
-
-        math.cbrt(self.size, self.input_vec_f64, self.brahmap_vec_f64)
-        np.cbrt(self.input_vec_f64, self.numpy_vec_f64)
-
-        np.testing.assert_allclose(
-            self.brahmap_vec_f32, self.numpy_vec_f32, rtol=1.5e-6
-        )
-        np.testing.assert_allclose(
-            self.brahmap_vec_f64, self.numpy_vec_f64, rtol=1.5e-7
-        )
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_sin", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_cos", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_tan", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_arcsin", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_arccos", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_arctan", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_exp", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_exp2", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_log", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_log2", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_sqrt", "-v", "-s"])
-    pytest.main([f"{__file__}::TestUnaryFunctions::test_cbrt", "-v", "-s"])
+        np.testing.assert_allclose(brahmap_vec_f32, numpy_vec_f32, rtol=1.5e-6)
+        np.testing.assert_allclose(brahmap_vec_f64, numpy_vec_f64, rtol=1.5e-7)
