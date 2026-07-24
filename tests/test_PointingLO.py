@@ -35,99 +35,24 @@ import py_PointingLO as hplo
 from mpi4py import MPI
 
 
-class InitCommonParams:
-    np.random.seed(54321 + brahmap.MPI_UTILS.rank)
-    npix = 128
-    nsamples_global = npix * 6
-
-    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
-    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
-
-    nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
-    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
-
-    pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
-    pointings_flag[bad_samples] = False
+TOLERANCES = {
+    np.float32: {"rtol": 1.5e-4, "atol": 1.0e-5},
+    np.float64: {"rtol": 1.5e-5, "atol": 1.0e-10},
+}
 
 
-class InitInt32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
+class TestPointingLO_I_Cpp:
+    def test_I_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
 
-        self.dtype = np.int32
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitInt64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.int64
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitFloat32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float32
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-        self.vec = np.random.random(size=self.npix * 3).astype(dtype=self.dtype)
-        self.rvec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-
-
-class InitFloat64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float64
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-        self.vec = np.random.random(size=self.npix * 3).astype(dtype=self.dtype)
-        self.rvec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
-
-
-# Initializing the parameter classes
-initint32 = InitInt32Params()
-initint64 = InitInt64Params()
-initfloat32 = InitFloat32Params()
-initfloat64 = InitFloat64Params()
-
-
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_I_Cpp(InitCommonParams):
-    def test_I_Cpp(self, initint, initfloat, rtol, atol):
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -161,23 +86,18 @@ class TestPointingLO_I_Cpp(InitCommonParams):
         )
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_QU_Cpp(InitCommonParams):
-    def test_QU_Cpp(self, initint, initfloat, rtol, atol):
+class TestPointingLO_QU_Cpp:
+    def test_QU_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -212,23 +132,18 @@ class TestPointingLO_QU_Cpp(InitCommonParams):
         )
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_IQU_Cpp(InitCommonParams):
-    def test_IQU_Cpp(self, initint, initfloat, rtol, atol):
+class TestPointingLO_IQU_Cpp:
+    def test_IQU_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -263,23 +178,18 @@ class TestPointingLO_IQU_Cpp(InitCommonParams):
         )
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_I(InitCommonParams):
-    def test_I(self, initint, initfloat, rtol, atol):
+class TestPointingLO_I:
+    def test_I(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -303,9 +213,9 @@ class TestPointingLO_I(InitCommonParams):
         vec = np.resize(initfloat.vec, ncols)
         signal = P * vec
 
-        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        signal_test = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             pixel = PTS.pointings[idx]
             if PTS.pointings_flag[idx]:
                 signal_test[idx] += vec[pixel]
@@ -318,23 +228,18 @@ class TestPointingLO_I(InitCommonParams):
         )
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_QU(InitCommonParams):
-    def test_QU(self, initint, initfloat, rtol, atol):
+class TestPointingLO_QU:
+    def test_QU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -350,7 +255,7 @@ class TestPointingLO_QU(InitCommonParams):
         weighted_sin = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_cos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             if PTS.pointings_flag[idx]:
                 pixel = PTS.pointings[idx]
                 weighted_sin[pixel] += PTS.sin2phi[idx] * initfloat.noise_weights[idx]
@@ -377,9 +282,9 @@ class TestPointingLO_QU(InitCommonParams):
         vec = np.resize(initfloat.vec, ncols)
         signal = P * vec
 
-        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        signal_test = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             pixel = PTS.pointings[idx]
             if PTS.pointings_flag[idx]:
                 signal_test[idx] += (
@@ -395,23 +300,18 @@ class TestPointingLO_QU(InitCommonParams):
         )
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-4, 1.0e-5),
-        (initint64, initfloat32, 1.5e-4, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestPointingLO_IQU(InitCommonParams):
-    def test_IQU(self, initint, initfloat, rtol, atol):
+class TestPointingLO_IQU:
+    def test_IQU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = brahmap.core.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -448,9 +348,9 @@ class TestPointingLO_IQU(InitCommonParams):
         vec = np.resize(initfloat.vec, ncols)
         signal = P * vec
 
-        signal_test = np.zeros(self.nsamples, dtype=initfloat.dtype)
+        signal_test = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             pixel = PTS.pointings[idx]
             if PTS.pointings_flag[idx]:
                 signal_test[idx] += (
