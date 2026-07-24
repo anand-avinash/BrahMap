@@ -84,6 +84,23 @@ def setup_scan(request):
             self.vec = np.random.random(size=self.npix * 3).astype(dtype=self.dtype)
             self.rvec = np.random.random(size=self.nsamples).astype(dtype=self.dtype)
 
+            # constant maps
+            self.const_I_map = np.ones(self.npix, dtype=self.dtype) * 7.0
+            self.const_Q_map = np.ones(self.npix, dtype=self.dtype) * 5.0
+            self.const_U_map = np.ones(self.npix, dtype=self.dtype) * 3.0
+
+            # random maps
+            rng_map = np.random.default_rng(seed=6454)
+            self.rand_I_map = rng_map.uniform(
+                low=-7.0, high=7.0, size=self.npix
+            ).astype(dtype=self.dtype)
+            self.rand_Q_map = rng_map.uniform(
+                low=-5.0, high=5.0, size=self.npix
+            ).astype(dtype=self.dtype)
+            self.rand_U_map = rng_map.uniform(
+                low=-3.0, high=3.0, size=self.npix
+            ).astype(dtype=self.dtype)
+
     initint = InitIntParams(dtype=dtype_int)
     initfloat = InitFloatParams(dtype=dtype_float)
 
