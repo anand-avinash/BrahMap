@@ -25,6 +25,24 @@ def setup_linalg_tools(request):
     return InitParams(dtype=dtype)
 
 
+@pytest.fixture
+def linear_system():
+    import brahmap
+
+    rng = np.random.default_rng(seed=867 + brahmap.MPI_UTILS.rank)
+    mat_size = 40
+    A = rng.random(size=(mat_size, mat_size))
+    A = A + A.T  # A symmetric matrix
+    A = A + mat_size * np.eye(mat_size)  # A positive definite matrix
+
+    # numpy array to sparse linop
+    A_op = brahmap.base.aslinearoperator(A)
+
+    # RHS vector
+    b = rng.random(mat_size)
+    return A_op, b
+
+
 @pytest.fixture(
     scope="module",
     params=[
