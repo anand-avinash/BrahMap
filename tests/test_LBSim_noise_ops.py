@@ -22,63 +22,60 @@ litebird_sim = pytest.importorskip(
 import litebird_sim as lbs  # noqa: E402
 
 
-class lbsim_simulation:
-    def __init__(self):
-        self.comm = lbs.MPI_COMM_WORLD
-        tmp_dir = tempfile.TemporaryDirectory()
-        imo = lbs.Imo(flatfile_location=lbs.PTEP_IMO_LOCATION)
+@pytest.fixture(scope="module")
+def setup_lbsim():
+    class lbsim_simulation:
+        def __init__(self):
+            self.comm = lbs.MPI_COMM_WORLD
+            tmp_dir = tempfile.TemporaryDirectory()
+            imo = lbs.Imo(flatfile_location=lbs.PTEP_IMO_LOCATION)
 
-        self.sim = lbs.Simulation(
-            base_path=tmp_dir.name,
-            start_time=234,
-            duration_s=71,  # Do not increase this number
-            random_seed=65454,
-            mpi_comm=self.comm,
-            imo=imo,
-        )
+            self.sim = lbs.Simulation(
+                base_path=tmp_dir.name,
+                start_time=234,
+                duration_s=71,  # Do not increase this number
+                random_seed=65454,
+                mpi_comm=self.comm,
+                imo=imo,
+            )
 
-        self.detector_list = [
-            lbs.DetectorInfo(name="det1", sampling_rate_hz=1, net_ukrts=1.0),
-            lbs.DetectorInfo(name="det2", sampling_rate_hz=1, net_ukrts=2.0),
-            lbs.DetectorInfo(name="det3", sampling_rate_hz=1, net_ukrts=3.0),
-            lbs.DetectorInfo(name="det4", sampling_rate_hz=1, net_ukrts=4.0),
-        ]
+            self.detector_list = [
+                lbs.DetectorInfo(name="det1", sampling_rate_hz=1, net_ukrts=1.0),
+                lbs.DetectorInfo(name="det2", sampling_rate_hz=1, net_ukrts=2.0),
+                lbs.DetectorInfo(name="det3", sampling_rate_hz=1, net_ukrts=3.0),
+                lbs.DetectorInfo(name="det4", sampling_rate_hz=1, net_ukrts=4.0),
+            ]
 
-        ### Create observations
-        comm_size = self.comm.Get_size()
-        if comm_size == 2:
-            n_block_det = 2
-            n_block_time = 1
-        elif comm_size == 4:
-            n_block_det = 2
-            n_block_time = 2
-        else:
-            n_block_det = 1
-            n_block_time = self.comm.Get_size()
+            ### Create observations
+            comm_size = self.comm.Get_size()
+            if comm_size == 2:
+                n_block_det = 2
+                n_block_time = 1
+            elif comm_size == 4:
+                n_block_det = 2
+                n_block_time = 2
+            else:
+                n_block_det = 1
+                n_block_time = self.comm.Get_size()
 
-        self.sim.create_observations(
-            detectors=self.detector_list,
-            num_of_obs_per_detector=3,
-            n_blocks_det=n_block_det,
-            n_blocks_time=n_block_time,
-            split_list_over_processes=False,
-        )
+            self.sim.create_observations(
+                detectors=self.detector_list,
+                num_of_obs_per_detector=3,
+                n_blocks_det=n_block_det,
+                n_blocks_time=n_block_time,
+                split_list_over_processes=False,
+            )
 
-        ### RNG used to generate noise properties
-        seed = 545454
-        self.rng = np.random.default_rng(seed=[seed, self.comm.rank])
+            ### RNG used to generate noise properties
+            seed = 545454
+            self.rng = np.random.default_rng(seed=[seed, self.comm.rank])
+
+    lbs_sim = lbsim_simulation()
+    return lbs_sim
 
 
-lbs_sim = lbsim_simulation()
-
-
-@pytest.mark.parametrize(
-    "lbsim_obj",
-    [(lbs_sim)],
-)
-@pytest.mark.ignore_param_count
 class TestLBSim_InvNoiseCovLO_UnCorr:
-    def test_LBSim_InvNoiseCov_UnCorr_explicit(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_UnCorr_explicit(self, setup_lbsim):
         """Here the noise variances are specified explicitly"""
         # Assigning the key values
         noise_variance = {
@@ -89,17 +86,17 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
         }
 
         inv_noise_variance_op = brahmap.lbsim.LBSim_InvNoiseCovLO_UnCorr(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             noise_variance=noise_variance,
         )
 
-        vec_length = np.sum([obs.tod.size for obs in lbsim_obj.sim.observations])
+        vec_length = np.sum([obs.tod.size for obs in setup_lbsim.sim.observations])
         vec = np.ones(vec_length)
 
         prod = inv_noise_variance_op * vec
 
         # filling the `test_tod` for each detector with its noise variance. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             obs.test_tod = np.empty_like(obs.tod)
             for idx in range(obs.n_detectors):
                 obs.test_tod[idx].fill(noise_variance[obs.name[idx]])
@@ -114,35 +111,35 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
-                [1.0 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
+                [1.0 / obs.test_tod for obs in setup_lbsim.sim.observations], axis=None
             ),
             rtol=1.0e-4,
             atol=1.0e-5,
         )
 
-    def test_LBSim_InvNoiseCov_UnCorr_IMo(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_UnCorr_IMo(self, setup_lbsim):
         """Here the noise variances are automatically taken from IMo"""
         inv_noise_variance_op = brahmap.lbsim.LBSim_InvNoiseCovLO_UnCorr(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             noise_variance=None,
         )
 
-        vec_length = np.sum([obs.tod.size for obs in lbsim_obj.sim.observations])
+        vec_length = np.sum([obs.tod.size for obs in setup_lbsim.sim.observations])
         vec = np.ones(vec_length)
 
         prod = inv_noise_variance_op * vec
 
         noise_variance = dict(
             zip(
-                lbsim_obj.sim.observations[0].name,
+                setup_lbsim.sim.observations[0].name,
                 lbs.mapmaking.common.get_map_making_weights(
-                    lbsim_obj.sim.observations[0]
+                    setup_lbsim.sim.observations[0]
                 ),
             )
         )
 
         # filling the `test_tod` for each detector with its noise variance. Now the flatten `test_tod` should resemble the diagonal of `inv_noise_variance_op`
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             obs.test_tod = np.empty_like(obs.tod)
             for idx in range(obs.n_detectors):
                 obs.test_tod[idx].fill(noise_variance[obs.name[idx]])
@@ -157,27 +154,23 @@ class TestLBSim_InvNoiseCovLO_UnCorr:
         np.testing.assert_allclose(
             inv_noise_variance_op.diag,
             np.concatenate(
-                [1.0e4 / obs.test_tod for obs in lbsim_obj.sim.observations], axis=None
+                [1.0e4 / obs.test_tod for obs in setup_lbsim.sim.observations],
+                axis=None,
             ),
             rtol=1.0e-4,
             atol=1.0e-5,
         )
 
 
-@pytest.mark.parametrize(
-    "lbsim_obj",
-    [(lbs_sim)],
-)
-@pytest.mark.ignore_param_count
 class TestLBSim_InvNoiseCovLO_Circulant:
-    def test_LBSim_InvNoiseCov_Circulant_dict(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_Circulant_dict(self, setup_lbsim):
         """Here the noise covariance and power spectrum are supplied for each detector"""
         covariance_list = {}
         power_spec_list = {}
 
-        for detector in lbsim_obj.detector_list:
-            covariance = lbsim_obj.rng.random(
-                size=lbsim_obj.sim.observations[0].n_samples
+        for detector in setup_lbsim.detector_list:
+            covariance = setup_lbsim.rng.random(
+                size=setup_lbsim.sim.observations[0].n_samples
             )
             power_spec = scipy.fft.fft(covariance).real
 
@@ -188,20 +181,20 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             power_spec_list[detector.name] = power_spec
 
         lbsim_inv_cov1 = brahmap.LBSim_InvNoiseCovLO_Circulant(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=covariance_list,
             input_type="covariance",
         )
 
         lbsim_inv_cov2 = brahmap.LBSim_InvNoiseCovLO_Circulant(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=power_spec_list,
             input_type="power_spectrum",
         )
 
         row_list = []
         inv_cov_LO_list = []
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             for __, detector in enumerate(obs.name):
                 inv_cov_LO_list.append(
                     brahmap.InvNoiseCovLO_Circulant(
@@ -245,30 +238,32 @@ class TestLBSim_InvNoiseCovLO_Circulant:
             atol=1.0e-5,
         )
 
-    def test_LBSim_InvNoiseCov_Circulant_array(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_Circulant_array(self, setup_lbsim):
         """Here only one common noise covariance and power spectrum is supplied"""
 
-        covariance = lbsim_obj.rng.random(size=lbsim_obj.sim.observations[0].n_samples)
+        covariance = setup_lbsim.rng.random(
+            size=setup_lbsim.sim.observations[0].n_samples
+        )
         power_spec = scipy.fft.fft(covariance).real
 
         covariance = scipy.fft.ifft(power_spec).real
         power_spec = scipy.fft.fft(covariance).real
 
         lbsim_inv_cov1 = brahmap.LBSim_InvNoiseCovLO_Circulant(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=covariance,
             input_type="covariance",
         )
 
         lbsim_inv_cov2 = brahmap.LBSim_InvNoiseCovLO_Circulant(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=power_spec,
             input_type="power_spectrum",
         )
 
         row_list = []
         inv_cov_LO_list = []
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             for __, __ in enumerate(obs.name):
                 inv_cov_LO_list.append(
                     brahmap.InvNoiseCovLO_Circulant(
@@ -313,22 +308,17 @@ class TestLBSim_InvNoiseCovLO_Circulant:
         )
 
 
-@pytest.mark.parametrize(
-    "lbsim_obj",
-    [(lbs_sim)],
-)
-@pytest.mark.ignore_param_count
 class TestLBSim_InvNoiseCovLO_Toeplitz:
     """Unlike previously, I am creating the inverse covariance operator but running the numerical tests on the covariance operator since it is faster"""
 
-    def test_LBSim_InvNoiseCov_Toeplitz_dict(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_Toeplitz_dict(self, setup_lbsim):
         """Here the noise covariance and power spectrum are supplied for each detector"""
         covariance_list = {}
         power_spec_list = {}
 
-        for detector in lbsim_obj.detector_list:
-            covariance = lbsim_obj.rng.random(
-                size=lbsim_obj.sim.observations[0].n_samples
+        for detector in setup_lbsim.detector_list:
+            covariance = setup_lbsim.rng.random(
+                size=setup_lbsim.sim.observations[0].n_samples
             )
 
             extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
@@ -338,20 +328,20 @@ class TestLBSim_InvNoiseCovLO_Toeplitz:
             power_spec_list[detector.name] = power_spec
 
         lbsim_cov1 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=covariance_list,
             input_type="covariance",
         ).get_inverse()
 
         lbsim_cov2 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=power_spec_list,
             input_type="power_spectrum",
         ).get_inverse()
 
         row_list = []
         cov_LO_list = []
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             for __, detector in enumerate(obs.name):
                 cov_LO_list.append(
                     brahmap.NoiseCovLO_Toeplitz01(
@@ -395,29 +385,31 @@ class TestLBSim_InvNoiseCovLO_Toeplitz:
             atol=1.0e-5,
         )
 
-    def test_LBSim_InvNoiseCov_Toeplitz_array(self, lbsim_obj):
+    def test_LBSim_InvNoiseCov_Toeplitz_array(self, setup_lbsim):
         """Here only one common noise covariance and power spectrum is supplied"""
 
-        covariance = lbsim_obj.rng.random(size=lbsim_obj.sim.observations[0].n_samples)
+        covariance = setup_lbsim.rng.random(
+            size=setup_lbsim.sim.observations[0].n_samples
+        )
 
         extended_covariance = np.concatenate([covariance, covariance[1:-1][::-1]])
         power_spec = scipy.fft.fft(extended_covariance).real
 
         lbsim_cov1 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=covariance,
             input_type="covariance",
         ).get_inverse()
 
         lbsim_cov2 = brahmap.LBSim_InvNoiseCovLO_Toeplitz(
-            obs=lbsim_obj.sim.observations,
+            obs=setup_lbsim.sim.observations,
             input=power_spec,
             input_type="power_spectrum",
         ).get_inverse()
 
         row_list = []
         cov_LO_list = []
-        for obs in lbsim_obj.sim.observations:
+        for obs in setup_lbsim.sim.observations:
             for __, __ in enumerate(obs.name):
                 cov_LO_list.append(
                     brahmap.NoiseCovLO_Toeplitz01(
