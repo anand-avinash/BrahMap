@@ -30,6 +30,7 @@ class TestUnaryFunctions(InitParams):
             "cbrt",
         ],
     )
+    @pytest.mark.ignore_param_count
     def test_unary_function(self, func_name):
         # Determine the input vectors
         if func_name in ["log", "log2", "sqrt"]:

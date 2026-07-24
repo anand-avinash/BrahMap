@@ -79,6 +79,7 @@ class TestSharedMemoryManager:
     @pytest.mark.parametrize(
         "dtype", [np.int32, np.int64, np.float32, np.float64, bool]
     )
+    @pytest.mark.ignore_param_count
     def test_shared_memory_manager_allocations(self, dtype):
         comm = brahmap.MPI_UTILS.comm
         nproc_reduce = 2
