@@ -204,7 +204,7 @@ class SharedMemoryManager(object):
         return self._node_root_comm
 
     @property
-    def tree_grp_comm(self) -> Comm:
+    def tree_grp_comm(self) -> Intracomm:
         """The sub-communicator group for local tree-like serialized
         accumulations
 
@@ -213,7 +213,7 @@ class SharedMemoryManager(object):
         MPI.Comm
             The local tree group communicator
         """
-        return self._tree_grp_comm
+        return cast(Intracomm, self._tree_grp_comm)
 
     @property
     def tree_grp_rank(self) -> int:
