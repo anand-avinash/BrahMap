@@ -1,15 +1,14 @@
 import numpy as np
 import numpy.typing as npt
-
 from ..base.linop import LinearOperator
-
-from .process_time_samples import SolverType, ProcessTimeSamples
-
-
+from ..mpi import MPI_UTILS
+from .process_time_samples import (
+    SolverType,
+    ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
+)
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
-
-from ..mpi import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
@@ -27,7 +26,7 @@ class PointingLO(LinearOperator):
 
     Parameters
     ----------
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing pointing and
         map-making metadata
     solver_type : SolverType | None, optional
@@ -42,7 +41,7 @@ class PointingLO(LinearOperator):
 
     def __init__(
         self,
-        processed_samples: ProcessTimeSamples,
+        processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
@@ -70,13 +69,45 @@ class PointingLO(LinearOperator):
             self.sin2phi = processed_samples.sin2phi
             self.cos2phi = processed_samples.cos2phi
 
+        self._is_shmem = hasattr(processed_samples, "shared_mem_manager")
+
+        if self._is_shmem:
+            assert isinstance(processed_samples, SharedMemProcessTimeSamples)
+            self.__shared_mem_mgr = processed_samples.shared_mem_manager
+            mgr = self.__shared_mem_mgr
+
+            # Allocated node-level shared memory arrays for transposed product
+            self._node_prod, self._win_node_prod = mgr.alloc_shared_array_node(
+                self.ncols,
+                processed_samples.dtype_float,
+            )
+
+            if mgr.tree_grp_size == 1:
+                self._grp_prod = self._node_prod
+                self._win_grp_prod = self._win_node_prod
+            else:
+                self._grp_prod, self._win_grp_prod = mgr.alloc_shared_array_comm(
+                    self.ncols,
+                    processed_samples.dtype_float,
+                    comm=mgr.tree_grp_comm,
+                    comm_root=0,
+                )
+
+            rmatvec_I = self._rmult_I_shmem
+            rmatvec_QU = self._rmult_QU_shmem
+            rmatvec_IQU = self._rmult_IQU_shmem
+        else:
+            rmatvec_I = self._rmult_I
+            rmatvec_QU = self._rmult_QU
+            rmatvec_IQU = self._rmult_IQU
+
         if self.solver_type == 1:
             super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
                 matvec=self._mult_I,
-                rmatvec=self._rmult_I,
+                rmatvec=rmatvec_I,
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
@@ -85,16 +116,16 @@ class PointingLO(LinearOperator):
                 nargout=self.nrows,
                 symmetric=False,
                 matvec=self._mult_QU,
-                rmatvec=self._rmult_QU,
+                rmatvec=rmatvec_QU,
                 dtype=processed_samples.dtype_float,
             )
         else:
             super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
-                matvec=self._mult_IQU,
                 symmetric=False,
-                rmatvec=self._rmult_IQU,
+                matvec=self._mult_IQU,
+                rmatvec=rmatvec_IQU,
                 dtype=processed_samples.dtype_float,
             )
 
@@ -153,6 +184,49 @@ class PointingLO(LinearOperator):
         )
 
         return prod
+
+    def _rmult_I_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature-only ($I$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self.__shared_mem_mgr.tree_grp_comm.Barrier()
+        self.__shared_mem_mgr.node_comm.Barrier()
+
+        PointingLO_tools.shmem_PLO_rmult_I(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            grp_reduce=self.__shared_mem_mgr.grp_reduce,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for linear
@@ -214,6 +288,51 @@ class PointingLO(LinearOperator):
 
         return prod
 
+    def _rmult_QU_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        linear polarization ($QU$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self.__shared_mem_mgr.tree_grp_comm.Barrier()
+        self.__shared_mem_mgr.node_comm.Barrier()
+
+        PointingLO_tools.shmem_PLO_rmult_QU(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            grp_reduce=self.__shared_mem_mgr.grp_reduce,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod
+
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for temperature and
         linear polarization map-making.
@@ -273,6 +392,51 @@ class PointingLO(LinearOperator):
         )
 
         return prod
+
+    def _rmult_IQU_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature and linear polarization map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self.__shared_mem_mgr.tree_grp_comm.Barrier()
+        self.__shared_mem_mgr.node_comm.Barrier()
+
+        PointingLO_tools.shmem_PLO_rmult_IQU(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            grp_reduce=self.__shared_mem_mgr.grp_reduce,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod
 
     @property
     def solver_type(self) -> SolverType:
