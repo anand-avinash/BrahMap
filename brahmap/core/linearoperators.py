@@ -32,17 +32,26 @@ class PointingLO(LinearOperator):
     solver_type : SolverType | None, optional
         The map-making solver configuration to use. If `None`, it falls
         back to the `solver_type` of `processed_samples`, by default `None`
+    return_copy : bool, optional
+        If `True`, the transposed operator (`rmatvec`) returns a copy of the
+        shared memory buffer. If `False`, it returns the shared memory buffer
+        directly. This argument is ignored if `processed_samples` is not a
+        `SharedMemProcessTimeSamples` object, by default `True`
 
     Attributes
     ----------
     solver_type : SolverType
         The current map-making solver configuration
+    return_copy : bool
+        Whether the transposed operator returns a copy of the shared memory
+        buffer
     """
 
     def __init__(
         self,
         processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
+        return_copy: bool = True,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
         ### extensions. A corresponding full Python implementation is provided in
@@ -57,6 +66,8 @@ class PointingLO(LinearOperator):
                     "`solver_type` of `processed_samples` object"
                 )
             self.__solver_type = solver_type
+
+        self.return_copy = return_copy
 
         self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
@@ -226,7 +237,7 @@ class PointingLO(LinearOperator):
             node_root_comm=self.__shared_mem_mgr.node_root_comm,
         )
 
-        return self._node_prod
+        return self._node_prod.copy() if self.return_copy else self._node_prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for linear
@@ -331,7 +342,7 @@ class PointingLO(LinearOperator):
             node_root_comm=self.__shared_mem_mgr.node_root_comm,
         )
 
-        return self._node_prod
+        return self._node_prod.copy() if self.return_copy else self._node_prod
 
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for temperature and
@@ -436,7 +447,7 @@ class PointingLO(LinearOperator):
             node_root_comm=self.__shared_mem_mgr.node_root_comm,
         )
 
-        return self._node_prod
+        return self._node_prod.copy() if self.return_copy else self._node_prod
 
     @property
     def solver_type(self) -> SolverType:
