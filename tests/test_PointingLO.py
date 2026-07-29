@@ -42,18 +42,18 @@ TOLERANCES = {
 
 
 class TestPointingLO_Cpp:
-    def test_I_Cpp(self, setup_scan):
+    def _cpp_test(self, setup_scan, solver_type):
         initint, initfloat = setup_scan
 
         tol = TOLERANCES[initfloat.dtype]
         rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = brahmap.core.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
             npix=initint.npix,
             pointings=initint.pointings,
             pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
@@ -84,94 +84,15 @@ class TestPointingLO_Cpp:
             rtol=rtol,
             atol=atol,
         )
+
+    def test_I_Cpp(self, setup_scan):
+        self._cpp_test(setup_scan, brahmap.core.SolverType.I)
 
     def test_QU_Cpp(self, setup_scan):
-        initint, initfloat = setup_scan
-
-        tol = TOLERANCES[initfloat.dtype]
-        rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = brahmap.core.SolverType.QU
-
-        PTS = brahmap.core.ProcessTimeSamples(
-            npix=initint.npix,
-            pointings=initint.pointings,
-            pointings_flag=initint.pointings_flag,
-            solver_type=solver_type,
-            pol_angles=initfloat.pol_angles,
-            noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
-        )
-
-        P_cpp = brahmap.core.PointingLO(PTS)
-        P_py = hplo.PointingLO(PTS)
-
-        ncols = PTS.new_npix * PTS.solver_type
-
-        vec = np.resize(initfloat.vec, ncols)
-        cpp_mult_prod = P_cpp * vec
-        py_mult_prod = P_py * vec
-
-        rvec = initfloat.rvec
-        cpp_rmult_prod = P_cpp.T * rvec
-        py_rmult_prod = P_py.T * rvec
-
-        np.testing.assert_allclose(
-            cpp_mult_prod,
-            py_mult_prod,
-            rtol=rtol,
-            atol=atol,
-        )
-        np.testing.assert_allclose(
-            cpp_rmult_prod,
-            py_rmult_prod,
-            rtol=rtol,
-            atol=atol,
-        )
+        self._cpp_test(setup_scan, brahmap.core.SolverType.QU)
 
     def test_IQU_Cpp(self, setup_scan):
-        initint, initfloat = setup_scan
-
-        tol = TOLERANCES[initfloat.dtype]
-        rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = brahmap.core.SolverType.IQU
-
-        PTS = brahmap.core.ProcessTimeSamples(
-            npix=initint.npix,
-            pointings=initint.pointings,
-            pointings_flag=initint.pointings_flag,
-            solver_type=solver_type,
-            pol_angles=initfloat.pol_angles,
-            noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
-        )
-
-        P_cpp = brahmap.core.PointingLO(PTS)
-        P_py = hplo.PointingLO(PTS)
-
-        ncols = PTS.new_npix * PTS.solver_type
-
-        vec = np.resize(initfloat.vec, ncols)
-        cpp_mult_prod = P_cpp * vec
-        py_mult_prod = P_py * vec
-
-        rvec = initfloat.rvec
-        cpp_rmult_prod = P_cpp.T * rvec
-        py_rmult_prod = P_py.T * rvec
-
-        np.testing.assert_allclose(
-            cpp_mult_prod,
-            py_mult_prod,
-            rtol=rtol,
-            atol=atol,
-        )
-        np.testing.assert_allclose(
-            cpp_rmult_prod,
-            py_rmult_prod,
-            rtol=rtol,
-            atol=atol,
-        )
+        self._cpp_test(setup_scan, brahmap.core.SolverType.IQU)
 
 
 class TestPointingLO:
@@ -443,3 +364,6 @@ if __name__ == "__main__":
     pytest.main([f"{__file__}::TestPointingLO::test_I", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO::test_QU", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLO::test_IQU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestShMemPointingLO::test_I", "-v", "-s"])
+    pytest.main([f"{__file__}::TestShMemPointingLO::test_QU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestShMemPointingLO::test_IQU", "-v", "-s"])
