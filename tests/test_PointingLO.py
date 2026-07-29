@@ -4,14 +4,14 @@
 # Analogous to this class, in the test suite, we have defined another version
 # of `PointingLO` based on only the python routines.
 #
-# - class `TestPointingLO_I_Cpp`:
+# - class `TestPointingLO_Cpp`:
 #
 #   -   `test_I_Cpp`: tests whether the `mult` and `rmult` method overloads
 # of the the two versions of `PointingLO` produce the same results.
 #
 # - Same as above, but for QU and IQU
 #
-# - class `TestPointingLO_I`:
+# - class `TestPointingLO`:
 #
 #   -   `test_I`: tests the `mult` and `rmult` method overloads of
 # `brahmap.interfaces.PointingLO` against their explicit computations.
@@ -41,7 +41,7 @@ TOLERANCES = {
 }
 
 
-class TestPointingLO_I_Cpp:
+class TestPointingLO_Cpp:
     def test_I_Cpp(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -85,8 +85,6 @@ class TestPointingLO_I_Cpp:
             atol=atol,
         )
 
-
-class TestPointingLO_QU_Cpp:
     def test_QU_Cpp(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -131,8 +129,6 @@ class TestPointingLO_QU_Cpp:
             atol=atol,
         )
 
-
-class TestPointingLO_IQU_Cpp:
     def test_IQU_Cpp(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -178,7 +174,7 @@ class TestPointingLO_IQU_Cpp:
         )
 
 
-class TestPointingLO_I:
+class TestPointingLO:
     def test_I(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -227,8 +223,6 @@ class TestPointingLO_I:
             atol=atol,
         )
 
-
-class TestPointingLO_QU:
     def test_QU(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -299,8 +293,6 @@ class TestPointingLO_QU:
             atol=atol,
         )
 
-
-class TestPointingLO_IQU:
     def test_IQU(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -367,10 +359,87 @@ class TestPointingLO_IQU:
         )
 
 
+class TestShMemPointingLO:
+    def _shmem_test(self, setup_scan, solver_type):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
+
+        nproc_reduce = 2
+
+        # Create SharedMemProcessTimeSamples
+        shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+            nproc_reduce=nproc_reduce,
+        )
+
+        # Create standard ProcessTimeSamples
+        std_PTS = brahmap.core.ProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+
+        # Create operators
+        shm_P = brahmap.core.PointingLO(shm_PTS)
+        std_P = brahmap.core.PointingLO(std_PTS)
+
+        assert hasattr(shm_P, "_PointingLO__shared_mem_mgr")
+
+        # Test for P * <vector>
+        ncols = shm_PTS.new_npix * shm_PTS.solver_type
+        vec = np.resize(initfloat.vec, ncols).astype(initfloat.dtype)
+
+        shm_mult_prod = shm_P * vec
+        std_mult_prod = std_P * vec
+
+        np.testing.assert_allclose(
+            shm_mult_prod,
+            std_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+
+        # Test for P.T * <vector>
+        rvec = initfloat.rvec.astype(initfloat.dtype)
+
+        shm_rmult_prod = shm_P.T * rvec
+        std_rmult_prod = std_P.T * rvec
+
+        np.testing.assert_allclose(
+            shm_rmult_prod,
+            std_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+
+    def test_I(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.I)
+
+    def test_QU(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.QU)
+
+    def test_IQU(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.IQU)
+
+
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::TestPointingLO_I_Cpp::test_I_Cpp", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLO_QU_Cpp::test_QU_Cpp", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLO_IQU_Cpp::test_IQU_Cpp", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLO_I::test_I", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLO_QU::test_QU", "-v", "-s"])
-    pytest.main([f"{__file__}::TestPointingLO_IQU::test_IQU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_Cpp::test_I_Cpp", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_Cpp::test_QU_Cpp", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO_Cpp::test_IQU_Cpp", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO::test_I", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO::test_QU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLO::test_IQU", "-v", "-s"])
