@@ -473,7 +473,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
     Parameters
     ----------
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing accumulated map-making weights
     solver_type : SolverType | None, optional
         The map-making solver configuration to use. If `None`, it falls
@@ -487,7 +487,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
     def __init__(
         self,
-        processed_samples: ProcessTimeSamples,
+        processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
