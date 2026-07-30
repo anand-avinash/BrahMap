@@ -23,10 +23,6 @@
 ![BrahMap documentation build status](https://github.com/anand-avinash/BrahMap/actions/workflows/documentation.yaml/badge.svg)
 <!-- markdownlint-enable MD013 -->
 
-<!-- markdownlint-disable MD033 -->
-<font color="red"> **This project is currently under active development!!!** </font>
-<!-- markdownlint-enable MD033 -->
-
 `BrahMap` is a scalable and modular map-making framework for CMB experiments.
 It features a user-friendly Python interface for the linear operators used in
 map-making. The Python interface seamlessly handles the workflow while
@@ -43,8 +39,9 @@ For a complete reference to the `BrahMap` API, refer to the
 Complete example notebooks and scripts can be
 [found here](./examples).
 
-You can find detailed information on the implementation and features of
-`BrahMap` at [arXiv:2501.16122](https://arxiv.org/abs/2501.16122).
+For detailed information on the implementation and features of `BrahMap`,
+please refer to the paper
+[arXiv:2501.16122](https://arxiv.org/abs/2501.16122).
 
 ## Installation
 
@@ -91,7 +88,7 @@ of its numerical routines and linear operators. The benchmarks are based on
 `pytest-benchmark` and support both serial and MPI-parallel execution.
 
 For detailed instructions on how to run and customize the benchmarks, refer to
-the [benchmarks documentation](./benchmarks/README.md).
+the [benchmarks documentation](./benchmarks).
 
 ## Citation
 

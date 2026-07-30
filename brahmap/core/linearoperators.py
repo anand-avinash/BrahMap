@@ -36,7 +36,7 @@ class PointingLO(LinearOperator):
         If `True`, the transposed operator (`rmatvec`) returns a copy of the
         shared memory buffer. If `False`, it returns the shared memory buffer
         directly. This argument is ignored if `processed_samples` is not a
-        `SharedMemProcessTimeSamples` object, by default `True`
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples] object, by default `True`
 
     Attributes
     ----------
