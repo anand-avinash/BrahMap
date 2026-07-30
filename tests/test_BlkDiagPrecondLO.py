@@ -43,102 +43,46 @@ TOLERANCES_2 = {
 }
 
 
-class TestBlkDiagPrecondLO_I_Cpp:
+class TestBlkDiagPrecondLO_Cpp:
+    def _cpp_test(self, setup_scan, solver_type):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES_1[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
+
+        PTS = hpts.ProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
+        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
+
+        vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
+            dtype=initfloat.dtype, copy=False
+        )
+
+        cpp_prod = BDP_cpp * vec
+        py_prod = BDP_py * vec
+
+        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
+
     def test_I_cpp(self, setup_scan):
-        initint, initfloat = setup_scan
+        self._cpp_test(setup_scan, hpts.SolverType.I)
 
-        tol = TOLERANCES_1[initfloat.dtype]
-        rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = hpts.SolverType.I
-
-        PTS = hpts.ProcessTimeSamples(
-            npix=initint.npix,
-            pointings=initint.pointings,
-            pointings_flag=initint.pointings_flag,
-            solver_type=solver_type,
-            noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
-        )
-        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
-        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
-
-        vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
-            dtype=initfloat.dtype, copy=False
-        )
-
-        cpp_prod = BDP_cpp * vec
-
-        py_prod = BDP_py * vec
-
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
-
-
-class TestBlkDiagPrecondLO_QU_Cpp:
     def test_QU_cpp(self, setup_scan):
-        initint, initfloat = setup_scan
+        self._cpp_test(setup_scan, hpts.SolverType.QU)
 
-        tol = TOLERANCES_1[initfloat.dtype]
-        rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = hpts.SolverType.QU
-
-        PTS = hpts.ProcessTimeSamples(
-            npix=initint.npix,
-            pointings=initint.pointings,
-            pointings_flag=initint.pointings_flag,
-            solver_type=solver_type,
-            pol_angles=initfloat.pol_angles,
-            noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
-        )
-        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
-        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
-
-        vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
-            dtype=initfloat.dtype, copy=False
-        )
-
-        cpp_prod = BDP_cpp * vec
-
-        py_prod = BDP_py * vec
-
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
-
-
-class TestBlkDiagPrecondLO_IQU_Cpp:
     def test_IQU_cpp(self, setup_scan):
-        initint, initfloat = setup_scan
-
-        tol = TOLERANCES_1[initfloat.dtype]
-        rtol, atol = tol["rtol"], tol["atol"]
-        solver_type = hpts.SolverType.IQU
-
-        PTS = hpts.ProcessTimeSamples(
-            npix=initint.npix,
-            pointings=initint.pointings,
-            pointings_flag=initint.pointings_flag,
-            solver_type=solver_type,
-            pol_angles=initfloat.pol_angles,
-            noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
-        )
-        BDP_cpp = brahmap.core.BlockDiagonalPreconditionerLO(PTS)
-        BDP_py = bdplo.BlockDiagonalPreconditionerLO(PTS)
-
-        vec = np.random.random(PTS.new_npix * PTS.solver_type).astype(
-            dtype=initfloat.dtype, copy=False
-        )
-
-        cpp_prod = BDP_cpp * vec
-
-        py_prod = BDP_py * vec
-
-        np.testing.assert_allclose(cpp_prod, py_prod, rtol=rtol, atol=atol)
+        self._cpp_test(setup_scan, hpts.SolverType.IQU)
 
 
-class TestBlkDiagPrecondLO_I:
+class TestBlkDiagPrecondLO:
     def test_I(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -162,8 +106,6 @@ class TestBlkDiagPrecondLO_I:
 
         np.testing.assert_allclose(bdp_array, diag_inv_count, rtol=rtol, atol=atol)
 
-
-class TestBlkDiagPrecondLO_QU:
     def test_QU(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -204,8 +146,6 @@ class TestBlkDiagPrecondLO_QU:
 
         np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol, atol=atol)
 
-
-class TestBlkDiagPrecondLO_IQU:
     def test_IQU(self, setup_scan):
         initint, initfloat = setup_scan
 
@@ -252,24 +192,86 @@ class TestBlkDiagPrecondLO_IQU:
         np.testing.assert_allclose(bdp_matrix, bdp_test_matrix, rtol=rtol, atol=atol)
 
 
+class TestShMemBlkDiagPrecondLO:
+    def _shmem_test(self, setup_scan, solver_type):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES_1[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
+
+        nproc_reduce = 2
+
+        # Create SharedMemProcessTimeSamples
+        shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+            nproc_reduce=nproc_reduce,
+        )
+
+        # Create standard ProcessTimeSamples
+        std_PTS = brahmap.core.ProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+        )
+
+        # Create operators
+        shm_P = brahmap.core.BlockDiagonalPreconditionerLO(shm_PTS)
+        std_P = brahmap.core.BlockDiagonalPreconditionerLO(std_PTS)
+
+        vec = np.random.random(shm_PTS.new_npix * shm_PTS.solver_type).astype(
+            dtype=initfloat.dtype, copy=False
+        )
+
+        shm_mult_prod = shm_P * vec
+        std_mult_prod = std_P * vec
+
+        np.testing.assert_allclose(
+            shm_mult_prod,
+            std_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+
+    def test_I(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.I)
+
+    def test_QU(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.QU)
+
+    def test_IQU(self, setup_scan):
+        self._shmem_test(setup_scan, brahmap.core.SolverType.IQU)
+
+
 if __name__ == "__main__":
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_I_Cpp::test_I_cpp",
+            f"{__file__}::TestBlkDiagPrecondLO_Cpp::test_I_cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_QU_Cpp::test_QU_cpp",
+            f"{__file__}::TestBlkDiagPrecondLO_Cpp::test_QU_cpp",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_IQU_Cpp::test_IQU_cpp",
+            f"{__file__}::TestBlkDiagPrecondLO_Cpp::test_IQU_cpp",
             "-v",
             "-s",
         ]
@@ -277,21 +279,42 @@ if __name__ == "__main__":
 
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_I::test_I",
+            f"{__file__}::TestBlkDiagPrecondLO::test_I",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_QU::test_QU",
+            f"{__file__}::TestBlkDiagPrecondLO::test_QU",
             "-v",
             "-s",
         ]
     )
     pytest.main(
         [
-            f"{__file__}::TestBlkDiagPrecondLO_IQU::test_IQU",
+            f"{__file__}::TestBlkDiagPrecondLO::test_IQU",
+            "-v",
+            "-s",
+        ]
+    )
+    pytest.main(
+        [
+            f"{__file__}::TestShMemBlkDiagPrecondLO::test_I",
+            "-v",
+            "-s",
+        ]
+    )
+    pytest.main(
+        [
+            f"{__file__}::TestShMemBlkDiagPrecondLO::test_QU",
+            "-v",
+            "-s",
+        ]
+    )
+    pytest.main(
+        [
+            f"{__file__}::TestShMemBlkDiagPrecondLO::test_IQU",
             "-v",
             "-s",
         ]
