@@ -210,7 +210,7 @@ class TestPointingLOTools_IQU:
         cpp_mult_prod = np.zeros(nrows, dtype=initfloat.dtype)
         vec = np.resize(initfloat.vec, ncols)
 
-        PointingLO_tools.PLO_mult_QU(
+        PointingLO_tools.PLO_mult_IQU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -219,7 +219,7 @@ class TestPointingLOTools_IQU:
             vec,
             cpp_mult_prod,
         )
-        py_mult_prod = hplo_tools.PLO_mult_QU(
+        py_mult_prod = hplo_tools.PLO_mult_IQU(
             nrows,
             PTS.pointings,
             PTS.pointings_flag,
@@ -231,7 +231,7 @@ class TestPointingLOTools_IQU:
         cpp_rmult_prod = np.zeros(ncols, dtype=initfloat.dtype)
         rvec = initfloat.rvec
 
-        PointingLO_tools.PLO_rmult_QU(
+        PointingLO_tools.PLO_rmult_IQU(
             PTS.new_npix,
             nrows,
             PTS.pointings,
@@ -242,7 +242,7 @@ class TestPointingLOTools_IQU:
             cpp_rmult_prod,
             brahmap.MPI_UTILS.comm,
         )
-        py_rmult_prod = hplo_tools.PLO_rmult_QU(
+        py_rmult_prod = hplo_tools.PLO_rmult_IQU(
             nrows,
             ncols,
             PTS.pointings,
@@ -267,7 +267,154 @@ class TestPointingLOTools_IQU:
         )
 
 
+class TestPointingLOTools_ShMem:
+    def _shmem_test(self, setup_scan, solver_type, shmem_func, py_func):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
+
+        shm_PTS = brahmap.core.SharedMemProcessTimeSamples(
+            npix=initint.npix,
+            pointings=initint.pointings,
+            pointings_flag=initint.pointings_flag,
+            solver_type=solver_type,
+            pol_angles=initfloat.pol_angles if solver_type > 1 else None,
+            noise_weights=initfloat.noise_weights,
+            dtype_float=initfloat.dtype,
+            update_pointings_inplace=False,
+            nproc_reduce=2,
+        )
+
+        mgr = shm_PTS.shared_mem_manager
+        ncols = shm_PTS.new_npix * shm_PTS.solver_type
+
+        node_prod, win_node_prod = mgr.alloc_shared_array_node(
+            ncols,
+            initfloat.dtype,
+        )
+
+        if mgr.tree_grp_size == 1:
+            grp_prod = node_prod
+            win_grp_prod = win_node_prod
+        else:
+            grp_prod, win_grp_prod = mgr.alloc_shared_array_comm(
+                ncols,
+                initfloat.dtype,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
+
+        if mgr.tree_grp_rank == 0:
+            grp_prod[:] = 0
+        if mgr.node_rank == 0:
+            node_prod[:] = 0
+
+        mgr.tree_grp_comm.Barrier()
+        mgr.node_comm.Barrier()
+
+        rvec = initfloat.rvec.astype(initfloat.dtype)
+
+        if solver_type == brahmap.core.SolverType.I:
+            shmem_func(
+                shm_PTS.new_npix,
+                initint.nsamples,
+                shm_PTS.pointings,
+                shm_PTS.pointings_flag,
+                rvec,
+                grp_prod,
+                win_grp_prod,
+                node_prod,
+                win_node_prod,
+                mgr.node_root,
+                mgr.grp_reduce,
+                mgr.tree_grp_comm,
+                mgr.tree_grp_root_comm,
+                mgr.node_comm,
+                mgr.node_root_comm,
+            )
+        else:
+            shmem_func(
+                shm_PTS.new_npix,
+                initint.nsamples,
+                shm_PTS.pointings,
+                shm_PTS.pointings_flag,
+                shm_PTS.sin2phi,
+                shm_PTS.cos2phi,
+                rvec,
+                grp_prod,
+                win_grp_prod,
+                node_prod,
+                win_node_prod,
+                mgr.node_root,
+                mgr.grp_reduce,
+                mgr.tree_grp_comm,
+                mgr.tree_grp_root_comm,
+                mgr.node_comm,
+                mgr.node_root_comm,
+            )
+
+        if solver_type == brahmap.core.SolverType.I:
+            py_rmult_prod = py_func(
+                initint.nsamples,
+                ncols,
+                shm_PTS.pointings,
+                shm_PTS.pointings_flag,
+                rvec,
+                brahmap.MPI_UTILS.comm,
+            )
+        else:
+            py_rmult_prod = py_func(
+                initint.nsamples,
+                ncols,
+                shm_PTS.pointings,
+                shm_PTS.pointings_flag,
+                shm_PTS.sin2phi,
+                shm_PTS.cos2phi,
+                rvec,
+                brahmap.MPI_UTILS.comm,
+            )
+
+        np.testing.assert_allclose(
+            node_prod,
+            py_rmult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+
+        mgr.free_shared_array(mgr.node_comm, win_node_prod)
+        if win_grp_prod is not win_node_prod:
+            mgr.free_shared_array(mgr.tree_grp_comm, win_grp_prod)
+
+    def test_I_shmem(self, setup_scan):
+        self._shmem_test(
+            setup_scan,
+            brahmap.core.SolverType.I,
+            PointingLO_tools.shmem_PLO_rmult_I,
+            hplo_tools.PLO_rmult_I,
+        )
+
+    def test_QU_shmem(self, setup_scan):
+        self._shmem_test(
+            setup_scan,
+            brahmap.core.SolverType.QU,
+            PointingLO_tools.shmem_PLO_rmult_QU,
+            hplo_tools.PLO_rmult_QU,
+        )
+
+    def test_IQU_shmem(self, setup_scan):
+        self._shmem_test(
+            setup_scan,
+            brahmap.core.SolverType.IQU,
+            PointingLO_tools.shmem_PLO_rmult_IQU,
+            hplo_tools.PLO_rmult_IQU,
+        )
+
+
 if __name__ == "__main__":
     pytest.main([f"{__file__}::TestPointingLOTools_I::test_I", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLOTools_QU::test_QU", "-v", "-s"])
     pytest.main([f"{__file__}::TestPointingLOTools_IQU::test_IQU", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLOTools_ShMem::test_I_shmem", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLOTools_ShMem::test_QU_shmem", "-v", "-s"])
+    pytest.main([f"{__file__}::TestPointingLOTools_ShMem::test_IQU_shmem", "-v", "-s"])
