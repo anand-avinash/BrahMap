@@ -10,11 +10,6 @@ from mpi4py import MPI
 
 comm_size_global = MPI.COMM_WORLD.size
 
-pytestmark = pytest.mark.skipif(
-    comm_size_global > 4,
-    reason="These tests are not meant for more than 4 MPI processes",
-)
-
 litebird_sim = pytest.importorskip(
     modname="litebird_sim",
     minversion="0.13.0",
@@ -127,9 +122,6 @@ def setup_lbsim(request):
                 tod_dtype=self.dtype_float,
             )
 
-            # Grid communicator object
-            self.MPI_COMM_GRID = lbs.MPI_COMM_GRID
-
             ### Compute pointings
             self.sim.prepare_pointings()
 
@@ -150,7 +142,6 @@ def setup_lbsim(request):
 class TestLBSimGLS:
     def test_LBSim_compute_GLS_maps_I(self, setup_lbsim):
         lbsim_obj, rtol, atol = setup_lbsim
-        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -208,7 +199,6 @@ class TestLBSimGLS:
 
     def test_LBSim_compute_GLS_maps_QU(self, setup_lbsim):
         lbsim_obj, rtol, atol = setup_lbsim
-        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -254,7 +244,6 @@ class TestLBSimGLS:
 
     def test_LBSim_compute_GLS_maps_IQU(self, setup_lbsim):
         lbsim_obj, rtol, atol = setup_lbsim
-        brahmap.MPI_UTILS.update_communicator(lbsim_obj.MPI_COMM_GRID.COMM_OBS_GRID)
 
         ### Setting tod arrays zero
         for obs in lbsim_obj.sim.observations:
@@ -293,6 +282,83 @@ class TestLBSimGLS:
         np.testing.assert_allclose(GLSresults.GLS_maps, input_map, rtol, atol)
 
 
+class TestSharedMemLBSimGLS:
+    def test_LBSim_compute_GLS_maps_shmem(self, setup_lbsim):
+        lbsim_obj, rtol, atol = setup_lbsim
+
+        # Setting tod arrays zero
+        for obs in lbsim_obj.sim.observations:
+            obs.tod = np.zeros(obs.tod.shape, lbsim_obj.dtype_float)
+
+        # Scanning the sky
+        lbs.scan_map_in_observations(
+            lbsim_obj.sim.observations,
+            maps=lbs.HealpixMap(
+                values=lbsim_obj.dummy_map,
+                nside=lbsim_obj.nside,
+                coordinates=lbs.CoordinateSystem.Galactic,
+            ),
+        )
+
+        # Run with standard
+        GLSparams_std = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.IQU,
+            output_coordinate_system=lbs.CoordinateSystem.Galactic,
+            return_processed_samples=False,
+            shmem_return_copy=True,
+        )
+        GLSresults_std = brahmap.lbsim.LBSim_compute_GLS_maps(
+            nside=lbsim_obj.nside,
+            observations=lbsim_obj.sim.observations,
+            dtype_float=lbsim_obj.dtype_float,
+            LBSim_gls_parameters=GLSparams_std,
+            use_shared_memory=False,
+        )
+
+        # Run with shared memory (return_copy=True)
+        GLSparams_shm = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.IQU,
+            output_coordinate_system=lbs.CoordinateSystem.Galactic,
+            return_processed_samples=False,
+            shmem_return_copy=True,
+        )
+        GLSresults_shm = brahmap.lbsim.LBSim_compute_GLS_maps(
+            nside=lbsim_obj.nside,
+            observations=lbsim_obj.sim.observations,
+            dtype_float=lbsim_obj.dtype_float,
+            LBSim_gls_parameters=GLSparams_shm,
+            use_shared_memory=True,
+            nproc_reduce=2,
+        )
+
+        # Run with shared memory (return_copy=False)
+        GLSparams_shm_nocopy = brahmap.lbsim.LBSimGLSParameters(
+            solver_type=brahmap.core.SolverType.IQU,
+            output_coordinate_system=lbs.CoordinateSystem.Galactic,
+            return_processed_samples=False,
+            shmem_return_copy=False,
+        )
+        GLSresults_shm_nocopy = brahmap.lbsim.LBSim_compute_GLS_maps(
+            nside=lbsim_obj.nside,
+            observations=lbsim_obj.sim.observations,
+            dtype_float=lbsim_obj.dtype_float,
+            LBSim_gls_parameters=GLSparams_shm_nocopy,
+            use_shared_memory=True,
+            nproc_reduce=2,
+        )
+
+        # Compare they are identical
+        np.testing.assert_allclose(
+            GLSresults_shm.GLS_maps, GLSresults_std.GLS_maps, rtol=rtol, atol=atol
+        )
+        np.testing.assert_allclose(
+            GLSresults_shm_nocopy.GLS_maps,
+            GLSresults_std.GLS_maps,
+            rtol=rtol,
+            atol=atol,
+        )
+
+
 if __name__ == "__main__":
     pytest.main(
         [f"{__file__}::TestLBSimGLS::test_LBSim_compute_GLS_maps_I", "-v", "-s"]
@@ -302,4 +368,11 @@ if __name__ == "__main__":
     )
     pytest.main(
         [f"{__file__}::TestLBSimGLS::test_LBSim_compute_GLS_maps_IQU", "-v", "-s"]
+    )
+    pytest.main(
+        [
+            f"{__file__}::TestSharedMemLBSimGLS::test_LBSim_compute_GLS_maps_shmem",
+            "-v",
+            "-s",
+        ]
     )
