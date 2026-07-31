@@ -331,7 +331,7 @@ def compute_GLS_maps(
     nproc_reduce : int, optional
         Number of processes used in parallel reduction within nodes for
         shared memory mode. See
-        [`SharedMemProcessTimeSamples`][brahmap.mpi.SharedMemProcessTimeSamples]
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
         for more details. By default `1`
 
     Returns

@@ -234,7 +234,7 @@ class LBSimSharedMemProcessTimeSamples(SharedMemProcessTimeSamples):
         `np.float64`
     nproc_reduce : int, optional
         Number of processes used in parallel Reduction within nodes for shared memory mode. See
-        [`SharedMemProcessTimeSamples`][brahmap.mpi.SharedMemProcessTimeSamples]
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
         for more details. By default `1`
     """
 

@@ -142,14 +142,14 @@ def LBSim_compute_GLS_maps(
         default `LBSimGLSParameters()`
     x0 : npt.NDArray[np.number] | None, optional
         Initial guess for the GLS solution in the form of interleaved
-        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, ]\dots]$), by default `None`
+        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, ]\\dots]$), by default `None`
     use_shared_memory : bool, optional
         Whether to use MPI shared memory based process time samples, by
         default `False`
     nproc_reduce : int, optional
         Number of processes used in parallel reduction within nodes for
         shared memory mode. See
-        [`SharedMemProcessTimeSamples`][brahmap.mpi.SharedMemProcessTimeSamples]
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
         for more details. By default `1`
 
     Returns
