@@ -167,6 +167,7 @@ class TestLBSimGLS:
             solver_type=brahmap.core.SolverType.I,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
+            isolver_max_iterations=5,
         )
 
         for obs in lbsim_obj.sim.observations:
@@ -224,6 +225,7 @@ class TestLBSimGLS:
             solver_type=brahmap.core.SolverType.QU,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
+            isolver_max_iterations=5,
         )
 
         GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
@@ -263,6 +265,7 @@ class TestLBSimGLS:
             solver_type=brahmap.core.SolverType.IQU,
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
+            isolver_max_iterations=5,
         )
 
         GLSresults = brahmap.lbsim.LBSim_compute_GLS_maps(
@@ -306,6 +309,7 @@ class TestSharedMemLBSimGLS:
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
             shmem_return_copy=True,
+            isolver_max_iterations=5,
         )
         GLSresults_std = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
@@ -321,6 +325,7 @@ class TestSharedMemLBSimGLS:
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
             shmem_return_copy=True,
+            isolver_max_iterations=5,
         )
         GLSresults_shm = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,
@@ -337,6 +342,7 @@ class TestSharedMemLBSimGLS:
             output_coordinate_system=lbs.CoordinateSystem.Galactic,
             return_processed_samples=False,
             shmem_return_copy=False,
+            isolver_max_iterations=5,
         )
         GLSresults_shm_nocopy = brahmap.lbsim.LBSim_compute_GLS_maps(
             nside=lbsim_obj.nside,

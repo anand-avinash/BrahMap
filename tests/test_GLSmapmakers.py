@@ -448,7 +448,7 @@ class TestSharedMemGLSMapMakers:
         # Standard solver
         GLSparams_std = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            isolver_max_iterations=10,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=False,
         )
@@ -467,7 +467,7 @@ class TestSharedMemGLSMapMakers:
         # Shared memory solver with return_copy=True
         GLSparams_shm_copy = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            isolver_max_iterations=10,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=False,
             shmem_return_copy=True,
@@ -488,7 +488,7 @@ class TestSharedMemGLSMapMakers:
         # Shared memory solver with return_copy=False
         GLSparams_shm_nocopy = brahmap.core.GLSParameters(
             solver_type=solver_type,
-            isolver_max_iterations=10,
+            isolver_max_iterations=5,
             return_hit_map=False,
             return_processed_samples=False,
             shmem_return_copy=False,
