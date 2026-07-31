@@ -9,7 +9,11 @@ from ..base import DTypeNoiseCov
 
 from ..core import GLSParameters, GLSResult, compute_GLS_maps_from_PTS
 
-from ..lbsim import LBSimProcessTimeSamples, DTypeLBSNoiseCov
+from ..lbsim import (
+    LBSimProcessTimeSamples,
+    LBSimSharedMemProcessTimeSamples,
+    DTypeLBSNoiseCov,
+)
 
 from ..math import DTypeFloat
 
@@ -92,7 +96,12 @@ def LBSim_compute_GLS_maps(
     dtype_float: DTypeFloat = np.float64,
     LBSim_gls_parameters: LBSimGLSParameters = LBSimGLSParameters(),
     x0: npt.NDArray[np.number] | None = None,
-) -> LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]:
+    use_shared_memory: bool = False,
+    nproc_reduce: int = 1,
+) -> (
+    LBSimGLSResult
+    | tuple[LBSimProcessTimeSamples | LBSimSharedMemProcessTimeSamples, LBSimGLSResult]
+):
     """Computes the Generalized Least Squares (GLS) maps from
     `litebird_sim` observations.
 
@@ -128,11 +137,19 @@ def LBSim_compute_GLS_maps(
         default `LBSimGLSParameters()`
     x0 : npt.NDArray[np.number] | None, optional
         Initial guess for the GLS solution in the form of interleaved
-        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, \\dots]$), by default `None`
+        maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, ]\dots]$), by default `None`
+    use_shared_memory : bool, optional
+        Whether to use MPI shared memory based process time samples, by
+        default `False`
+    nproc_reduce : int, optional
+        Number of processes used in parallel reduction within nodes for
+        shared memory mode. See
+        [`SharedMemProcessTimeSamples`][brahmap.mpi.SharedMemProcessTimeSamples]
+        for more details. By default `1`
 
     Returns
     -------
-    LBSimGLSResult | tuple[LBSimProcessTimeSamples, LBSimGLSResult]
+    LBSimGLSResult | tuple[LBSimProcessTimeSamples | LBSimSharedMemProcessTimeSamples, LBSimGLSResult]
         The dataclass containing the final output from the GLS map-maker,
         optionally returning the processed samples container
     """
@@ -141,18 +158,35 @@ def LBSim_compute_GLS_maps(
     else:
         noise_weights = inv_noise_cov_operator.diag
 
-    processed_samples = LBSimProcessTimeSamples(
-        nside=nside,
-        observations=observations,
-        pointings=pointings,
-        hwp=hwp,
-        pointings_flag=pointings_flag,
-        solver_type=LBSim_gls_parameters.solver_type,
-        noise_weights=noise_weights,
-        output_coordinate_system=LBSim_gls_parameters.output_coordinate_system,
-        threshold=threshold,
-        dtype_float=dtype_float,
-    )
+    if use_shared_memory:
+        processed_samples: (
+            LBSimProcessTimeSamples | LBSimSharedMemProcessTimeSamples
+        ) = LBSimSharedMemProcessTimeSamples(
+            nside=nside,
+            observations=observations,
+            pointings=pointings,
+            hwp=hwp,
+            pointings_flag=pointings_flag,
+            solver_type=LBSim_gls_parameters.solver_type,
+            noise_weights=noise_weights,
+            output_coordinate_system=LBSim_gls_parameters.output_coordinate_system,
+            threshold=threshold,
+            dtype_float=dtype_float,
+            nproc_reduce=nproc_reduce,
+        )
+    else:
+        processed_samples = LBSimProcessTimeSamples(
+            nside=nside,
+            observations=observations,
+            pointings=pointings,
+            hwp=hwp,
+            pointings_flag=pointings_flag,
+            solver_type=LBSim_gls_parameters.solver_type,
+            noise_weights=noise_weights,
+            output_coordinate_system=LBSim_gls_parameters.output_coordinate_system,
+            threshold=threshold,
+            dtype_float=dtype_float,
+        )
 
     if isinstance(components, str):
         components = [components]
