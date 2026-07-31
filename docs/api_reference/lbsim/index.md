@@ -3,6 +3,7 @@
 ## Data pre-processing
 
 - [`LBSimProcessTimeSamples`](LBSimProcessTimeSamples.md)
+- [`LBSimSharedMemProcessTimeSamples`](LBSimSharedMemProcessTimeSamples.md)
 
 ## Noise covariance (and their inverse) operators
 

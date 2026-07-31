@@ -153,7 +153,8 @@ nav:
       
     - litebird_sim Interface:
       - api_reference/lbsim/index.md
-      - LBSimProcessTimeSamples: api_reference/lbsim/LBSimProcessTimeSamples.md      
+      - LBSimProcessTimeSamples: api_reference/lbsim/LBSimProcessTimeSamples.md
+      - LBSimSharedMemProcessTimeSamples: api_reference/lbsim/LBSimSharedMemProcessTimeSamples.md
       - LBSim_InvNoiseCovLO_UnCorr: api_reference/lbsim/LBSim_InvNoiseCovLO_UnCorr.md
       - LBSim_InvNoiseCovLO_Circulant: api_reference/lbsim/LBSim_InvNoiseCovLO_Circulant.md
       - LBSim_InvNoiseCovLO_Toeplitz: api_reference/lbsim/LBSim_InvNoiseCovLO_Toeplitz.md
