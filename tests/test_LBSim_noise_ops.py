@@ -9,11 +9,6 @@ from mpi4py import MPI
 
 comm_size_global = MPI.COMM_WORLD.size
 
-pytestmark = pytest.mark.skipif(
-    comm_size_global > 4,
-    reason="These tests are not meant for more than 4 MPI processes",
-)
-
 litebird_sim = pytest.importorskip(
     modname="litebird_sim",
     minversion="0.13.0",

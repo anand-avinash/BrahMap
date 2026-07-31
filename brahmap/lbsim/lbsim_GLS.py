@@ -41,6 +41,11 @@ class LBSimGLSParameters(GLSParameters):
         samples container
     return_hit_map : bool
         Whether the function should return the pixel hit map
+    shmem_return_copy : bool
+        Whether the linear operators (PointingLO, BlockDiagonalPreconditionerLO)
+        should return copies of the shared memory buffer during matrix-vector
+        products. Only applicable when using shared memory process time
+        samples class instances, by default `True`
     output_coordinate_system : lbs.CoordinateSystem
         The celestial coordinate system to use for the generated output maps
     """
