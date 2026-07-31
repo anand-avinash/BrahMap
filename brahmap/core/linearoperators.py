@@ -478,17 +478,29 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
     solver_type : SolverType | None, optional
         The map-making solver configuration to use. If `None`, it falls
         back to the `solver_type` of `processed_samples`, by default None
+    return_copy : bool, optional
+        If `True`, the operator application (`matvec`) is computed locally by
+        each process and it returns the product as a new numpy array. If
+        `False` and `processed_samples` is a
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
+        object, the computation is performed only on the node root process
+        using a node-level shared memory buffer, and a reference to this
+        shared memory buffer is returned directly (zero-copy). By default `True`
 
     Attributes
     ----------
     solver_type : SolverType
         The active map-making solver configuration
+    return_copy : bool
+        If `True`, `matvec` returns a locally computed copy. If `False`, it
+        returns the raw shared memory buffer reference
     """
 
     def __init__(
         self,
         processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
+        return_copy: bool = True,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
         ### extensions. A corresponding full Python implementation is provided in
@@ -506,6 +518,21 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
+
+        self.return_copy = return_copy
+        self._shmem_mode = not return_copy and isinstance(
+            processed_samples, SharedMemProcessTimeSamples
+        )
+        if self._shmem_mode:
+            assert isinstance(processed_samples, SharedMemProcessTimeSamples)
+            self.__shared_mem_mgr = processed_samples.shared_mem_manager
+            (
+                self._node_prod,
+                self._win_node_prod,
+            ) = self.__shared_mem_mgr.alloc_shared_array_node(
+                self.size,
+                processed_samples.dtype_float,
+            )
 
         if self.solver_type == 1:
             self.weighted_counts = processed_samples.weighted_counts  # type: ignore
@@ -560,10 +587,14 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `new_npix`
         """
-
-        prod = vec / self.weighted_counts
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                self._node_prod[:] = vec / self.weighted_counts
+            self.__shared_mem_mgr.node_comm.Barrier()
+            return self._node_prod
+        else:
+            prod = vec / self.weighted_counts
+            return prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Applies the block-diagonal preconditioner for linear
@@ -581,20 +612,31 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `2*new_npix`
         """
-
-        prod = np.zeros(self.size, dtype=self.dtype)
-
-        BlkDiagPrecondLO_tools.BDPLO_mult_QU(
-            new_npix=self.new_npix,
-            weighted_sin_sq=self.weighted_sin_sq,
-            weighted_cos_sq=self.weighted_cos_sq,
-            weighted_sincos=self.weighted_sincos,
-            one_over_determinant=self.one_over_determinant,
-            vec=vec,
-            prod=prod,
-        )
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+                    new_npix=self.new_npix,
+                    weighted_sin_sq=self.weighted_sin_sq,
+                    weighted_cos_sq=self.weighted_cos_sq,
+                    weighted_sincos=self.weighted_sincos,
+                    one_over_determinant=self.one_over_determinant,
+                    vec=vec,
+                    prod=self._node_prod,
+                )
+            self.__shared_mem_mgr.node_comm.Barrier()
+            return self._node_prod
+        else:
+            prod = np.zeros(self.size, dtype=self.dtype)
+            BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+                new_npix=self.new_npix,
+                weighted_sin_sq=self.weighted_sin_sq,
+                weighted_cos_sq=self.weighted_cos_sq,
+                weighted_sincos=self.weighted_sincos,
+                one_over_determinant=self.one_over_determinant,
+                vec=vec,
+                prod=prod,
+            )
+            return prod
 
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Applies the block-diagonal preconditioner for temperature and
@@ -612,23 +654,37 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `3*new_npix`
         """
-
-        prod = np.zeros(self.size, dtype=self.dtype)
-
-        BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
-            new_npix=self.new_npix,
-            weighted_counts=self.weighted_counts,
-            weighted_sin_sq=self.weighted_sin_sq,
-            weighted_cos_sq=self.weighted_cos_sq,
-            weighted_sincos=self.weighted_sincos,
-            weighted_sin=self.weighted_sin,
-            weighted_cos=self.weighted_cos,
-            one_over_determinant=self.one_over_determinant,
-            vec=vec,
-            prod=prod,
-        )
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+                    new_npix=self.new_npix,
+                    weighted_counts=self.weighted_counts,
+                    weighted_sin_sq=self.weighted_sin_sq,
+                    weighted_cos_sq=self.weighted_cos_sq,
+                    weighted_sincos=self.weighted_sincos,
+                    weighted_sin=self.weighted_sin,
+                    weighted_cos=self.weighted_cos,
+                    one_over_determinant=self.one_over_determinant,
+                    vec=vec,
+                    prod=self._node_prod,
+                )
+            self.__shared_mem_mgr.node_comm.Barrier()
+            return self._node_prod
+        else:
+            prod = np.zeros(self.size, dtype=self.dtype)
+            BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+                new_npix=self.new_npix,
+                weighted_counts=self.weighted_counts,
+                weighted_sin_sq=self.weighted_sin_sq,
+                weighted_cos_sq=self.weighted_cos_sq,
+                weighted_sincos=self.weighted_sincos,
+                weighted_sin=self.weighted_sin,
+                weighted_cos=self.weighted_cos,
+                one_over_determinant=self.one_over_determinant,
+                vec=vec,
+                prod=prod,
+            )
+            return prod
 
     @property
     def solver_type(self) -> SolverType:

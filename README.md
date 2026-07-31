@@ -97,7 +97,7 @@ This work can be cited with:
 <!-- markdownlint-disable MD013 -->
 ```text
 @misc{anand2025brahmap,
-      title={\texttt{BrahMap}: A scalable and modular map-making framework for the CMB experiments}, 
+      title={BrahMap: A scalable and modular map-making framework for the CMB experiments}, 
       author={Avinash Anand and Giuseppe Puglisi},
       year={2025},
       eprint={2501.16122},
