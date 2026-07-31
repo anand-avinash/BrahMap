@@ -67,7 +67,7 @@ class PointingLO(LinearOperator):
                 )
             self.__solver_type = solver_type
 
-        self.return_copy = return_copy
+        self.__return_copy = return_copy
 
         self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
@@ -460,6 +460,18 @@ class PointingLO(LinearOperator):
         """
         return self.__solver_type
 
+    @property
+    def return_copy(self) -> bool:
+        """Whether the transposed operator returns a copy of the shared memory
+        buffer.
+
+        Returns
+        -------
+        bool
+            `True` if a copy is returned, `False` otherwise.
+        """
+        return self.__return_copy
+
 
 class BlockDiagonalPreconditionerLO(LinearOperator):
     r"""A block-diagonal preconditioner operator for iterative map-making solvers.
@@ -519,7 +531,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
 
-        self.return_copy = return_copy
+        self.__return_copy = return_copy
         self._shmem_mode = not return_copy and isinstance(
             processed_samples, SharedMemProcessTimeSamples
         )
@@ -696,3 +708,15 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
             The map-making solver type
         """
         return self.__solver_type
+
+    @property
+    def return_copy(self) -> bool:
+        """Whether the operator application returns a copy of the shared
+        memory buffer.
+
+        Returns
+        -------
+        bool
+            `True` if a copy is returned, `False` otherwise.
+        """
+        return self.__return_copy
