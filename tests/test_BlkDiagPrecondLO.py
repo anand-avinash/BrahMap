@@ -227,14 +227,21 @@ class TestShMemBlkDiagPrecondLO:
         )
 
         # Create operators
-        shm_P = brahmap.core.BlockDiagonalPreconditionerLO(shm_PTS)
+        shm_P = brahmap.core.BlockDiagonalPreconditionerLO(shm_PTS, return_copy=True)
+        shm_P_nocopy = brahmap.core.BlockDiagonalPreconditionerLO(
+            shm_PTS, return_copy=False
+        )
         std_P = brahmap.core.BlockDiagonalPreconditionerLO(std_PTS)
 
-        vec = np.random.random(shm_PTS.new_npix * shm_PTS.solver_type).astype(
-            dtype=initfloat.dtype, copy=False
-        )
+        vec = None
+        if brahmap.MPI_UTILS.rank == 0:
+            vec = np.random.random(shm_PTS.new_npix * shm_PTS.solver_type).astype(
+                dtype=initfloat.dtype, copy=False
+            )
+        vec = brahmap.MPI_UTILS.comm.bcast(vec, root=0)
 
         shm_mult_prod = shm_P * vec
+        shm_mult_prod_nocopy = shm_P_nocopy * vec
         std_mult_prod = std_P * vec
 
         np.testing.assert_allclose(
@@ -243,6 +250,15 @@ class TestShMemBlkDiagPrecondLO:
             rtol=rtol,
             atol=atol,
         )
+
+        np.testing.assert_allclose(
+            shm_mult_prod_nocopy,
+            std_mult_prod,
+            rtol=rtol,
+            atol=atol,
+        )
+
+        assert shm_mult_prod_nocopy.ctypes.data == shm_P_nocopy._node_prod.ctypes.data
 
     def test_I(self, setup_scan):
         self._shmem_test(setup_scan, brahmap.core.SolverType.I)
