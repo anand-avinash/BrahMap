@@ -52,7 +52,10 @@ dint compute_weights_shmem_pol_I(            //
     allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
     grp_hit_counts = allocator->allocate<dint>(npix);
     grp_weighted_counts = allocator->allocate<dfloat>(npix);
-    MPI_Barrier(tree_grp_comm);
+  } // if
+
+  if (allocator) {
+    allocator->fence(0);
   } // if
 
   // Accumulation over group roots
@@ -71,11 +74,9 @@ dint compute_weights_shmem_pol_I(            //
     } // if
 
     if (allocator) {
-      for (MPI_Win win : allocator->get_windows()) {
-        MPI_Win_fence(0, win);
-      } // for
-    }   // if
-  }     // for
+      allocator->fence(0);
+    } // if
+  }   // for
 
   // Group roots to node root reduction on each node
   // tree_grp_root_comm contains one root from each tree group communicator.
@@ -194,7 +195,10 @@ void compute_weights_shmem_pol_QU(           //
     grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
     grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
     grp_weighted_sincos = allocator->allocate<dfloat>(npix);
-    MPI_Barrier(tree_grp_comm);
+  } // if
+
+  if (allocator) {
+    allocator->fence(0);
   } // if
 
   // Accumulation over group roots
@@ -219,11 +223,9 @@ void compute_weights_shmem_pol_QU(           //
     } // if
 
     if (allocator) {
-      for (MPI_Win win : allocator->get_windows()) {
-        MPI_Win_fence(0, win);
-      } // for
-    }   // if
-  }     // for
+      allocator->fence(0);
+    } // if
+  }   // for
 
   // Group roots to node root reduction on each node
   if (grp_reduce) {
@@ -358,7 +360,10 @@ void compute_weights_shmem_pol_IQU(          //
     grp_weighted_sincos = allocator->allocate<dfloat>(npix);
     grp_weighted_sin = allocator->allocate<dfloat>(npix);
     grp_weighted_cos = allocator->allocate<dfloat>(npix);
-    MPI_Barrier(tree_grp_comm);
+  } // if
+
+  if (allocator) {
+    allocator->fence(0);
   } // if
 
   // Accumulation over group roots
@@ -385,11 +390,9 @@ void compute_weights_shmem_pol_IQU(          //
     } // if
 
     if (allocator) {
-      for (MPI_Win win : allocator->get_windows()) {
-        MPI_Win_fence(0, win);
-      } // for
-    }   // if
-  }     // for
+      allocator->fence(0);
+    } // if
+  }   // for
 
   // Group roots to node root reduction on each node
   if (grp_reduce) {
