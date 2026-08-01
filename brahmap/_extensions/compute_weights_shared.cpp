@@ -52,6 +52,7 @@ dint compute_weights_shmem_pol_I(            //
     allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
     grp_hit_counts = allocator->allocate<dint>(npix);
     grp_weighted_counts = allocator->allocate<dfloat>(npix);
+    MPI_Barrier(tree_grp_comm);
   } // if
 
   // Accumulation over group roots
@@ -193,6 +194,7 @@ void compute_weights_shmem_pol_QU(           //
     grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
     grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
     grp_weighted_sincos = allocator->allocate<dfloat>(npix);
+    MPI_Barrier(tree_grp_comm);
   } // if
 
   // Accumulation over group roots
@@ -356,6 +358,7 @@ void compute_weights_shmem_pol_IQU(          //
     grp_weighted_sincos = allocator->allocate<dfloat>(npix);
     grp_weighted_sin = allocator->allocate<dfloat>(npix);
     grp_weighted_cos = allocator->allocate<dfloat>(npix);
+    MPI_Barrier(tree_grp_comm);
   } // if
 
   // Accumulation over group roots

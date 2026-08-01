@@ -118,8 +118,7 @@ public:
 
     if (_rank == _root && shared_buf != nullptr) {
       std::memset(shared_buf, 0, size * dtype_size);
-    }
-    MPI_Barrier(_comm);
+    } // if
 
     return shared_buf;
 
