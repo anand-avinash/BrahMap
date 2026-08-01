@@ -127,6 +127,13 @@ public:
   // Expose the windows if the user needs to manually call MPI_Win_fence
   const std::vector<MPI_Win> &get_windows() const { return _windows; }
 
+  // Call MPI_Win_fence on all allocated windows
+  void fence(int assertion = 0) const {
+    for (const MPI_Win &win : _windows) {
+      MPI_Win_fence(assertion, const_cast<MPI_Win &>(win));
+    } // for
+  }   // fence()
+
   // destructor
   ~SharedMemoryAllocator() {
     for (MPI_Win &win : _windows) {
