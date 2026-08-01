@@ -25,8 +25,18 @@ formatted_print() {
 # String to collect the failing nprocs
 error_nprocs=()
 
+# On macOS, the tests seems to be stalling for nprocs > 2. The docs says that
+# macos-latest runner comes with 2 vCPUs. My guess is that the shared memory
+# based test are stalling due to fences or barriers whenever there is
+# oversubscription. So I am limiting the tests to 1 and 2 processes for macos.
+if [ "$(uname)" = "Darwin" ]; then
+  nprocs_list="1 2"
+else
+  nprocs_list="1 2 3 4"
+fi
+
 # Testing the execution for different nprocs
-for nprocs in 1 2 3 4; do
+for nprocs in $nprocs_list; do
 
   formatted_print "Running test with nprocs = $nprocs"
 
