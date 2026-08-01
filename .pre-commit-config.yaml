@@ -38,3 +38,5 @@ repos:
     name: Building the markdown documentation with `mkdocs build`
     entry: bash -c 'mkdocs build'
     language: system
+    pass_filenames: false
+    require_serial: true

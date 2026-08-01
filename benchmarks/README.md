@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Benchmarking BrahMap
 
 This directory contains scripts for benchmarking the performance of BrahMap components. While the benchmark scripts are primarily designed for serial execution, they can also be used for parallel execution with `mpirun/mpiexec`, though one has to be careful while saving the benchmark results.
