@@ -1,4 +1,5 @@
 import pytest
+from mpi4py import MPI
 
 # Dictionaries to keep track of the results and parameter counts of parametrized test cases
 test_results_status = {}
@@ -119,3 +120,17 @@ def pytest_sessionfinish(session, exitstatus):
     status to the system.
     """
     pass
+
+
+@pytest.fixture(autouse=True)
+def mpi_test_synchronizer():
+    # Synchronize all ranks before starting the test
+    if MPI.Is_initialized():
+        MPI.COMM_WORLD.Barrier()
+
+    yield
+
+    # Synchronize all ranks after finishing the test
+    # (and before starting the next one)
+    if MPI.Is_initialized():
+        MPI.COMM_WORLD.Barrier()
