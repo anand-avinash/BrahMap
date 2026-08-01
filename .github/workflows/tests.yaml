@@ -23,17 +23,17 @@ jobs:
 
     steps:
       - name: Checkout BrahMap repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Install MPI - ${{ matrix.mpi }}
-        uses: mpi4py/setup-mpi@v1.4.2
+        uses: mpi4py/setup-mpi@v1.4.4
         with:
           mpi: ${{ matrix.mpi }}
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
