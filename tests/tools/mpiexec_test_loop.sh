@@ -30,7 +30,7 @@ for nprocs in 1 2 3 4; do
 
   formatted_print "Running test with nprocs = $nprocs"
 
-  if ! mpiexec --map-by :OVERSUBSCRIBE -n $nprocs pytest; then
+  if ! mpiexec --map-by :OVERSUBSCRIBE -n $nprocs pytest --tb=short; then
     # if fails, prints the status and stores the `nprocs`` in `error_nprocs`
     formatted_print \
       "Test status for nprocs = $nprocs: $(printf "${bbred}FAILED${nc}")"
