@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <cstddef>
+#include <cstring>
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 #include <vector>
@@ -114,6 +115,11 @@ public:
     MPI_Win_shared_query(win, _root, &segment_size, &disp, &shared_buf);
 
     _windows.push_back(win);
+
+    if (_rank == _root && shared_buf != nullptr) {
+      std::memset(shared_buf, 0, size * dtype_size);
+    }
+    MPI_Barrier(_comm);
 
     return shared_buf;
 
