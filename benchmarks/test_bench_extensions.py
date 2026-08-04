@@ -3,6 +3,7 @@ import pytest
 import brahmap
 from brahmap._extensions import (
     compute_weights,
+    compute_weights_shared,
     repixelize,
     PointingLO_tools,
     BlkDiagPrecondLO_tools,
@@ -145,6 +146,234 @@ class TestComputeWeights:
             old2new_pixel,
             pixel_flag,
         )
+
+
+# --- compute_weights_shared.cpp ---
+@pytest.mark.benchmark(group="extensions::compute_weights_shared")
+class TestComputeWeightsShared:
+    def test_bench_compute_weights_shmem_pol_I(self, benchmark, data):
+        npix, nsamples, dtype_int, dtype_float = (
+            data["npix"],
+            data["nsamples"],
+            data["dtype_int"],
+            data["dtype_float"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_int,
+        )
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        observed_pixels, _ = mgr.alloc_shared_array_node(
+            npix,
+            dtype=dtype_int,
+        )
+        old2new_pixel, _ = mgr.alloc_shared_array_node(
+            npix,
+            dtype=dtype_int,
+        )
+        pixel_flag, _ = mgr.alloc_shared_array_node(
+            npix,
+            dtype=bool,
+        )
+
+        if mgr.node_rank == 0:
+            for array in mgr.list_arrays[mgr.node_comm.handle]:
+                array[:] = 0
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        benchmark(
+            compute_weights_shared.compute_weights_shmem_pol_I,
+            npix,
+            nsamples,
+            data["pointings"],
+            data["pointings_flag"],
+            data["noise_weights"],
+            hit_counts,
+            win_hit_counts,
+            weighted_counts,
+            win_weighted_counts,
+            observed_pixels,
+            old2new_pixel,
+            pixel_flag,
+            mgr.node_root,
+            mgr.grp_reduce,
+            mgr.tree_grp_comm,
+            mgr.tree_grp_root_comm,
+            mgr.node_comm,
+            mgr.node_root_comm,
+        )
+        mgr.free_shared_arrays_all()
+
+    def test_bench_compute_weights_shmem_pol_QU(self, benchmark, data):
+        npix, nsamples, dtype_int, dtype_float = (
+            data["npix"],
+            data["nsamples"],
+            data["dtype_int"],
+            data["dtype_float"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_int,
+        )
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        sin2phi = np.zeros(nsamples, dtype=dtype_float)
+        cos2phi = np.zeros(nsamples, dtype=dtype_float)
+        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        one_over_determinant, _ = mgr.alloc_shared_array_node(
+            npix,
+            dtype=dtype_float,
+        )
+
+        if mgr.node_rank == 0:
+            for array in mgr.list_arrays[mgr.node_comm.handle]:
+                array[:] = 0
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        benchmark(
+            compute_weights_shared.compute_weights_shmem_pol_QU,
+            npix,
+            nsamples,
+            data["pointings"],
+            data["pointings_flag"],
+            data["noise_weights"],
+            data["pol_angles"],
+            hit_counts,
+            win_hit_counts,
+            weighted_counts,
+            win_weighted_counts,
+            sin2phi,
+            cos2phi,
+            weighted_sin_sq,
+            win_weighted_sin_sq,
+            weighted_cos_sq,
+            win_weighted_cos_sq,
+            weighted_sincos,
+            win_weighted_sincos,
+            one_over_determinant,
+            mgr.node_root,
+            mgr.grp_reduce,
+            mgr.tree_grp_comm,
+            mgr.tree_grp_root_comm,
+            mgr.node_comm,
+            mgr.node_root_comm,
+        )
+        mgr.free_shared_arrays_all()
+
+    def test_bench_compute_weights_shmem_pol_IQU(self, benchmark, data):
+        npix, nsamples, dtype_int, dtype_float = (
+            data["npix"],
+            data["nsamples"],
+            data["dtype_int"],
+            data["dtype_float"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_int,
+        )
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        sin2phi = np.zeros(nsamples, dtype=dtype_float)
+        cos2phi = np.zeros(nsamples, dtype=dtype_float)
+        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_sin, win_weighted_sin = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        weighted_cos, win_weighted_cos = mgr.alloc_shared_array_node(
+            npix,
+            dtype_float,
+        )
+        one_over_determinant, _ = mgr.alloc_shared_array_node(
+            npix,
+            dtype=dtype_float,
+        )
+
+        if mgr.node_rank == 0:
+            for array in mgr.list_arrays[mgr.node_comm.handle]:
+                array[:] = 0
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        benchmark(
+            compute_weights_shared.compute_weights_shmem_pol_IQU,
+            npix,
+            nsamples,
+            data["pointings"],
+            data["pointings_flag"],
+            data["noise_weights"],
+            data["pol_angles"],
+            hit_counts,
+            win_hit_counts,
+            weighted_counts,
+            win_weighted_counts,
+            sin2phi,
+            cos2phi,
+            weighted_sin_sq,
+            win_weighted_sin_sq,
+            weighted_cos_sq,
+            win_weighted_cos_sq,
+            weighted_sincos,
+            win_weighted_sincos,
+            weighted_sin,
+            win_weighted_sin,
+            weighted_cos,
+            win_weighted_cos,
+            one_over_determinant,
+            mgr.node_root,
+            mgr.grp_reduce,
+            mgr.tree_grp_comm,
+            mgr.tree_grp_root_comm,
+            mgr.node_comm,
+            mgr.node_root_comm,
+        )
+        mgr.free_shared_arrays_all()
 
 
 # --- repixelization.cpp ---
