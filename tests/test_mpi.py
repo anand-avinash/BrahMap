@@ -92,7 +92,7 @@ class TestSharedMemoryManager:
         )
 
         size = 100
-        array, win = mgr.alloc_shared_array_node(size, dtype)
+        array, win = mgr.alloc_shared_node(size, dtype)
 
         assert isinstance(array, np.ndarray)
         assert isinstance(win, MPI.Win)
@@ -137,8 +137,8 @@ class TestSharedMemoryManager:
             node_root=node_root,
         )
 
-        arr1, win1 = mgr.alloc_shared_array_node(10, np.float64)
-        arr2, win2 = mgr.alloc_shared_array_node(20, np.int32)
+        arr1, win1 = mgr.alloc_shared_node(10, np.float64)
+        arr2, win2 = mgr.alloc_shared_node(20, np.int32)
 
         handle = mgr.node_comm.handle
         assert len(mgr._list_windows[handle]) == 2
@@ -160,7 +160,7 @@ class TestSharedMemoryManager:
         assert handle not in mgr._list_arrays
 
         # Re-allocate and test free all
-        arr3, win3 = mgr.alloc_shared_array_node(10, np.float64)
+        arr3, win3 = mgr.alloc_shared_node(10, np.float64)
         assert handle in mgr._list_windows
         mgr.free_shared_arrays_all()
         assert mgr._list_windows == {}

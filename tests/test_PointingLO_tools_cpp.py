@@ -289,7 +289,7 @@ class TestPointingLOTools_ShMem:
         mgr = shm_PTS.shared_mem_manager
         ncols = shm_PTS.new_npix * shm_PTS.solver_type
 
-        node_prod, win_node_prod = mgr.alloc_shared_node(
+        node_prod, win_node_prod = mgr.alloc_shared_zeros_node(
             ncols,
             initfloat.dtype,
         )
@@ -298,12 +298,15 @@ class TestPointingLOTools_ShMem:
             grp_prod = node_prod
             win_grp_prod = win_node_prod
         else:
-            grp_prod, win_grp_prod = mgr.alloc_shared_comm(
+            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
                 ncols,
                 initfloat.dtype,
                 comm=mgr.tree_grp_comm,
                 comm_root=0,
             )
+            mgr.fence_comm_all(mgr.tree_grp_comm)
+
+        mgr.fence_comm_all(mgr.node_comm)
 
         rvec = initfloat.rvec.astype(initfloat.dtype)
 
@@ -373,10 +376,6 @@ class TestPointingLOTools_ShMem:
             rtol=rtol,
             atol=atol,
         )
-
-        mgr.free_shared_array(mgr.node_comm, win_node_prod)
-        if win_grp_prod is not win_node_prod:
-            mgr.free_shared_array(mgr.tree_grp_comm, win_grp_prod)
 
     def test_I_shmem(self, setup_scan):
         self._shmem_test(
