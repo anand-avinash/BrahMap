@@ -126,6 +126,8 @@ class TestSharedMemoryManager:
         assert handle not in mgr._list_windows
         assert handle not in mgr._list_arrays
 
+        mgr.free_shared_arrays_all()
+
     def test_shared_memory_manager_free_methods(self):
         comm = brahmap.MPI_UTILS.comm
         nproc_reduce = 2
@@ -165,3 +167,46 @@ class TestSharedMemoryManager:
         mgr.free_shared_arrays_all()
         assert mgr._list_windows == {}
         assert mgr._list_arrays == {}
+
+    def test_shared_memory_manager_zeros_ones_comm(self):
+        comm = brahmap.MPI_UTILS.comm
+        nproc_reduce = 2
+        node_root = 0 if comm.size == 1 else 1
+
+        mgr = SharedMemoryManager(
+            base_comm=comm,
+            nproc_reduce=nproc_reduce,
+            node_root=node_root,
+        )
+
+        size = 50
+        # Test alloc_shared_zeros_comm
+        arr_zeros, win_zeros = mgr.alloc_shared_zeros_comm(
+            size,
+            np.float64,
+            mgr.node_comm,
+        )
+
+        assert isinstance(arr_zeros, np.ndarray)
+        assert isinstance(win_zeros, MPI.Win)
+        assert arr_zeros.shape == (size,)
+        assert arr_zeros.dtype == np.float64
+        win_zeros.Fence(0)
+        np.testing.assert_array_equal(arr_zeros, 0.0)
+
+        # Test alloc_shared_ones_comm
+        arr_ones, win_ones = mgr.alloc_shared_ones_comm(
+            size,
+            np.int32,
+            mgr.node_comm,
+        )
+
+        assert isinstance(arr_ones, np.ndarray)
+        assert isinstance(win_ones, MPI.Win)
+        assert arr_ones.shape == (size,)
+        assert arr_ones.dtype == np.int32
+        win_ones.Fence(0)
+        np.testing.assert_array_equal(arr_ones, 1)
+
+        # Clean up
+        mgr.free_shared_arrays_all()
