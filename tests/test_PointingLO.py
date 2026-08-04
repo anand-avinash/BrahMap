@@ -347,6 +347,8 @@ class TestShMemPointingLO:
             atol=atol,
         )
 
+        shm_PTS.free_shmem_arrays()
+
     def test_I(self, setup_scan):
         self._shmem_test(setup_scan, brahmap.core.SolverType.I)
 

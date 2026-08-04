@@ -377,6 +377,8 @@ class TestPointingLOTools_ShMem:
             atol=atol,
         )
 
+        shm_PTS.free_shmem_arrays()
+
     def test_I_shmem(self, setup_scan):
         self._shmem_test(
             setup_scan,

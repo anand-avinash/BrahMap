@@ -437,6 +437,8 @@ class TestComputeWeightsShared:
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
+        mgr.free_shared_arrays_all()
+
     def test_get_pix_mask_pol_IQU(self, setup_scan):
         initint, initfloat = setup_scan
         (
@@ -521,6 +523,8 @@ class TestComputeWeightsShared:
         np.testing.assert_array_equal(cpp_observed_pixels_new, py_observed_pixels)
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
+
+        mgr.free_shared_arrays_all()
 
 
 if __name__ == "__main__":

@@ -55,6 +55,8 @@ class TestSharedMemProcessTimeSamples:
         np.testing.assert_array_equal(shm_PTS.pixel_flag, std_PTS.pixel_flag)
         np.testing.assert_array_equal(shm_PTS.old2new_pixel, std_PTS.old2new_pixel)
 
+        shm_PTS.free_shmem_arrays()
+
     def test_SharedMemProcessTimeSamples_QU(self, setup_scan):
         initint, initfloat = setup_scan
         nproc_reduce = 2
@@ -134,6 +136,8 @@ class TestSharedMemProcessTimeSamples:
         )
         np.testing.assert_array_equal(shm_PTS.pixel_flag, std_PTS.pixel_flag)
         np.testing.assert_array_equal(shm_PTS.old2new_pixel, std_PTS.old2new_pixel)
+
+        shm_PTS.free_shmem_arrays()
 
     def test_SharedMemProcessTimeSamples_IQU(self, setup_scan):
         initint, initfloat = setup_scan
@@ -226,6 +230,8 @@ class TestSharedMemProcessTimeSamples:
         )
         np.testing.assert_array_equal(shm_PTS.pixel_flag, std_PTS.pixel_flag)
         np.testing.assert_array_equal(shm_PTS.old2new_pixel, std_PTS.old2new_pixel)
+
+        shm_PTS.free_shmem_arrays()
 
 
 if __name__ == "__main__":

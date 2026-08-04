@@ -260,6 +260,8 @@ class TestShMemBlkDiagPrecondLO:
 
         assert shm_mult_prod_nocopy.ctypes.data == shm_P_nocopy._node_prod.ctypes.data
 
+        shm_PTS.free_shmem_arrays()
+
     def test_I(self, setup_scan):
         self._shmem_test(setup_scan, brahmap.core.SolverType.I)
 
