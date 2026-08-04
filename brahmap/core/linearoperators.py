@@ -216,7 +216,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self._win_grp_prod.Fence(0)
+        if self.__shared_mem_mgr.tree_grp_size > 1:
+            self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_I(
@@ -319,7 +320,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self._win_grp_prod.Fence(0)
+        if self.__shared_mem_mgr.tree_grp_size > 1:
+            self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_QU(
@@ -424,7 +426,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self._win_grp_prod.Fence(0)
+        if self.__shared_mem_mgr.tree_grp_size > 1:
+            self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_IQU(

@@ -95,10 +95,10 @@ dint compute_weights_shmem_pol_I(            //
       MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
                  mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
     } // if
+  }   // if
 
-    MPI_Win_fence(0, win_hit_counts);
-    MPI_Win_fence(0, win_weighted_counts);
-  } // if
+  MPI_Win_fence(0, win_hit_counts);
+  MPI_Win_fence(0, win_weighted_counts);
 
   if (allocator) {
     delete allocator;
@@ -241,13 +241,13 @@ void compute_weights_shmem_pol_QU(           //
       MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
                  mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
     } // if
+  }   // if
 
-    MPI_Win_fence(0, win_hit_counts);
-    MPI_Win_fence(0, win_weighted_counts);
-    MPI_Win_fence(0, win_weighted_sin_sq);
-    MPI_Win_fence(0, win_weighted_cos_sq);
-    MPI_Win_fence(0, win_weighted_sincos);
-  } // if
+  MPI_Win_fence(0, win_hit_counts);
+  MPI_Win_fence(0, win_weighted_counts);
+  MPI_Win_fence(0, win_weighted_sin_sq);
+  MPI_Win_fence(0, win_weighted_cos_sq);
+  MPI_Win_fence(0, win_weighted_sincos);
 
   if (allocator) {
     delete allocator;
@@ -410,15 +410,15 @@ void compute_weights_shmem_pol_IQU(          //
       MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
                  mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
     } // if
+  }   // if
 
-    MPI_Win_fence(0, win_hit_counts);
-    MPI_Win_fence(0, win_weighted_counts);
-    MPI_Win_fence(0, win_weighted_sin_sq);
-    MPI_Win_fence(0, win_weighted_cos_sq);
-    MPI_Win_fence(0, win_weighted_sincos);
-    MPI_Win_fence(0, win_weighted_sin);
-    MPI_Win_fence(0, win_weighted_cos);
-  } // if
+  MPI_Win_fence(0, win_hit_counts);
+  MPI_Win_fence(0, win_weighted_counts);
+  MPI_Win_fence(0, win_weighted_sin_sq);
+  MPI_Win_fence(0, win_weighted_cos_sq);
+  MPI_Win_fence(0, win_weighted_sincos);
+  MPI_Win_fence(0, win_weighted_sin);
+  MPI_Win_fence(0, win_weighted_cos);
 
   if (allocator) {
     delete allocator;
