@@ -378,11 +378,6 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         """
         return self.__shared_mem_manager
 
-    def __del__(self) -> None:
-        if hasattr(self, "_ProcessTimeSamples__shared_mem_manager"):
-            if self.__shared_mem_manager is not None:
-                self.__shared_mem_manager.free_shared_arrays_all()
-
     def _allocate_shmem_arrays_node(
         self,
         mgr: SharedMemoryManager,

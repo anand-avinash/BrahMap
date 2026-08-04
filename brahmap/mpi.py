@@ -594,6 +594,14 @@ class SharedMemoryManager(object):
             if not self._list_arrays[handle]:
                 del self._list_arrays[handle]
 
+    def __del__(self) -> None:
+        """Destructor to ensure all allocated MPI windows are freed."""
+        if hasattr(self, "_list_windows") and self._list_windows:
+            try:
+                self.free_shared_arrays_all()
+            except Exception:
+                pass
+
 
 class _MPI(object):
     """A helper class to manage basic MPI environment state and
