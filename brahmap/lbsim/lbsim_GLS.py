@@ -225,6 +225,8 @@ def LBSim_compute_GLS_maps(
     if LBSim_gls_parameters.return_processed_samples:
         return processed_samples, lbsim_gls_result
     else:
+        if isinstance(processed_samples, LBSimSharedMemProcessTimeSamples):
+            processed_samples.free_shmem_arrays()
         del processed_samples
         gc.collect()
         return lbsim_gls_result

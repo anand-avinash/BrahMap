@@ -378,7 +378,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         """
         return self.__shared_mem_manager
 
-    def free_shmem_wins(self) -> None:
+    def free_shmem_arrays(self) -> None:
         """Frees all allocated shared-memory arrays and windows.
 
         Returns

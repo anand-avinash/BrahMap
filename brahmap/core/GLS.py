@@ -391,6 +391,8 @@ def compute_GLS_maps(
     if gls_parameters.return_processed_samples:
         return processed_samples, gls_result
     else:
+        if isinstance(processed_samples, SharedMemProcessTimeSamples):
+            processed_samples.free_shmem_arrays()
         del processed_samples
         gc.collect()
         return gls_result
