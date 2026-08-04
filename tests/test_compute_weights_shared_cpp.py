@@ -37,27 +37,33 @@ class TestComputeWeightsShared:
 
         tol = TOLERANCES[initfloat.dtype]
         rtol, atol = tol["rtol"], tol["atol"]
-        mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
-
-        cpp_observed_pixels, _ = mgr.alloc_shared_array_node(
-            initint.npix, initint.dtype
-        )
-        cpp_old2new_pixel, _ = mgr.alloc_shared_array_node(initint.npix, initint.dtype)
-        cpp_pixel_flag, _ = mgr.alloc_shared_array_node(initint.npix, bool)
-        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            initint.npix, initint.dtype
-        )
-        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        mgr = SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
         )
 
-        if mgr.node_rank == 0:
-            cpp_hit_counts[:] = 0
-            cpp_weighted_counts[:] = 0
-            cpp_observed_pixels[:] = 0
-            cpp_old2new_pixel[:] = 0
-            cpp_pixel_flag[:] = False
-        mgr.node_comm.Barrier()
+        cpp_observed_pixels, _ = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_old2new_pixel, _ = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_pixel_flag, _ = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            bool,
+        )
+        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
+        )
+
+        mgr.fence_comm_all(mgr.node_comm)
 
         cpp_new_npix = compute_weights_shared.compute_weights_shmem_pol_I(
             initint.npix,
@@ -97,6 +103,8 @@ class TestComputeWeightsShared:
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        mgr.fence_comm_all(mgr.node_comm)
+
         cpp_observed_pixels = cpp_observed_pixels[:cpp_new_npix]
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
@@ -115,38 +123,40 @@ class TestComputeWeightsShared:
 
         tol = TOLERANCES[initfloat.dtype]
         rtol, atol = tol["rtol"], tol["atol"]
-        mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
+        mgr = SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+        )
 
         cpp_sin2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
-        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            initint.npix, initint.dtype
+        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
         )
-        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_one_over_determinant, _ = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_one_over_determinant, _ = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
 
-        if mgr.node_rank == 0:
-            cpp_hit_counts[:] = 0
-            cpp_weighted_counts[:] = 0
-            cpp_weighted_sin_sq[:] = 0
-            cpp_weighted_cos_sq[:] = 0
-            cpp_weighted_sincos[:] = 0
-            cpp_one_over_determinant[:] = 0
-        mgr.node_comm.Barrier()
+        mgr.fence_comm_all(mgr.node_comm)
 
         compute_weights_shared.compute_weights_shmem_pol_QU(
             initint.npix,
@@ -196,6 +206,8 @@ class TestComputeWeightsShared:
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        mgr.fence_comm_all(mgr.node_comm)
+
         np.testing.assert_array_equal(cpp_hit_counts, py_hit_counts)
         np.testing.assert_allclose(
             cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
@@ -219,46 +231,48 @@ class TestComputeWeightsShared:
 
         tol = TOLERANCES[initfloat.dtype]
         rtol, atol = tol["rtol"], tol["atol"]
-        mgr = SharedMemoryManager(base_comm=brahmap.MPI_UTILS.comm, nproc_reduce=1)
+        mgr = SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+        )
 
         cpp_sin2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
         cpp_cos2phi = np.zeros(initint.nsamples, dtype=initfloat.dtype)
 
-        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
-            initint.npix, initint.dtype
+        cpp_hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
         )
-        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_sincos, win_weighted_sincos = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_sin, win_weighted_sin = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_sin, win_weighted_sin = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_weighted_cos, win_weighted_cos = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_weighted_cos, win_weighted_cos = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
-        cpp_one_over_determinant, _ = mgr.alloc_shared_array_node(
-            initint.npix, initfloat.dtype
+        cpp_one_over_determinant, _ = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initfloat.dtype,
         )
 
-        if mgr.node_rank == 0:
-            cpp_hit_counts[:] = 0
-            cpp_weighted_counts[:] = 0
-            cpp_weighted_sin_sq[:] = 0
-            cpp_weighted_cos_sq[:] = 0
-            cpp_weighted_sincos[:] = 0
-            cpp_weighted_sin[:] = 0
-            cpp_weighted_cos[:] = 0
-            cpp_one_over_determinant[:] = 0
-        mgr.node_comm.Barrier()
+        mgr.fence_comm_all(mgr.node_comm)
 
         compute_weights_shared.compute_weights_shmem_pol_IQU(
             initint.npix,
@@ -314,6 +328,8 @@ class TestComputeWeightsShared:
             comm=brahmap.MPI_UTILS.comm,
         )
 
+        mgr.fence_comm_all(mgr.node_comm)
+
         np.testing.assert_array_equal(cpp_hit_counts, py_hit_counts)
         np.testing.assert_allclose(
             cpp_weighted_counts, py_weighted_counts, rtol=rtol, atol=atol
@@ -360,24 +376,47 @@ class TestComputeWeightsShared:
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        cpp_observed_pixels = np.zeros(initint.npix, initint.dtype)
-        cpp_old2new_pixel = np.zeros(initint.npix, dtype=initint.dtype)
-        cpp_pixel_flag = np.zeros(initint.npix, dtype=bool)
+        mgr = SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+        )
+
+        cpp_observed_pixels, win_observed_pixels = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_old2new_pixel, win_old2new_pixel = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_pixel_flag, win_pixel_flag = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            bool,
+        )
+
+        mgr.fence_comm_all(mgr.node_comm)
 
         hit_counts = hit_counts.astype(dtype=initint.dtype)
 
-        cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
-            2,
-            initint.npix,
-            1.0e3,
-            hit_counts,
-            one_over_determinant,
-            cpp_observed_pixels,
-            cpp_old2new_pixel,
-            cpp_pixel_flag,
-        )
+        if mgr.node_rank == mgr.node_root:
+            cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
+                2,
+                initint.npix,
+                1.0e3,
+                hit_counts,
+                one_over_determinant,
+                cpp_observed_pixels,
+                cpp_old2new_pixel,
+                cpp_pixel_flag,
+            )
+        else:
+            cpp_new_npix = 0
 
-        cpp_observed_pixels.resize(cpp_new_npix, refcheck=False)
+        mgr.fence_comm_all(mgr.node_comm)
+
+        cpp_new_npix = mgr.node_comm.bcast(cpp_new_npix, root=mgr.node_root)
+
+        cpp_observed_pixels_new = cpp_observed_pixels[:cpp_new_npix]
 
         (
             py_new_npix,
@@ -394,7 +433,7 @@ class TestComputeWeightsShared:
         )
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
-        np.testing.assert_array_equal(cpp_observed_pixels, py_observed_pixels)
+        np.testing.assert_array_equal(cpp_observed_pixels_new, py_observed_pixels)
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
@@ -422,24 +461,47 @@ class TestComputeWeightsShared:
             comm=brahmap.MPI_UTILS.comm,
         )
 
-        cpp_observed_pixels = np.zeros(initint.npix, initint.dtype)
-        cpp_old2new_pixel = np.zeros(initint.npix, dtype=initint.dtype)
-        cpp_pixel_flag = np.zeros(initint.npix, dtype=bool)
+        mgr = SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+        )
+
+        cpp_observed_pixels, win_observed_pixels = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_old2new_pixel, win_old2new_pixel = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            initint.dtype,
+        )
+        cpp_pixel_flag, win_pixel_flag = mgr.alloc_shared_zeros_node(
+            initint.npix,
+            bool,
+        )
+
+        mgr.fence_comm_all(mgr.node_comm)
 
         hit_counts = hit_counts.astype(dtype=initint.dtype)
 
-        cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
-            3,
-            initint.npix,
-            1.0e3,
-            hit_counts,
-            one_over_determinant,
-            cpp_observed_pixels,
-            cpp_old2new_pixel,
-            cpp_pixel_flag,
-        )
+        if mgr.node_rank == mgr.node_root:
+            cpp_new_npix = compute_weights_shared.get_pixel_mask_pol(
+                3,
+                initint.npix,
+                1.0e3,
+                hit_counts,
+                one_over_determinant,
+                cpp_observed_pixels,
+                cpp_old2new_pixel,
+                cpp_pixel_flag,
+            )
+        else:
+            cpp_new_npix = 0
 
-        cpp_observed_pixels.resize(cpp_new_npix, refcheck=False)
+        mgr.fence_comm_all(mgr.node_comm)
+
+        cpp_new_npix = mgr.node_comm.bcast(cpp_new_npix, root=mgr.node_root)
+
+        cpp_observed_pixels_new = cpp_observed_pixels[:cpp_new_npix]
 
         (
             py_new_npix,
@@ -456,7 +518,7 @@ class TestComputeWeightsShared:
         )
 
         np.testing.assert_equal(cpp_new_npix, py_new_npix)
-        np.testing.assert_array_equal(cpp_observed_pixels, py_observed_pixels)
+        np.testing.assert_array_equal(cpp_observed_pixels_new, py_observed_pixels)
         np.testing.assert_array_equal(cpp_old2new_pixel, py_old2new_pixel)
         np.testing.assert_array_equal(cpp_pixel_flag, py_pixel_flag)
 
