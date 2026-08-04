@@ -286,7 +286,7 @@ class SharedMemoryManager(object):
         """
         return self._list_arrays
 
-    def alloc_shared_array_comm(
+    def alloc_shared_comm(
         self,
         size: int,
         dtype: npt.DTypeLike,
@@ -338,7 +338,7 @@ class SharedMemoryManager(object):
         self._list_arrays[handle].append(array)
         return array, win
 
-    def alloc_shared_array_node(
+    def alloc_shared_node(
         self,
         size: int,
         dtype: npt.DTypeLike,
@@ -359,7 +359,145 @@ class SharedMemoryManager(object):
             A tuple containing the shared NumPy array view and the backing
             MPI window object
         """
-        return self.alloc_shared_array_comm(
+        return self.alloc_shared_comm(
+            size=size,
+            dtype=dtype,
+            comm=self.node_comm,
+            comm_root=self.node_root,
+        )
+
+    def alloc_shared_zeros_comm(
+        self,
+        size: int,
+        dtype: npt.DTypeLike,
+        comm: Intracomm,
+        comm_root: int = 0,
+    ):
+        """Allocates a shared-memory MPI window-backed 1D NumPy array for a
+        communicator, initialized to zeros.
+
+        Parameters
+        ----------
+        size : int
+            The size of the array
+        dtype : npt.DTypeLike
+            The data type of the array
+        comm : Intracomm
+            The MPI communicator over which the shared memory window is
+            allocated
+        comm_root : int, optional
+            The root rank in `comm` that allocates the actual memory buffer.
+            By default `0`
+
+        Returns
+        -------
+        tuple[npt.NDArray, MPI.Win]
+            A tuple containing the shared NumPy array view and the backing
+            MPI window object
+        """
+        array, win = self.alloc_shared_comm(
+            size=size,
+            dtype=dtype,
+            comm=comm,
+            comm_root=comm_root,
+        )
+
+        if comm.rank == 0:
+            array[:] = 0
+
+        return array, win
+
+    def alloc_shared_zeros_node(
+        self,
+        size: int,
+        dtype: npt.DTypeLike,
+    ):
+        """Allocates a shared-memory MPI window-backed 1D NumPy array for the
+        node-level communicator, initialized to zeros.
+
+        Parameters
+        ----------
+        size : int
+            The size of the array
+        dtype : npt.DTypeLike
+            The data type of the array
+
+        Returns
+        -------
+        tuple[npt.NDArray, MPI.Win]
+            A tuple containing the shared NumPy array view and the backing
+            MPI window object
+        """
+        return self.alloc_shared_zeros_comm(
+            size=size,
+            dtype=dtype,
+            comm=self.node_comm,
+            comm_root=self.node_root,
+        )
+
+    def alloc_shared_ones_comm(
+        self,
+        size: int,
+        dtype: npt.DTypeLike,
+        comm: Intracomm,
+        comm_root: int = 0,
+    ):
+        """Allocates a shared-memory MPI window-backed 1D NumPy array for a
+        communicator, initialized to ones.
+
+        Parameters
+        ----------
+        size : int
+            The size of the array
+        dtype : npt.DTypeLike
+            The data type of the array
+        comm : Intracomm
+            The MPI communicator over which the shared memory window is
+            allocated
+        comm_root : int, optional
+            The root rank in `comm` that allocates the actual memory buffer.
+            By default `0`
+
+        Returns
+        -------
+        tuple[npt.NDArray, MPI.Win]
+            A tuple containing the shared NumPy array view and the backing
+            MPI window object
+        """
+        array, win = self.alloc_shared_comm(
+            size=size,
+            dtype=dtype,
+            comm=comm,
+            comm_root=comm_root,
+        )
+
+        if comm.rank == 0:
+            array[:] = 1
+
+        return array, win
+
+    def alloc_shared_ones_node(
+        self,
+        size: int,
+        dtype: npt.DTypeLike,
+    ):
+        """Allocates a shared-memory MPI window-backed 1D NumPy array for the
+        node-level communicator, initialized to ones.
+
+        Parameters
+        ----------
+        size : int
+            The size of the array
+        dtype : npt.DTypeLike
+            The data type of the array
+
+        Returns
+        -------
+        tuple[npt.NDArray, MPI.Win]
+            A tuple containing the shared NumPy array view and the backing
+            MPI window object
+        """
+        return self.alloc_shared_ones_comm(
             size=size,
             dtype=dtype,
             comm=self.node_comm,
