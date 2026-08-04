@@ -55,8 +55,10 @@ for nprocs in $nprocs_list; do
 done
 
 num_errors=${#error_nprocs[@]}
+num_procs=$(( ${#nprocs_arr[@]} / 2 ))
 
-if [ ${num_errors} -gt 2 ]; then
+nprocs_arr=($nprocs_list)
+if [ ${num_errors} -gt ${num_procs} ]; then
   # exit 1, when more than two tests fail
   formatted_print \
     "$(printf "${bbred}Test failed for nproc(s): ${error_nprocs[*]}${nc}")"
