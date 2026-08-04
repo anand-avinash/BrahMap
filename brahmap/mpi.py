@@ -366,6 +366,26 @@ class SharedMemoryManager(object):
             comm_root=self.node_root,
         )
 
+    def fence_comm_all(self, comm: Intracomm, assertion: int = 0) -> None:
+        """Call MPI.Win.Fence on all windows allocated on the given
+        communicator.
+
+        Parameters
+        ----------
+        comm : Intracomm
+            The communicator for which to fence the windows
+        assertion : int, optional
+            The assertion flag for the fence call, by default 0
+
+        Returns
+        -------
+        None
+        """
+        handle = comm.handle
+        if handle in self._list_windows:
+            for win in self._list_windows[handle]:
+                win.Fence(assertion)
+
     def free_shared_arrays_all(self) -> None:
         """Frees all allocated shared-memory MPI windows and clears manager
         state.
