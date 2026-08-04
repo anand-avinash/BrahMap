@@ -283,8 +283,6 @@ void compute_weights_shmem_pol_QU(           //
     );
   } // if
 
-  MPI_Barrier(node_comm);
-
   return;
 
 } // compute_weights_shmem_pol_QU()
@@ -464,8 +462,6 @@ void compute_weights_shmem_pol_IQU(          //
         one_over_determinant                    //
     );
   } // if
-
-  MPI_Barrier(node_comm);
 
   return;
 

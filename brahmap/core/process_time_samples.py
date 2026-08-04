@@ -389,19 +389,19 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         dint,
         dfloat,
     ):
-        self._observed_pixels, self._win_observed_pixels = mgr.alloc_shared_array_node(
+        self._observed_pixels, self._win_observed_pixels = mgr.alloc_shared_zeros_node(
             self.npix, dint
         )
-        self._old2new_pixel, self._win_old2new_pixel = mgr.alloc_shared_array_node(
+        self._old2new_pixel, self._win_old2new_pixel = mgr.alloc_shared_zeros_node(
             self.npix, dint
         )
-        self._pixel_flag, self._win_pixel_flag = mgr.alloc_shared_array_node(
+        self._pixel_flag, self._win_pixel_flag = mgr.alloc_shared_zeros_node(
             self.npix, bool
         )
-        self._hit_counts, self._win_hit_counts = mgr.alloc_shared_array_node(
+        self._hit_counts, self._win_hit_counts = mgr.alloc_shared_zeros_node(
             self.npix, dint
         )
-        self._weighted_counts, self._win_weighted_counts = mgr.alloc_shared_array_node(
+        self._weighted_counts, self._win_weighted_counts = mgr.alloc_shared_zeros_node(
             self.npix, dfloat
         )
 
@@ -409,25 +409,25 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             (
                 self._weighted_sin_sq,
                 self._win_weighted_sin_sq,
-            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            ) = mgr.alloc_shared_zeros_node(self.npix, dfloat)
             (
                 self._weighted_cos_sq,
                 self._win_weighted_cos_sq,
-            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            ) = mgr.alloc_shared_zeros_node(self.npix, dfloat)
             (
                 self._weighted_sincos,
                 self._win_weighted_sincos,
-            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            ) = mgr.alloc_shared_zeros_node(self.npix, dfloat)
             (
                 self._one_over_determinant,
                 self._win_one_over_determinant,
-            ) = mgr.alloc_shared_array_node(self.npix, dfloat)
+            ) = mgr.alloc_shared_zeros_node(self.npix, dfloat)
 
         if self.solver_type == SolverType.IQU:
-            self._weighted_sin, self._win_weighted_sin = mgr.alloc_shared_array_node(
+            self._weighted_sin, self._win_weighted_sin = mgr.alloc_shared_zeros_node(
                 self.npix, dfloat
             )
-            self._weighted_cos, self._win_weighted_cos = mgr.alloc_shared_array_node(
+            self._weighted_cos, self._win_weighted_cos = mgr.alloc_shared_zeros_node(
                 self.npix, dfloat
             )
 
@@ -450,11 +450,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             self._sin2phi = np.zeros(self.nsamples, dtype=dfloat)
             self._cos2phi = np.zeros(self.nsamples, dtype=dfloat)
 
-        if mgr.node_rank == 0:
-            for array in mgr.list_arrays[mgr.node_comm.handle]:
-                array[:] = 0
-
-        mgr.node_comm.Barrier()
+        mgr.fence_comm_all(mgr.node_comm)
 
         if self.solver_type == SolverType.I:
             self._new_npix = compute_weights_shared.compute_weights_shmem_pol_I(
@@ -477,6 +473,8 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                 node_comm=mgr.node_comm,
                 node_root_comm=mgr.node_root_comm,
             )
+
+            mgr.fence_comm_all(mgr.node_comm)
 
         else:
             if self.solver_type == SolverType.QU:
@@ -541,6 +539,8 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                     node_root_comm=mgr.node_root_comm,
                 )
 
+            mgr.fence_comm_all(mgr.node_comm)
+
             if mgr.node_rank == mgr.node_root:
                 self._new_npix = compute_weights_shared.get_pixel_mask_pol(
                     solver_type=self.solver_type,
@@ -554,6 +554,8 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                 )
             else:
                 self._new_npix = 0
+
+            mgr.fence_comm_all(mgr.node_comm)
 
             self._new_npix = mgr.node_comm.bcast(self._new_npix, root=mgr.node_root)
 
@@ -598,10 +600,10 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                     one_over_determinant=self._one_over_determinant,
                 )
 
-        mgr.node_comm.Barrier()
+        mgr.fence_comm_all(mgr.node_comm)
 
         def _realloc_shared(old_arr, old_win, size, dtype):
-            new_arr, new_win = mgr.alloc_shared_array_node(size, dtype)
+            new_arr, new_win = mgr.alloc_shared_node(size, dtype)
             if mgr.node_rank == 0:
                 new_arr[:] = old_arr[:size]
             mgr.node_comm.Barrier()
@@ -670,4 +672,4 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                 dfloat,
             )
 
-        mgr.node_comm.Barrier()
+        mgr.fence_comm_all(mgr.node_comm)
