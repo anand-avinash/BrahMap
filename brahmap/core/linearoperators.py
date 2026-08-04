@@ -88,7 +88,7 @@ class PointingLO(LinearOperator):
             mgr = self.__shared_mem_mgr
 
             # Allocated node-level shared memory arrays for transposed product
-            self._node_prod, self._win_node_prod = mgr.alloc_shared_array_node(
+            self._node_prod, self._win_node_prod = mgr.alloc_shared_node(
                 self.ncols,
                 processed_samples.dtype_float,
             )
@@ -97,7 +97,7 @@ class PointingLO(LinearOperator):
                 self._grp_prod = self._node_prod
                 self._win_grp_prod = self._win_node_prod
             else:
-                self._grp_prod, self._win_grp_prod = mgr.alloc_shared_array_comm(
+                self._grp_prod, self._win_grp_prod = mgr.alloc_shared_comm(
                     self.ncols,
                     processed_samples.dtype_float,
                     comm=mgr.tree_grp_comm,
@@ -216,8 +216,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self.__shared_mem_mgr.tree_grp_comm.Barrier()
-        self.__shared_mem_mgr.node_comm.Barrier()
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_I(
             new_npix=self.new_npix,
@@ -319,8 +319,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self.__shared_mem_mgr.tree_grp_comm.Barrier()
-        self.__shared_mem_mgr.node_comm.Barrier()
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_QU(
             new_npix=self.new_npix,
@@ -424,8 +424,8 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        self.__shared_mem_mgr.tree_grp_comm.Barrier()
-        self.__shared_mem_mgr.node_comm.Barrier()
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_IQU(
             new_npix=self.new_npix,
@@ -541,7 +541,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
             (
                 self._node_prod,
                 self._win_node_prod,
-            ) = self.__shared_mem_mgr.alloc_shared_array_node(
+            ) = self.__shared_mem_mgr.alloc_shared_node(
                 self.size,
                 processed_samples.dtype_float,
             )
@@ -602,7 +602,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         if self._shmem_mode:
             if self.__shared_mem_mgr.node_rank == 0:
                 self._node_prod[:] = vec / self.weighted_counts
-            self.__shared_mem_mgr.node_comm.Barrier()
+            self._win_node_prod.Fence(0)
             return self._node_prod
         else:
             prod = vec / self.weighted_counts
@@ -635,7 +635,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                     vec=vec,
                     prod=self._node_prod,
                 )
-            self.__shared_mem_mgr.node_comm.Barrier()
+            self._win_node_prod.Fence(0)
             return self._node_prod
         else:
             prod = np.zeros(self.size, dtype=self.dtype)
@@ -680,7 +680,7 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
                     vec=vec,
                     prod=self._node_prod,
                 )
-            self.__shared_mem_mgr.node_comm.Barrier()
+            self._win_node_prod.Fence(0)
             return self._node_prod
         else:
             prod = np.zeros(self.size, dtype=self.dtype)
