@@ -594,13 +594,20 @@ class SharedMemoryManager(object):
             if not self._list_arrays[handle]:
                 del self._list_arrays[handle]
 
-    def __del__(self) -> None:
-        """Destructor to ensure all allocated MPI windows are freed."""
-        if hasattr(self, "_list_windows") and self._list_windows:
-            try:
-                self.free_shared_arrays_all()
-            except Exception:
-                pass
+    ### In Python, while using mpi, the garbage collection is not
+    # synchronized. For instance, one process may call the garbage collector
+    # at a time, while another doesn't. But since the `win.Free()` are meant
+    # to be called globally across a given communicator, an asynchronous call
+    # to destructor may lead to a deadlock. There this destructor function
+    # has been commented out, while leaving a warning to the developers.
+    #
+    # def __del__(self) -> None:
+    #     """Destructor to ensure all allocated MPI windows are freed."""
+    #     if hasattr(self, "_list_windows") and self._list_windows:
+    #         try:
+    #             self.free_shared_arrays_all()
+    #         except Exception:
+    #             pass
 
 
 class _MPI(object):

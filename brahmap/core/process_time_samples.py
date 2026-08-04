@@ -378,6 +378,17 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         """
         return self.__shared_mem_manager
 
+    def free_shmem_wins(self) -> None:
+        """Frees all allocated shared-memory arrays and windows.
+
+        Returns
+        -------
+        None
+        """
+        MPI_UTILS.comm.barrier()
+        if self.__shared_mem_manager is not None:
+            self.__shared_mem_manager.free_shared_arrays_all()
+
     def _allocate_shmem_arrays_node(
         self,
         mgr: SharedMemoryManager,
