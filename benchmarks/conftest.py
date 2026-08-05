@@ -56,6 +56,18 @@ def pytest_addoption(parser):
         default=0,
         help="Number of warmup rounds for mpi_benchmark",
     )
+    parser.addoption(
+        "--nproc-reduce",
+        action="store",
+        type=int,
+        default=1,
+        help="Number of processes used in parallel Reduction within nodes for shared memory mode",
+    )
+
+
+@pytest.fixture(scope="session")
+def nproc_reduce(request):
+    return request.config.getoption("--nproc-reduce")
 
 
 @pytest.fixture(scope="session")
