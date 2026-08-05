@@ -74,7 +74,7 @@ class TestSharedMemoryManager:
             assert isinstance(mgr.tree_grp_root_comm, MPI.Intracomm)
             assert 0 <= mgr.tree_grp_root_comm.rank < mgr.tree_grp_root_comm.size
 
-        mgr.free_shared_arrays_all()
+        mgr.free_all_resources()
 
     @pytest.mark.parametrize(
         "dtype", [np.int32, np.int64, np.float32, np.float64, bool]
@@ -126,7 +126,7 @@ class TestSharedMemoryManager:
         assert handle not in mgr._list_windows
         assert handle not in mgr._list_arrays
 
-        mgr.free_shared_arrays_all()
+        mgr.free_all_resources()
 
     def test_shared_memory_manager_free_methods(self):
         comm = brahmap.MPI_UTILS.comm
@@ -164,7 +164,7 @@ class TestSharedMemoryManager:
         # Re-allocate and test free all
         arr3, win3 = mgr.alloc_shared_node(10, np.float64)
         assert handle in mgr._list_windows
-        mgr.free_shared_arrays_all()
+        mgr.free_all_resources()
         assert mgr._list_windows == {}
         assert mgr._list_arrays == {}
 
@@ -209,4 +209,4 @@ class TestSharedMemoryManager:
         np.testing.assert_array_equal(arr_ones, 1)
 
         # Clean up
-        mgr.free_shared_arrays_all()
+        mgr.free_all_resources()

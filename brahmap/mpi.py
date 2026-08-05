@@ -594,6 +594,24 @@ class SharedMemoryManager(object):
             if not self._list_arrays[handle]:
                 del self._list_arrays[handle]
 
+    def free_all_resources(self) -> None:
+        """Frees all allocated shared-memory MPI windows and all split MPI
+        communicators created by the manager.
+
+        Returns
+        -------
+        None
+        """
+        self.free_shared_arrays_all()
+        if hasattr(self, "_tree_grp_root_comm") and self._tree_grp_root_comm:
+            self._tree_grp_root_comm.Free()
+        if hasattr(self, "_tree_grp_comm") and self._tree_grp_comm:
+            self._tree_grp_comm.Free()
+        if hasattr(self, "_node_root_comm") and self._node_root_comm:
+            self._node_root_comm.Free()
+        if hasattr(self, "_node_comm") and self._node_comm:
+            self._node_comm.Free()
+
     ### In Python, while using mpi, the garbage collection is not
     # synchronized. For instance, one process may call the garbage collector
     # at a time, while another doesn't. But since the `win.Free()` are meant
