@@ -691,6 +691,191 @@ class TestPointingLO:
             setup=setup,
         )
 
+    def test_bench_shmem_PLO_rmult_I(self, mpi_benchmark, data):
+        nsamples, npix, dtype_float, rng = (
+            data["nsamples"],
+            data["npix"],
+            data["dtype_float"],
+            data["rng"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        vec = rng.random(nsamples).astype(dtype_float)
+
+        node_prod, win_node_prod = mgr.alloc_shared_zeros_node(
+            npix,
+            dtype_float,
+        )
+
+        if mgr.tree_grp_size == 1:
+            grp_prod = node_prod
+            win_grp_prod = win_node_prod
+        else:
+            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+                npix,
+                dtype_float,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        def setup():
+            grp_prod.fill(0)
+            node_prod.fill(0)
+            return (
+                npix,
+                nsamples,
+                data["pointings"],
+                data["pointings_flag"],
+                vec,
+                grp_prod,
+                win_grp_prod,
+                node_prod,
+                win_node_prod,
+                mgr.node_root,
+                mgr.grp_reduce,
+                mgr.tree_grp_comm,
+                mgr.tree_grp_root_comm,
+                mgr.node_comm,
+                mgr.node_root_comm,
+            ), {}
+
+        mpi_benchmark(
+            PointingLO_tools.shmem_PLO_rmult_I,
+            setup=setup,
+        )
+        mgr.free_all_resources()
+
+    def test_bench_shmem_PLO_rmult_QU(self, mpi_benchmark, data):
+        nsamples, npix, dtype_float, rng = (
+            data["nsamples"],
+            data["npix"],
+            data["dtype_float"],
+            data["rng"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        vec = rng.random(nsamples).astype(dtype_float)
+        sin2phi = rng.random(nsamples).astype(dtype_float)
+        cos2phi = rng.random(nsamples).astype(dtype_float)
+
+        node_prod, win_node_prod = mgr.alloc_shared_zeros_node(
+            2 * npix,
+            dtype_float,
+        )
+
+        if mgr.tree_grp_size == 1:
+            grp_prod = node_prod
+            win_grp_prod = win_node_prod
+        else:
+            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+                2 * npix,
+                dtype_float,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        def setup():
+            grp_prod.fill(0)
+            node_prod.fill(0)
+            return (
+                npix,
+                nsamples,
+                data["pointings"],
+                data["pointings_flag"],
+                sin2phi,
+                cos2phi,
+                vec,
+                grp_prod,
+                win_grp_prod,
+                node_prod,
+                win_node_prod,
+                mgr.node_root,
+                mgr.grp_reduce,
+                mgr.tree_grp_comm,
+                mgr.tree_grp_root_comm,
+                mgr.node_comm,
+                mgr.node_root_comm,
+            ), {}
+
+        mpi_benchmark(
+            PointingLO_tools.shmem_PLO_rmult_QU,
+            setup=setup,
+        )
+        mgr.free_all_resources()
+
+    def test_bench_shmem_PLO_rmult_IQU(self, mpi_benchmark, data):
+        nsamples, npix, dtype_float, rng = (
+            data["nsamples"],
+            data["npix"],
+            data["dtype_float"],
+            data["rng"],
+        )
+        mgr = brahmap.mpi.SharedMemoryManager(
+            base_comm=brahmap.MPI_UTILS.comm,
+            nproc_reduce=1,
+            node_root=0,
+        )
+        vec = rng.random(nsamples).astype(dtype_float)
+        sin2phi = rng.random(nsamples).astype(dtype_float)
+        cos2phi = rng.random(nsamples).astype(dtype_float)
+
+        node_prod, win_node_prod = mgr.alloc_shared_zeros_node(
+            3 * npix,
+            dtype_float,
+        )
+
+        if mgr.tree_grp_size == 1:
+            grp_prod = node_prod
+            win_grp_prod = win_node_prod
+        else:
+            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+                3 * npix,
+                dtype_float,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
+
+        mgr.fence_comm_all(mgr.node_comm)
+
+        def setup():
+            grp_prod.fill(0)
+            node_prod.fill(0)
+            return (
+                npix,
+                nsamples,
+                data["pointings"],
+                data["pointings_flag"],
+                sin2phi,
+                cos2phi,
+                vec,
+                grp_prod,
+                win_grp_prod,
+                node_prod,
+                win_node_prod,
+                mgr.node_root,
+                mgr.grp_reduce,
+                mgr.tree_grp_comm,
+                mgr.tree_grp_root_comm,
+                mgr.node_comm,
+                mgr.node_root_comm,
+            ), {}
+
+        mpi_benchmark(
+            PointingLO_tools.shmem_PLO_rmult_IQU,
+            setup=setup,
+        )
+        mgr.free_all_resources()
+
 
 # --- BlkDiagPrecondLO_tools ---
 @pytest.mark.benchmark(group="extensions::BlkDiagPrecondLO")
