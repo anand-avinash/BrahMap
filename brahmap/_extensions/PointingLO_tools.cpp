@@ -174,7 +174,7 @@ void shmem_PLO_rmult_I(                    //
                              grp_prod);
     } // if
 
-    if (tree_grp_size != 1) {
+    if (grp_reduce && tree_grp_size > 1) {
       MPI_Win_fence(0, win_grp_prod);
     } // if
   }   // for
@@ -189,7 +189,7 @@ void shmem_PLO_rmult_I(                    //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_prod, new_npix, mpi_get_type<dfloat>(),
                   MPI_SUM, node_root_comm);
   } // if
@@ -279,7 +279,7 @@ void shmem_PLO_rmult_QU(                   //
                               cos2phi, vec, grp_prod);
     } // if
 
-    if (tree_grp_size != 1) {
+    if (grp_reduce && tree_grp_size > 1) {
       MPI_Win_fence(0, win_grp_prod);
     } // if
   }   // for
@@ -294,7 +294,7 @@ void shmem_PLO_rmult_QU(                   //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_prod, 2 * new_npix, mpi_get_type<dfloat>(),
                   MPI_SUM, node_root_comm);
   } // if
@@ -385,7 +385,7 @@ void shmem_PLO_rmult_IQU(                  //
                                cos2phi, vec, grp_prod);
     } // if
 
-    if (tree_grp_size != 1) {
+    if (grp_reduce && tree_grp_size > 1) {
       MPI_Win_fence(0, win_grp_prod);
     } // if
   }   // for
@@ -400,7 +400,7 @@ void shmem_PLO_rmult_IQU(                  //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_prod, 3 * new_npix, mpi_get_type<dfloat>(),
                   MPI_SUM, node_root_comm);
   } // if

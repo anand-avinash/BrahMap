@@ -93,7 +93,7 @@ class PointingLO(LinearOperator):
                 processed_samples.dtype_float,
             )
 
-            if mgr.tree_grp_size == 1:
+            if not mgr.grp_reduce:
                 self._grp_prod = self._node_prod
                 self._win_grp_prod = self._win_node_prod
             else:
@@ -216,7 +216,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.tree_grp_size > 1:
+        if self.__shared_mem_mgr.grp_reduce:
             self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
@@ -320,7 +320,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.tree_grp_size > 1:
+        if self.__shared_mem_mgr.grp_reduce:
             self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
@@ -426,7 +426,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.tree_grp_size > 1:
+        if self.__shared_mem_mgr.grp_reduce:
             self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
@@ -535,6 +535,9 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         self.size = processed_samples.new_npix * self.solver_type
 
         self.__return_copy = return_copy
+
+        # If a return copy is requested, there is not need to use shared
+        # memory, we can just use standard operations
         self._shmem_mode = not return_copy and isinstance(
             processed_samples, SharedMemProcessTimeSamples
         )

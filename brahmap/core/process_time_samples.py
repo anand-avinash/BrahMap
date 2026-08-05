@@ -386,7 +386,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
         None
         """
         MPI_UTILS.comm.barrier()
-        if self.__shared_mem_manager is not None:
+        if hasattr(self, "_SharedMemProcessTimeSamples__shared_mem_manager"):
             self.__shared_mem_manager.free_shared_arrays_all()
 
     def _allocate_shmem_arrays_node(
@@ -612,7 +612,7 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
             new_arr, new_win = mgr.alloc_shared_node(size, dtype)
             if mgr.node_rank == 0:
                 new_arr[:] = old_arr[:size]
-            mgr.node_comm.Barrier()
+            new_win.Fence(0)
             mgr.free_shared_array(mgr.node_comm, old_win)
             return new_arr, new_win
 
@@ -677,5 +677,3 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                 new_npix,
                 dfloat,
             )
-
-        mgr.fence_comm_all(mgr.node_comm)

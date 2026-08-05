@@ -209,7 +209,6 @@ class TestShMemBlkDiagPrecondLO:
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles if solver_type > 1 else None,
             noise_weights=initfloat.noise_weights,
-            dtype_float=initfloat.dtype,
             update_pointings_inplace=False,
             nproc_reduce=nproc_reduce,
         )
@@ -223,7 +222,6 @@ class TestShMemBlkDiagPrecondLO:
             pol_angles=initfloat.pol_angles if solver_type > 1 else None,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
-            update_pointings_inplace=False,
         )
 
         # Create operators

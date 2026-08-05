@@ -45,7 +45,7 @@ dint compute_weights_shmem_pol_I(            //
   dfloat *grp_weighted_counts = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (tree_grp_size == 1) {
+  if (!grp_reduce) {
     grp_hit_counts = node_hit_counts;
     grp_weighted_counts = node_weighted_counts;
   } else {
@@ -105,7 +105,8 @@ dint compute_weights_shmem_pol_I(            //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  // if (node_rank == node_root) { // same as the condition below
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_hit_counts, npix, mpi_get_type<dint>(),
                   MPI_SUM, node_root_comm);
     MPI_Allreduce(MPI_IN_PLACE, node_weighted_counts, npix,
@@ -182,7 +183,7 @@ void compute_weights_shmem_pol_QU(           //
   dfloat *grp_weighted_sincos = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (tree_grp_size == 1) {
+  if (!grp_reduce) {
     grp_hit_counts = node_hit_counts;
     grp_weighted_counts = node_weighted_counts;
     grp_weighted_sin_sq = node_weighted_sin_sq;
@@ -254,7 +255,7 @@ void compute_weights_shmem_pol_QU(           //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_hit_counts, npix, mpi_get_type<dint>(),
                   MPI_SUM, node_root_comm);
     MPI_Allreduce(MPI_IN_PLACE, node_weighted_counts, npix,
@@ -341,7 +342,7 @@ void compute_weights_shmem_pol_IQU(          //
   dfloat *grp_weighted_cos = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (tree_grp_size == 1) {
+  if (!grp_reduce) {
     grp_hit_counts = node_hit_counts;
     grp_weighted_counts = node_weighted_counts;
     grp_weighted_sin_sq = node_weighted_sin_sq;
@@ -425,7 +426,7 @@ void compute_weights_shmem_pol_IQU(          //
   } // if
 
   // Allreduce sync across all node roots
-  if (node_rank == node_root) {
+  if (node_root_comm != MPI_COMM_NULL) {
     MPI_Allreduce(MPI_IN_PLACE, node_hit_counts, npix, mpi_get_type<dint>(),
                   MPI_SUM, node_root_comm);
     MPI_Allreduce(MPI_IN_PLACE, node_weighted_counts, npix,
