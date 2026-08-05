@@ -140,6 +140,7 @@ def mpi_benchmark(benchmark, request):
         iterations = kwargs.pop("iterations", cli_iterations)
         warmup_rounds = kwargs.pop("warmup_rounds", cli_warmup)
         setup = kwargs.pop("setup", None)
+        teardown = kwargs.pop("teardown", None)
 
         # Setup function when used in benchmark.pedantic, can also be used to
         # supply the benchmark parameters. The setup functions is called at
@@ -153,6 +154,7 @@ def mpi_benchmark(benchmark, request):
             args=args,
             kwargs=kwargs,
             setup=setup,
+            teardown=teardown,
             iterations=iterations,
             rounds=rounds,
             warmup_rounds=warmup_rounds,
