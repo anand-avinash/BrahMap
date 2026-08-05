@@ -40,6 +40,8 @@ class TestProcessTimeSamples:
         mpi_benchmark(run)
 
     def test_bench_shmem_process_time_samples(self, mpi_benchmark, data, stype):
+        active_shm = []
+
         def run():
             shm_PTS = SharedMemProcessTimeSamples(
                 npix=data["npix"],
@@ -51,9 +53,14 @@ class TestProcessTimeSamples:
                 update_pointings_inplace=False,
                 nproc_reduce=1,
             )
-            shm_PTS.free_shmem_arrays()
+            active_shm.append(shm_PTS)
 
-        mpi_benchmark(run)
+        def teardown():
+            while active_shm:
+                shm_PTS = active_shm.pop()
+                shm_PTS.free_shmem_arrays()
+
+        mpi_benchmark(run, teardown=teardown)
 
 
 @pytest.fixture
