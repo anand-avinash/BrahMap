@@ -163,30 +163,26 @@ class TestComputeWeightsShared:
             nproc_reduce=1,
             node_root=0,
         )
-        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+        hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_int,
         )
-        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        observed_pixels, _ = mgr.alloc_shared_array_node(
+        observed_pixels, _ = mgr.alloc_shared_zeros_node(
             npix,
             dtype=dtype_int,
         )
-        old2new_pixel, _ = mgr.alloc_shared_array_node(
+        old2new_pixel, _ = mgr.alloc_shared_zeros_node(
             npix,
             dtype=dtype_int,
         )
-        pixel_flag, _ = mgr.alloc_shared_array_node(
+        pixel_flag, _ = mgr.alloc_shared_zeros_node(
             npix,
             dtype=bool,
         )
-
-        if mgr.node_rank == 0:
-            for array in mgr.list_arrays[mgr.node_comm.handle]:
-                array[:] = 0
 
         mgr.fence_comm_all(mgr.node_comm)
 
@@ -225,36 +221,32 @@ class TestComputeWeightsShared:
             nproc_reduce=1,
             node_root=0,
         )
-        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+        hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_int,
         )
-        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
         sin2phi = np.zeros(nsamples, dtype=dtype_float)
         cos2phi = np.zeros(nsamples, dtype=dtype_float)
-        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
+        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
+        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
+        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        one_over_determinant, _ = mgr.alloc_shared_array_node(
+        one_over_determinant, _ = mgr.alloc_shared_zeros_node(
             npix,
             dtype=dtype_float,
         )
-
-        if mgr.node_rank == 0:
-            for array in mgr.list_arrays[mgr.node_comm.handle]:
-                array[:] = 0
 
         mgr.fence_comm_all(mgr.node_comm)
 
@@ -300,44 +292,40 @@ class TestComputeWeightsShared:
             nproc_reduce=1,
             node_root=0,
         )
-        hit_counts, win_hit_counts = mgr.alloc_shared_array_node(
+        hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_int,
         )
-        weighted_counts, win_weighted_counts = mgr.alloc_shared_array_node(
+        weighted_counts, win_weighted_counts = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
         sin2phi = np.zeros(nsamples, dtype=dtype_float)
         cos2phi = np.zeros(nsamples, dtype=dtype_float)
-        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_array_node(
+        weighted_sin_sq, win_weighted_sin_sq = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_array_node(
+        weighted_cos_sq, win_weighted_cos_sq = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_array_node(
+        weighted_sincos, win_weighted_sincos = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_sin, win_weighted_sin = mgr.alloc_shared_array_node(
+        weighted_sin, win_weighted_sin = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        weighted_cos, win_weighted_cos = mgr.alloc_shared_array_node(
+        weighted_cos, win_weighted_cos = mgr.alloc_shared_zeros_node(
             npix,
             dtype_float,
         )
-        one_over_determinant, _ = mgr.alloc_shared_array_node(
+        one_over_determinant, _ = mgr.alloc_shared_zeros_node(
             npix,
             dtype=dtype_float,
         )
-
-        if mgr.node_rank == 0:
-            for array in mgr.list_arrays[mgr.node_comm.handle]:
-                array[:] = 0
 
         mgr.fence_comm_all(mgr.node_comm)
 
