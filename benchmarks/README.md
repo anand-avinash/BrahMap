@@ -66,6 +66,7 @@ You can override specific parameters regardless of the `--size` flag:
 | `--mpi-rounds`        | e.g. `20`            | Sets number of rounds for `mpi_benchmark` (default: 20)      |
 | `--mpi-iterations`    | e.g. `1`             | Sets iterations per round for `mpi_benchmark` (default: 1)   |
 | `--mpi-warmup-rounds` | e.g. `0`             | Sets number of warmup rounds for `mpi_benchmark` (default: 0)|
+| `--nproc-reduce`      | e.g. `1`             | Sets the size of each sub-communicator group witin the node-level communicator (default: 1)  |
 
 Example usage:
 
