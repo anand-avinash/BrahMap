@@ -11,6 +11,7 @@ import litebird_sim as lbs  # noqa: E402
 
 from brahmap.lbsim import (  # noqa: E402
     LBSimProcessTimeSamples,
+    LBSimSharedMemProcessTimeSamples,
     LBSim_InvNoiseCovLO_UnCorr,
     LBSim_InvNoiseCovLO_Circulant,
     LBSim_InvNoiseCovLO_Toeplitz,
@@ -125,12 +126,32 @@ class TestLBSimNoiseOps:
 
 @pytest.mark.benchmark(group="LBSim::LBSimProcessTimeSamples")
 class TestLBSimPTS:
-    def test_bench_LBSimProcessTimeSamples(self, benchmark, lbsim_data):
+    def test_bench_LBSimProcessTimeSamples(self, mpi_benchmark, lbsim_data):
         nside, _, sim, _ = lbsim_data
         sim.prepare_pointings()
 
-        benchmark(
+        mpi_benchmark(
             LBSimProcessTimeSamples,
             nside=nside,
             observations=sim.observations,
         )
+
+    def test_bench_LBSimSharedMemProcessTimeSamples(self, mpi_benchmark, lbsim_data):
+        nside, _, sim, _ = lbsim_data
+        sim.prepare_pointings()
+
+        active_shm = []
+
+        def run():
+            shm_PTS = LBSimSharedMemProcessTimeSamples(
+                nside=nside,
+                observations=sim.observations,
+            )
+            active_shm.append(shm_PTS)
+
+        def teardown():
+            while active_shm:
+                shm_PTS = active_shm.pop()
+                shm_PTS.free_shmem_arrays()
+
+        mpi_benchmark(run, teardown=teardown)
