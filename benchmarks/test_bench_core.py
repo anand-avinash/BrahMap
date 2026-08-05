@@ -24,7 +24,7 @@ def stype(request):
 
 @pytest.mark.benchmark(group="core::ProcessTimeSamples")
 class TestProcessTimeSamples:
-    def test_bench_process_time_samples(self, benchmark, data, stype):
+    def test_bench_process_time_samples(self, mpi_benchmark, data, stype):
         def run():
             ProcessTimeSamples(
                 npix=data["npix"],
@@ -36,7 +36,7 @@ class TestProcessTimeSamples:
                 update_pointings_inplace=False,
             )
 
-        benchmark(run)
+        mpi_benchmark(run)
 
 
 @pytest.fixture
@@ -72,7 +72,7 @@ class TestLinearOperators:
 
     def test_bench_PointingLO_rmatvec(
         self,
-        benchmark,
+        mpi_benchmark,
         data,
         processed_samples,
     ):
@@ -84,7 +84,7 @@ class TestLinearOperators:
                 processed_samples.dtype_float,
             )
         )
-        benchmark(lo.T.matvec, vec)
+        mpi_benchmark(lo.T.matvec, vec)
 
     def test_bench_BDPLO_matvec(
         self,
@@ -107,7 +107,7 @@ class TestLinearOperators:
 class TestGLS:
     def test_bench_compute_GLS_maps(
         self,
-        benchmark,
+        mpi_benchmark,
         data,
         processed_samples,
         stype,
@@ -123,4 +123,10 @@ class TestGLS:
                 processed_samples.dtype_float,
             )
         )
-        benchmark(compute_GLS_maps_from_PTS, processed_samples, tod, None, gls_params)
+        mpi_benchmark(
+            compute_GLS_maps_from_PTS,
+            processed_samples,
+            tod,
+            None,
+            gls_params,
+        )
