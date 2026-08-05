@@ -185,7 +185,12 @@ class TestComputeWeights:
 # --- compute_weights_shared.cpp ---
 @pytest.mark.benchmark(group="extensions::compute_weights_shared")
 class TestComputeWeightsShared:
-    def test_bench_compute_weights_shmem_pol_I(self, mpi_benchmark, data):
+    def test_bench_compute_weights_shmem_pol_I(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         npix, nsamples, dtype_int, dtype_float = (
             data["npix"],
             data["nsamples"],
@@ -194,7 +199,7 @@ class TestComputeWeightsShared:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
@@ -250,7 +255,12 @@ class TestComputeWeightsShared:
         )
         mgr.free_shared_arrays_all()
 
-    def test_bench_compute_weights_shmem_pol_QU(self, mpi_benchmark, data):
+    def test_bench_compute_weights_shmem_pol_QU(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         npix, nsamples, dtype_int, dtype_float = (
             data["npix"],
             data["nsamples"],
@@ -259,7 +269,7 @@ class TestComputeWeightsShared:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
@@ -332,7 +342,12 @@ class TestComputeWeightsShared:
         )
         mgr.free_shared_arrays_all()
 
-    def test_bench_compute_weights_shmem_pol_IQU(self, mpi_benchmark, data):
+    def test_bench_compute_weights_shmem_pol_IQU(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         npix, nsamples, dtype_int, dtype_float = (
             data["npix"],
             data["nsamples"],
@@ -341,7 +356,7 @@ class TestComputeWeightsShared:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         hit_counts, win_hit_counts = mgr.alloc_shared_zeros_node(
@@ -691,7 +706,12 @@ class TestPointingLO:
             setup=setup,
         )
 
-    def test_bench_shmem_PLO_rmult_I(self, mpi_benchmark, data):
+    def test_bench_shmem_PLO_rmult_I(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         nsamples, npix, dtype_float, rng = (
             data["nsamples"],
             data["npix"],
@@ -700,7 +720,7 @@ class TestPointingLO:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         vec = rng.random(nsamples).astype(dtype_float)
@@ -750,7 +770,12 @@ class TestPointingLO:
         )
         mgr.free_all_resources()
 
-    def test_bench_shmem_PLO_rmult_QU(self, mpi_benchmark, data):
+    def test_bench_shmem_PLO_rmult_QU(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         nsamples, npix, dtype_float, rng = (
             data["nsamples"],
             data["npix"],
@@ -759,7 +784,7 @@ class TestPointingLO:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         vec = rng.random(nsamples).astype(dtype_float)
@@ -813,7 +838,12 @@ class TestPointingLO:
         )
         mgr.free_all_resources()
 
-    def test_bench_shmem_PLO_rmult_IQU(self, mpi_benchmark, data):
+    def test_bench_shmem_PLO_rmult_IQU(
+        self,
+        mpi_benchmark,
+        data,
+        nproc_reduce,
+    ):
         nsamples, npix, dtype_float, rng = (
             data["nsamples"],
             data["npix"],
@@ -822,7 +852,7 @@ class TestPointingLO:
         )
         mgr = brahmap.mpi.SharedMemoryManager(
             base_comm=brahmap.MPI_UTILS.comm,
-            nproc_reduce=1,
+            nproc_reduce=nproc_reduce,
             node_root=0,
         )
         vec = rng.random(nsamples).astype(dtype_float)

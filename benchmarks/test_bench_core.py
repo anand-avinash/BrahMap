@@ -39,7 +39,9 @@ class TestProcessTimeSamples:
 
         mpi_benchmark(run)
 
-    def test_bench_shmem_process_time_samples(self, mpi_benchmark, data, stype):
+    def test_bench_shmem_process_time_samples(
+        self, mpi_benchmark, data, stype, nproc_reduce
+    ):
         active_shm = []
 
         def run():
@@ -51,7 +53,7 @@ class TestProcessTimeSamples:
                 pol_angles=data["pol_angles"],
                 noise_weights=data["noise_weights"],
                 update_pointings_inplace=False,
-                nproc_reduce=1,
+                nproc_reduce=nproc_reduce,
             )
             active_shm.append(shm_PTS)
 
@@ -77,7 +79,7 @@ def processed_samples(data, stype):
 
 
 @pytest.fixture
-def processed_shmem_samples(data, stype):
+def processed_shmem_samples(data, stype, nproc_reduce):
     """Initializes SharedMemProcessTimeSamples for ONLY the current stype."""
     shm_PTS = SharedMemProcessTimeSamples(
         npix=data["npix"],
@@ -86,7 +88,7 @@ def processed_shmem_samples(data, stype):
         solver_type=stype,
         pol_angles=data["pol_angles"],
         noise_weights=data["noise_weights"],
-        nproc_reduce=1,
+        nproc_reduce=nproc_reduce,
     )
     yield shm_PTS
     shm_PTS.free_shmem_arrays()

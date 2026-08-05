@@ -136,7 +136,12 @@ class TestLBSimPTS:
             observations=sim.observations,
         )
 
-    def test_bench_LBSimSharedMemProcessTimeSamples(self, mpi_benchmark, lbsim_data):
+    def test_bench_LBSimSharedMemProcessTimeSamples(
+        self,
+        mpi_benchmark,
+        lbsim_data,
+        nproc_reduce,
+    ):
         nside, _, sim, _ = lbsim_data
         sim.prepare_pointings()
 
@@ -146,6 +151,7 @@ class TestLBSimPTS:
             shm_PTS = LBSimSharedMemProcessTimeSamples(
                 nside=nside,
                 observations=sim.observations,
+                nproc_reduce=nproc_reduce,
             )
             active_shm.append(shm_PTS)
 
