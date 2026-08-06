@@ -473,7 +473,6 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                 __old2new_pixel=self._old2new_pixel,  # type: ignore
                 pixel_flag=self._pixel_flag,
                 node_root=mgr.node_root,
-                grp_reduce=mgr.grp_reduce,
                 tree_grp_comm=mgr.tree_grp_comm,
                 tree_grp_root_comm=mgr.tree_grp_root_comm,
                 node_comm=mgr.node_comm,
@@ -505,7 +504,6 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                     win_weighted_sincos=self._win_weighted_sincos,
                     one_over_determinant=self._one_over_determinant,
                     node_root=mgr.node_root,
-                    grp_reduce=mgr.grp_reduce,
                     tree_grp_comm=mgr.tree_grp_comm,
                     tree_grp_root_comm=mgr.tree_grp_root_comm,
                     node_comm=mgr.node_comm,
@@ -538,7 +536,6 @@ class SharedMemProcessTimeSamples(BaseProcessTimeSamples):
                     win_weighted_cos=self._win_weighted_cos,
                     one_over_determinant=self._one_over_determinant,
                     node_root=mgr.node_root,
-                    grp_reduce=mgr.grp_reduce,
                     tree_grp_comm=mgr.tree_grp_comm,
                     tree_grp_root_comm=mgr.tree_grp_root_comm,
                     node_comm=mgr.node_comm,

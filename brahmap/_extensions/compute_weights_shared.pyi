@@ -19,7 +19,6 @@ def compute_weights_shmem_pol_I(
     __old2new_pixel: NDArray[Any],  # type: ignore
     pixel_flag: NDArray[numpy.bool_],
     node_root: int,
-    grp_reduce: bool,
     tree_grp_comm: object,
     tree_grp_root_comm: object,
     node_comm: object,
@@ -46,7 +45,6 @@ def compute_weights_shmem_pol_QU(
     win_weighted_sincos: object,
     one_over_determinant: NDArray[Any],
     node_root: int,
-    grp_reduce: bool,
     tree_grp_comm: object,
     tree_grp_root_comm: object,
     node_comm: object,
@@ -77,7 +75,6 @@ def compute_weights_shmem_pol_IQU(
     win_weighted_cos: object,
     one_over_determinant: NDArray[Any],
     node_root: int,
-    grp_reduce: bool,
     tree_grp_comm: object,
     tree_grp_root_comm: object,
     node_comm: object,

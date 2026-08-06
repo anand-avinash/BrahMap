@@ -29,7 +29,6 @@ dint compute_weights_shmem_pol_I(            //
     dint *__restrict __old2new_pixel,        //
     bool *__restrict pixel_flag,             //
     const ssize_t node_root,                 //
-    const bool grp_reduce,                   //
     const MPI_Comm tree_grp_comm,            //
     const MPI_Comm tree_grp_root_comm,       //
     const MPI_Comm node_comm,                //
@@ -45,18 +44,11 @@ dint compute_weights_shmem_pol_I(            //
   dfloat *grp_weighted_counts = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (!grp_reduce) {
-    grp_hit_counts = node_hit_counts;
-    grp_weighted_counts = node_weighted_counts;
-  } else {
-    allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
-    grp_hit_counts = allocator->allocate<dint>(npix);
-    grp_weighted_counts = allocator->allocate<dfloat>(npix);
-  } // if
+  allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
+  grp_hit_counts = allocator->allocate<dint>(npix);
+  grp_weighted_counts = allocator->allocate<dfloat>(npix);
 
-  if (allocator) {
-    allocator->fence(0);
-  } // if
+  allocator->fence(0);
 
   // Accumulation over group roots
   for (ssize_t idx = 0; idx < tree_grp_size; ++idx) {
@@ -73,10 +65,8 @@ dint compute_weights_shmem_pol_I(            //
 
     } // if
 
-    if (allocator) {
-      allocator->fence(0);
-    } // if
-  }   // for
+    allocator->fence(0);
+  } // for
 
   // Group roots to node root reduction on each node
   // tree_grp_root_comm contains one root from each tree group communicator.
@@ -88,21 +78,17 @@ dint compute_weights_shmem_pol_I(            //
   // the node root.
   // Also, for nproc_reduce == 1, grp_reduce = false
 
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
-                 MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-    } // if
-  }   // if
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
+               MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+  } // if
 
   MPI_Win_fence(0, win_hit_counts);
   MPI_Win_fence(0, win_weighted_counts);
 
-  if (allocator) {
-    delete allocator;
-  } // if
+  delete allocator;
 
   // Allreduce sync across all node roots
   // if (node_rank == node_root) { // same as the condition below
@@ -157,7 +143,6 @@ void compute_weights_shmem_pol_QU(           //
     MPI_Win &win_weighted_sincos,            //
     dfloat *__restrict one_over_determinant, //
     const ssize_t node_root,                 //
-    const bool grp_reduce,                   //
     const MPI_Comm tree_grp_comm,            //
     const MPI_Comm tree_grp_root_comm,       //
     const MPI_Comm node_comm,                //
@@ -183,24 +168,14 @@ void compute_weights_shmem_pol_QU(           //
   dfloat *grp_weighted_sincos = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (!grp_reduce) {
-    grp_hit_counts = node_hit_counts;
-    grp_weighted_counts = node_weighted_counts;
-    grp_weighted_sin_sq = node_weighted_sin_sq;
-    grp_weighted_cos_sq = node_weighted_cos_sq;
-    grp_weighted_sincos = node_weighted_sincos;
-  } else {
-    allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
-    grp_hit_counts = allocator->allocate<dint>(npix);
-    grp_weighted_counts = allocator->allocate<dfloat>(npix);
-    grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
-    grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
-    grp_weighted_sincos = allocator->allocate<dfloat>(npix);
-  } // if
+  allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
+  grp_hit_counts = allocator->allocate<dint>(npix);
+  grp_weighted_counts = allocator->allocate<dfloat>(npix);
+  grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
+  grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
+  grp_weighted_sincos = allocator->allocate<dfloat>(npix);
 
-  if (allocator) {
-    allocator->fence(0);
-  } // if
+  allocator->fence(0);
 
   // Accumulation over group roots
   for (ssize_t idx = 0; idx < tree_grp_size; ++idx) {
@@ -223,26 +198,22 @@ void compute_weights_shmem_pol_QU(           //
 
     } // if
 
-    if (allocator) {
-      allocator->fence(0);
-    } // if
-  }   // for
+    allocator->fence(0);
+  } // for
 
   // Group roots to node root reduction on each node
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
-                 MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_sin_sq, node_weighted_sin_sq, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_cos_sq, node_weighted_cos_sq, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-    } // if
-  }   // if
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
+               MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_sin_sq, node_weighted_sin_sq, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_cos_sq, node_weighted_cos_sq, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+  } // if
 
   MPI_Win_fence(0, win_hit_counts);
   MPI_Win_fence(0, win_weighted_counts);
@@ -250,9 +221,7 @@ void compute_weights_shmem_pol_QU(           //
   MPI_Win_fence(0, win_weighted_cos_sq);
   MPI_Win_fence(0, win_weighted_sincos);
 
-  if (allocator) {
-    delete allocator;
-  } // if
+  delete allocator;
 
   // Allreduce sync across all node roots
   if (node_root_comm != MPI_COMM_NULL) {
@@ -314,7 +283,6 @@ void compute_weights_shmem_pol_IQU(          //
     MPI_Win &win_weighted_cos,               //
     dfloat *__restrict one_over_determinant, //
     const ssize_t node_root,                 //
-    const bool grp_reduce,                   //
     const MPI_Comm tree_grp_comm,            //
     const MPI_Comm tree_grp_root_comm,       //
     const MPI_Comm node_comm,                //
@@ -342,28 +310,16 @@ void compute_weights_shmem_pol_IQU(          //
   dfloat *grp_weighted_cos = nullptr;
   SharedMemoryAllocator *allocator = nullptr;
 
-  if (!grp_reduce) {
-    grp_hit_counts = node_hit_counts;
-    grp_weighted_counts = node_weighted_counts;
-    grp_weighted_sin_sq = node_weighted_sin_sq;
-    grp_weighted_cos_sq = node_weighted_cos_sq;
-    grp_weighted_sincos = node_weighted_sincos;
-    grp_weighted_sin = node_weighted_sin;
-    grp_weighted_cos = node_weighted_cos;
-  } else {
-    allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
-    grp_hit_counts = allocator->allocate<dint>(npix);
-    grp_weighted_counts = allocator->allocate<dfloat>(npix);
-    grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
-    grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
-    grp_weighted_sincos = allocator->allocate<dfloat>(npix);
-    grp_weighted_sin = allocator->allocate<dfloat>(npix);
-    grp_weighted_cos = allocator->allocate<dfloat>(npix);
-  } // if
+  allocator = new SharedMemoryAllocator(tree_grp_comm, 0);
+  grp_hit_counts = allocator->allocate<dint>(npix);
+  grp_weighted_counts = allocator->allocate<dfloat>(npix);
+  grp_weighted_sin_sq = allocator->allocate<dfloat>(npix);
+  grp_weighted_cos_sq = allocator->allocate<dfloat>(npix);
+  grp_weighted_sincos = allocator->allocate<dfloat>(npix);
+  grp_weighted_sin = allocator->allocate<dfloat>(npix);
+  grp_weighted_cos = allocator->allocate<dfloat>(npix);
 
-  if (allocator) {
-    allocator->fence(0);
-  } // if
+  allocator->fence(0);
 
   // Accumulation over group roots
   for (ssize_t idx = 0; idx < tree_grp_size; ++idx) {
@@ -388,30 +344,26 @@ void compute_weights_shmem_pol_IQU(          //
 
     } // if
 
-    if (allocator) {
-      allocator->fence(0);
-    } // if
-  }   // for
+    allocator->fence(0);
+  } // for
 
   // Group roots to node root reduction on each node
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
-                 MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_sin, node_weighted_sin, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_cos, node_weighted_cos, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_sin_sq, node_weighted_sin_sq, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_cos_sq, node_weighted_cos_sq, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-      MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
-                 mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
-    } // if
-  }   // if
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),
+               MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_counts, node_weighted_counts, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_sin, node_weighted_sin, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_cos, node_weighted_cos, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_sin_sq, node_weighted_sin_sq, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_cos_sq, node_weighted_cos_sq, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+    MPI_Reduce(grp_weighted_sincos, node_weighted_sincos, npix,
+               mpi_get_type<dfloat>(), MPI_SUM, 0, tree_grp_root_comm);
+  } // if
 
   MPI_Win_fence(0, win_hit_counts);
   MPI_Win_fence(0, win_weighted_counts);
@@ -421,9 +373,7 @@ void compute_weights_shmem_pol_IQU(          //
   MPI_Win_fence(0, win_weighted_sin);
   MPI_Win_fence(0, win_weighted_cos);
 
-  if (allocator) {
-    delete allocator;
-  } // if
+  delete allocator;
 
   // Allreduce sync across all node roots
   if (node_root_comm != MPI_COMM_NULL) {
@@ -503,7 +453,6 @@ void register_compute_weights(nb::module_ &m) {
           arr_dint __old2new_pixel,             //
           arr_bool pixel_flag,                  //
           const ssize_t node_root,              //
-          const bool grp_reduce,                //
           const nb::object tree_grp_comm,       //
           const nb::object tree_grp_root_comm,  //
           const nb::object node_comm,           //
@@ -525,7 +474,6 @@ void register_compute_weights(nb::module_ &m) {
             __old2new_pixel.data(),         //
             pixel_flag.data(),              //
             node_root,                      //
-            grp_reduce,                     //
             get_comm(tree_grp_comm),        //
             get_comm(tree_grp_root_comm),   //
             get_comm(node_comm),            //
@@ -545,7 +493,6 @@ void register_compute_weights(nb::module_ &m) {
       nb::arg("__old2new_pixel").noconvert(),      //
       nb::arg("pixel_flag").noconvert(),           //
       nb::arg("node_root"),                        //
-      nb::arg("grp_reduce"),                       //
       nb::arg("tree_grp_comm").noconvert(),        //
       nb::arg("tree_grp_root_comm").noconvert(),   //
       nb::arg("node_comm").noconvert(),            //
@@ -575,7 +522,6 @@ void register_compute_weights(nb::module_ &m) {
           const nb::object win_weighted_sincos, //
           arr_dfloat one_over_determinant,      //
           const ssize_t node_root,              //
-          const bool grp_reduce,                //
           const nb::object tree_grp_comm,       //
           const nb::object tree_grp_root_comm,  //
           const nb::object node_comm,           //
@@ -607,7 +553,6 @@ void register_compute_weights(nb::module_ &m) {
             win_wsc,                      //
             one_over_determinant.data(),  //
             node_root,                    //
-            grp_reduce,                   //
             get_comm(tree_grp_comm),      //
             get_comm(tree_grp_root_comm), //
             get_comm(node_comm),          //
@@ -634,7 +579,6 @@ void register_compute_weights(nb::module_ &m) {
       nb::arg("win_weighted_sincos").noconvert(),  //
       nb::arg("one_over_determinant").noconvert(), //
       nb::arg("node_root"),                        //
-      nb::arg("grp_reduce"),                       //
       nb::arg("tree_grp_comm").noconvert(),        //
       nb::arg("tree_grp_root_comm").noconvert(),   //
       nb::arg("node_comm").noconvert(),            //
@@ -668,7 +612,6 @@ void register_compute_weights(nb::module_ &m) {
           const nb::object win_weighted_cos,    //
           arr_dfloat one_over_determinant,      //
           const ssize_t node_root,              //
-          const bool grp_reduce,                //
           const nb::object tree_grp_comm,       //
           const nb::object tree_grp_root_comm,  //
           const nb::object node_comm,           //
@@ -706,7 +649,6 @@ void register_compute_weights(nb::module_ &m) {
             win_wc_p,                     //
             one_over_determinant.data(),  //
             node_root,                    //
-            grp_reduce,                   //
             get_comm(tree_grp_comm),      //
             get_comm(tree_grp_root_comm), //
             get_comm(node_comm),          //
@@ -737,7 +679,6 @@ void register_compute_weights(nb::module_ &m) {
       nb::arg("win_weighted_cos").noconvert(),     //
       nb::arg("one_over_determinant").noconvert(), //
       nb::arg("node_root"),                        //
-      nb::arg("grp_reduce"),                       //
       nb::arg("tree_grp_comm").noconvert(),        //
       nb::arg("tree_grp_root_comm").noconvert(),   //
       nb::arg("node_comm").noconvert(),            //
