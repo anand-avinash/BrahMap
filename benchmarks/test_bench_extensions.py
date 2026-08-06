@@ -727,17 +727,13 @@ class TestPointingLO:
             dtype_float,
         )
 
-        if mgr.tree_grp_size == 1:
-            grp_prod = node_prod
-            win_grp_prod = win_node_prod
-        else:
-            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
-                npix,
-                dtype_float,
-                comm=mgr.tree_grp_comm,
-                comm_root=0,
-            )
-
+        grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+            npix,
+            dtype_float,
+            comm=mgr.tree_grp_comm,
+            comm_root=0,
+        )
+        mgr.fence_comm_all(mgr.tree_grp_comm)
         mgr.fence_comm_all(mgr.node_comm)
 
         def setup():
@@ -792,17 +788,13 @@ class TestPointingLO:
             dtype_float,
         )
 
-        if mgr.tree_grp_size == 1:
-            grp_prod = node_prod
-            win_grp_prod = win_node_prod
-        else:
-            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
-                2 * npix,
-                dtype_float,
-                comm=mgr.tree_grp_comm,
-                comm_root=0,
-            )
-
+        grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+            2 * npix,
+            dtype_float,
+            comm=mgr.tree_grp_comm,
+            comm_root=0,
+        )
+        mgr.fence_comm_all(mgr.tree_grp_comm)
         mgr.fence_comm_all(mgr.node_comm)
 
         def setup():
@@ -859,17 +851,13 @@ class TestPointingLO:
             dtype_float,
         )
 
-        if mgr.tree_grp_size == 1:
-            grp_prod = node_prod
-            win_grp_prod = win_node_prod
-        else:
-            grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
-                3 * npix,
-                dtype_float,
-                comm=mgr.tree_grp_comm,
-                comm_root=0,
-            )
-
+        grp_prod, win_grp_prod = mgr.alloc_shared_zeros_comm(
+            3 * npix,
+            dtype_float,
+            comm=mgr.tree_grp_comm,
+            comm_root=0,
+        )
+        mgr.fence_comm_all(mgr.tree_grp_comm)
         mgr.fence_comm_all(mgr.node_comm)
 
         def setup():
