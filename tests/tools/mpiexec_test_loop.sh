@@ -25,6 +25,9 @@ formatted_print() {
 # String to collect the failing nprocs
 error_nprocs=()
 
+# To prevent overusing resources while running the tests as github actions
+export OMP_NUM_THREADS=1
+
 # On macOS, the tests seems to be stalling for nprocs > 2. The docs says that
 # macos-latest runner comes with 2 vCPUs. My guess is that the shared memory
 # based test are stalling due to fences or barriers whenever there is
