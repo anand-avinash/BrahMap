@@ -76,7 +76,6 @@ dint compute_weights_shmem_pol_I(            //
   // 0 rank of tree_grp_root_comm as root argument of MPI_Reduce. This will
   // allow the reduction from the root of each tree group communicator to
   // the node root.
-  // Also, for nproc_reduce == 1, grp_reduce = false
 
   if (tree_grp_root_comm != MPI_COMM_NULL) {
     MPI_Reduce(grp_hit_counts, node_hit_counts, npix, mpi_get_type<dint>(),

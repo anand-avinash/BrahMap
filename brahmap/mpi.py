@@ -83,7 +83,6 @@ class SharedMemoryManager(object):
         self._node_rank = self._node_comm.rank
         self._node_size = self._node_comm.size
         self._nproc_reduce = min(max(nproc_reduce, 1), self._node_size)
-        self.__grp_reduce = self._nproc_reduce > 1
         self._node_root = node_root
 
         # node root communicator: a communicator that contains the
@@ -167,18 +166,6 @@ class SharedMemoryManager(object):
             Size of the local tree group
         """
         return self._nproc_reduce
-
-    @property
-    def grp_reduce(self) -> bool:
-        """Whether the reduction operations from tree group roots to the node
-        root on each node are required
-
-        Returns
-        -------
-        bool
-            True if tree group reduction is required, False otherwise
-        """
-        return self.__grp_reduce
 
     @property
     def node_root(self) -> int:
