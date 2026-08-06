@@ -154,7 +154,6 @@ void shmem_PLO_rmult_I(                    //
     dfloat *__restrict node_prod,          //
     MPI_Win &win_node_prod,                //
     const ssize_t node_root,               //
-    const bool grp_reduce,                 //
     const MPI_Comm tree_grp_comm,          //
     const MPI_Comm tree_grp_root_comm,     //
     const MPI_Comm node_comm,              //
@@ -174,19 +173,16 @@ void shmem_PLO_rmult_I(                    //
                              grp_prod);
     } // if
 
-    if (grp_reduce && tree_grp_size > 1) {
-      MPI_Win_fence(0, win_grp_prod);
-    } // if
-  }   // for
+    MPI_Win_fence(0, win_grp_prod);
+  } // for
 
   // Group roots to node root reduction on each node
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_prod, node_prod, new_npix, mpi_get_type<dfloat>(), MPI_SUM,
-                 0, tree_grp_root_comm);
-    } // if
-    MPI_Win_fence(0, win_node_prod);
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_prod, node_prod, new_npix, mpi_get_type<dfloat>(), MPI_SUM,
+               0, tree_grp_root_comm);
   } // if
+
+  MPI_Win_fence(0, win_node_prod);
 
   // Allreduce sync across all node roots
   if (node_root_comm != MPI_COMM_NULL) {
@@ -259,7 +255,6 @@ void shmem_PLO_rmult_QU(                   //
     dfloat *__restrict node_prod,          //
     MPI_Win &win_node_prod,                //
     const ssize_t node_root,               //
-    const bool grp_reduce,                 //
     const MPI_Comm tree_grp_comm,          //
     const MPI_Comm tree_grp_root_comm,     //
     const MPI_Comm node_comm,              //
@@ -279,19 +274,15 @@ void shmem_PLO_rmult_QU(                   //
                               cos2phi, vec, grp_prod);
     } // if
 
-    if (grp_reduce && tree_grp_size > 1) {
-      MPI_Win_fence(0, win_grp_prod);
-    } // if
-  }   // for
+    MPI_Win_fence(0, win_grp_prod);
+  } // for
 
   // Group roots to node root reduction on each node
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_prod, node_prod, 2 * new_npix, mpi_get_type<dfloat>(),
-                 MPI_SUM, 0, tree_grp_root_comm);
-    } // if
-    MPI_Win_fence(0, win_node_prod);
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_prod, node_prod, 2 * new_npix, mpi_get_type<dfloat>(),
+               MPI_SUM, 0, tree_grp_root_comm);
   } // if
+  MPI_Win_fence(0, win_node_prod);
 
   // Allreduce sync across all node roots
   if (node_root_comm != MPI_COMM_NULL) {
@@ -365,7 +356,6 @@ void shmem_PLO_rmult_IQU(                  //
     dfloat *__restrict node_prod,          //
     MPI_Win &win_node_prod,                //
     const ssize_t node_root,               //
-    const bool grp_reduce,                 //
     const MPI_Comm tree_grp_comm,          //
     const MPI_Comm tree_grp_root_comm,     //
     const MPI_Comm node_comm,              //
@@ -385,19 +375,15 @@ void shmem_PLO_rmult_IQU(                  //
                                cos2phi, vec, grp_prod);
     } // if
 
-    if (grp_reduce && tree_grp_size > 1) {
-      MPI_Win_fence(0, win_grp_prod);
-    } // if
-  }   // for
+    MPI_Win_fence(0, win_grp_prod);
+  } // for
 
   // Group roots to node root reduction on each node
-  if (grp_reduce) {
-    if (tree_grp_root_comm != MPI_COMM_NULL) {
-      MPI_Reduce(grp_prod, node_prod, 3 * new_npix, mpi_get_type<dfloat>(),
-                 MPI_SUM, 0, tree_grp_root_comm);
-    } // if
-    MPI_Win_fence(0, win_node_prod);
+  if (tree_grp_root_comm != MPI_COMM_NULL) {
+    MPI_Reduce(grp_prod, node_prod, 3 * new_npix, mpi_get_type<dfloat>(),
+               MPI_SUM, 0, tree_grp_root_comm);
   } // if
+  MPI_Win_fence(0, win_node_prod);
 
   // Allreduce sync across all node roots
   if (node_root_comm != MPI_COMM_NULL) {
@@ -496,7 +482,6 @@ void register_PointingLO(nb::module_ &m) {
           arr_dfloat node_prod,          //
           const nb::object win_node_prod,
           const ssize_t node_root,             //
-          const bool grp_reduce,               //
           const nb::object tree_grp_comm,      //
           const nb::object tree_grp_root_comm, //
           const nb::object node_comm,          //
@@ -515,7 +500,6 @@ void register_PointingLO(nb::module_ &m) {
             node_prod.data(),             //
             wnode,                        //
             node_root,                    //
-            grp_reduce,                   //
             get_comm(tree_grp_comm),      //
             get_comm(tree_grp_root_comm), //
             get_comm(node_comm),          //
@@ -532,7 +516,6 @@ void register_PointingLO(nb::module_ &m) {
       nb::arg("node_prod").noconvert(),          //
       nb::arg("win_node_prod").noconvert(),      //
       nb::arg("node_root"),                      //
-      nb::arg("grp_reduce"),                     //
       nb::arg("tree_grp_comm").noconvert(),      //
       nb::arg("tree_grp_root_comm").noconvert(), //
       nb::arg("node_comm").noconvert(),          //
@@ -620,7 +603,6 @@ void register_PointingLO(nb::module_ &m) {
           arr_dfloat node_prod,          //
           const nb::object win_node_prod,
           const ssize_t node_root,             //
-          const bool grp_reduce,               //
           const nb::object tree_grp_comm,      //
           const nb::object tree_grp_root_comm, //
           const nb::object node_comm,          //
@@ -641,7 +623,6 @@ void register_PointingLO(nb::module_ &m) {
             node_prod.data(),             //
             wnode,                        //
             node_root,                    //
-            grp_reduce,                   //
             get_comm(tree_grp_comm),      //
             get_comm(tree_grp_root_comm), //
             get_comm(node_comm),          //
@@ -660,7 +641,6 @@ void register_PointingLO(nb::module_ &m) {
       nb::arg("node_prod").noconvert(),          //
       nb::arg("win_node_prod").noconvert(),      //
       nb::arg("node_root"),                      //
-      nb::arg("grp_reduce"),                     //
       nb::arg("tree_grp_comm").noconvert(),      //
       nb::arg("tree_grp_root_comm").noconvert(), //
       nb::arg("node_comm").noconvert(),          //
@@ -748,7 +728,6 @@ void register_PointingLO(nb::module_ &m) {
           arr_dfloat node_prod,          //
           const nb::object win_node_prod,
           const ssize_t node_root,             //
-          const bool grp_reduce,               //
           const nb::object tree_grp_comm,      //
           const nb::object tree_grp_root_comm, //
           const nb::object node_comm,          //
@@ -769,7 +748,6 @@ void register_PointingLO(nb::module_ &m) {
             node_prod.data(),             //
             wnode,                        //
             node_root,                    //
-            grp_reduce,                   //
             get_comm(tree_grp_comm),      //
             get_comm(tree_grp_root_comm), //
             get_comm(node_comm),          //
@@ -788,7 +766,6 @@ void register_PointingLO(nb::module_ &m) {
       nb::arg("node_prod").noconvert(),          //
       nb::arg("win_node_prod").noconvert(),      //
       nb::arg("node_root"),                      //
-      nb::arg("grp_reduce"),                     //
       nb::arg("tree_grp_comm").noconvert(),      //
       nb::arg("tree_grp_root_comm").noconvert(), //
       nb::arg("node_comm").noconvert(),          //

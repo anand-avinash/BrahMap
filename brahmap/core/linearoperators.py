@@ -93,16 +93,12 @@ class PointingLO(LinearOperator):
                 processed_samples.dtype_float,
             )
 
-            if not mgr.grp_reduce:
-                self._grp_prod = self._node_prod
-                self._win_grp_prod = self._win_node_prod
-            else:
-                self._grp_prod, self._win_grp_prod = mgr.alloc_shared_comm(
-                    self.ncols,
-                    processed_samples.dtype_float,
-                    comm=mgr.tree_grp_comm,
-                    comm_root=0,
-                )
+            self._grp_prod, self._win_grp_prod = mgr.alloc_shared_comm(
+                self.ncols,
+                processed_samples.dtype_float,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
 
             rmatvec_I = self._rmult_I_shmem
             rmatvec_QU = self._rmult_QU_shmem
@@ -216,8 +212,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.grp_reduce:
-            self._win_grp_prod.Fence(0)
+        self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_I(
@@ -231,7 +226,6 @@ class PointingLO(LinearOperator):
             node_prod=self._node_prod,
             win_node_prod=self._win_node_prod,
             node_root=self.__shared_mem_mgr.node_root,
-            grp_reduce=self.__shared_mem_mgr.grp_reduce,
             tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
             tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
             node_comm=self.__shared_mem_mgr.node_comm,
@@ -320,8 +314,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.grp_reduce:
-            self._win_grp_prod.Fence(0)
+        self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_QU(
@@ -337,7 +330,6 @@ class PointingLO(LinearOperator):
             node_prod=self._node_prod,
             win_node_prod=self._win_node_prod,
             node_root=self.__shared_mem_mgr.node_root,
-            grp_reduce=self.__shared_mem_mgr.grp_reduce,
             tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
             tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
             node_comm=self.__shared_mem_mgr.node_comm,
@@ -426,8 +418,7 @@ class PointingLO(LinearOperator):
         if self.__shared_mem_mgr.node_rank == 0:
             self._node_prod[:] = 0
 
-        if self.__shared_mem_mgr.grp_reduce:
-            self._win_grp_prod.Fence(0)
+        self._win_grp_prod.Fence(0)
         self._win_node_prod.Fence(0)
 
         PointingLO_tools.shmem_PLO_rmult_IQU(
@@ -443,7 +434,6 @@ class PointingLO(LinearOperator):
             node_prod=self._node_prod,
             win_node_prod=self._win_node_prod,
             node_root=self.__shared_mem_mgr.node_root,
-            grp_reduce=self.__shared_mem_mgr.grp_reduce,
             tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
             tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
             node_comm=self.__shared_mem_mgr.node_comm,
