@@ -2,8 +2,11 @@
 #define _MPI_UTILS
 
 #include <complex>
+#include <cstddef>
+#include <cstring>
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
+#include <vector>
 
 // The following function is taken from
 // <https://gist.github.com/2b-t/50d85115db8b12ed263f8231abf07fa2>
@@ -72,5 +75,72 @@ template <typename T>
   return mpi_type;
 
 } // mpi_get_type()
+
+// MPI shared memory allocator class
+class SharedMemoryAllocator {
+private:
+  MPI_Comm _comm;
+  int _rank;
+  int _root;
+
+  std::vector<MPI_Win> _windows;
+
+public:
+  // constructor
+  SharedMemoryAllocator(MPI_Comm comm, int comm_root = 0)
+      : _comm(comm), _root(comm_root) {
+    MPI_Comm_rank(comm, &_rank);
+  } // constructor
+
+  // Disallow copying to prevent double-freeing MPI_Windows
+  SharedMemoryAllocator(const SharedMemoryAllocator &) = delete;
+  SharedMemoryAllocator &operator=(const SharedMemoryAllocator &) = delete;
+
+  // Shared memory array allocator
+  template <typename dtype> dtype *allocate(size_t size) {
+    int dtype_size = sizeof(dtype);
+
+    MPI_Aint bytes_to_allocate = (_rank == _root) ? size * dtype_size : 0;
+
+    dtype *local_ptr = nullptr;
+    MPI_Win win;
+    MPI_Win_allocate_shared(bytes_to_allocate, dtype_size, MPI_INFO_NULL, _comm,
+                            &local_ptr, &win);
+
+    MPI_Aint segment_size;
+    int disp;
+    dtype *shared_buf = nullptr;
+
+    // Query the root's memory space
+    MPI_Win_shared_query(win, _root, &segment_size, &disp, &shared_buf);
+
+    _windows.push_back(win);
+
+    if (_rank == _root && shared_buf != nullptr) {
+      std::memset(shared_buf, 0, size * dtype_size);
+    } // if
+
+    return shared_buf;
+
+  } // allocate()
+
+  // Expose the windows if the user needs to manually call MPI_Win_fence
+  const std::vector<MPI_Win> &get_windows() const { return _windows; }
+
+  // Call MPI_Win_fence on all allocated windows
+  void fence(int assertion = 0) const {
+    for (const MPI_Win &win : _windows) {
+      MPI_Win_fence(assertion, const_cast<MPI_Win &>(win));
+    } // for
+  }   // fence()
+
+  // destructor
+  ~SharedMemoryAllocator() {
+    for (MPI_Win &win : _windows) {
+      MPI_Win_free(&win);
+    } // for
+  }   // destructor
+
+}; // SharedMemoryAllocator
 
 #endif

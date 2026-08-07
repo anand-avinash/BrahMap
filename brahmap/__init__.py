@@ -27,6 +27,7 @@ from .base import TypeChangeWarning, LowerTypeCastWarning, ShapeError  # noqa: E
 from .core import (  # noqa: E402
     SolverType,
     ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
     PointingLO,
     BlockDiagonalPreconditionerLO,
     NoiseCovLO_Diagonal,
@@ -52,6 +53,7 @@ if find_spec("litebird_sim") is not None:
     from . import lbsim
     from .lbsim import (
         LBSimProcessTimeSamples,
+        LBSimSharedMemProcessTimeSamples,
         LBSim_InvNoiseCovLO_UnCorr,
         LBSim_InvNoiseCovLO_Circulant,
         LBSim_InvNoiseCovLO_Toeplitz,
@@ -63,6 +65,7 @@ if find_spec("litebird_sim") is not None:
     __all__ = __all__ + [
         "lbsim",
         "LBSimProcessTimeSamples",
+        "LBSimSharedMemProcessTimeSamples",
         "LBSim_InvNoiseCovLO_UnCorr",
         "LBSim_InvNoiseCovLO_Circulant",
         "LBSim_InvNoiseCovLO_Toeplitz",
@@ -87,6 +90,7 @@ __all__ = __all__ + [
     "core",
     "SolverType",
     "ProcessTimeSamples",
+    "SharedMemProcessTimeSamples",
     "PointingLO",
     "BlockDiagonalPreconditionerLO",
     "NoiseCovLO_Diagonal",

@@ -1,4 +1,8 @@
-from .process_time_samples import SolverType, ProcessTimeSamples
+from .process_time_samples import (
+    SolverType,
+    ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
+)
 
 from .linearoperators import (
     PointingLO,
@@ -38,6 +42,7 @@ __all__ = [
     # process_time_samples.py
     "SolverType",
     "ProcessTimeSamples",
+    "SharedMemProcessTimeSamples",
     # linearoperators.py
     "PointingLO",
     "BlockDiagonalPreconditionerLO",

@@ -1,0 +1,11 @@
+/* Target the slate (dark mode) theme */
+[data-md-color-scheme="slate"] {
+  /* Main body background color */
+  --md-default-bg-color: #0c0f16;
+
+  /* Lighter fallback background (used for code blocks, headers, card borders, etc.) */
+  --md-default-bg-color--light: #161b22;
+
+  /* Code blocks background */
+  --md-code-bg-color: #161b22;
+}

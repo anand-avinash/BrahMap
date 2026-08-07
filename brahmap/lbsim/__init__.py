@@ -1,6 +1,9 @@
 from typing import Union
 
-from .lbsim_process_time_samples import LBSimProcessTimeSamples
+from .lbsim_process_time_samples import (
+    LBSimProcessTimeSamples,
+    LBSimSharedMemProcessTimeSamples,
+)
 
 from .lbsim_noise_operators import (
     LBSim_InvNoiseCovLO_UnCorr,
@@ -20,6 +23,7 @@ from .lbsim_GLS import LBSimGLSParameters, LBSimGLSResult, LBSim_compute_GLS_map
 __all__ = [
     # lbsim_process_time_samples.py
     "LBSimProcessTimeSamples",
+    "LBSimSharedMemProcessTimeSamples",
     # lbsim_noise_operators.py
     "LBSim_InvNoiseCovLO_UnCorr",
     "LBSim_InvNoiseCovLO_Circulant",

@@ -90,11 +90,21 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+
 
 ### Matjax support
 extra_javascript:
   - javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
 
 
 plugins:
@@ -143,7 +153,8 @@ nav:
       
     - litebird_sim Interface:
       - api_reference/lbsim/index.md
-      - LBSimProcessTimeSamples: api_reference/lbsim/LBSimProcessTimeSamples.md      
+      - LBSimProcessTimeSamples: api_reference/lbsim/LBSimProcessTimeSamples.md
+      - LBSimSharedMemProcessTimeSamples: api_reference/lbsim/LBSimSharedMemProcessTimeSamples.md
       - LBSim_InvNoiseCovLO_UnCorr: api_reference/lbsim/LBSim_InvNoiseCovLO_UnCorr.md
       - LBSim_InvNoiseCovLO_Circulant: api_reference/lbsim/LBSim_InvNoiseCovLO_Circulant.md
       - LBSim_InvNoiseCovLO_Toeplitz: api_reference/lbsim/LBSim_InvNoiseCovLO_Toeplitz.md
@@ -155,6 +166,7 @@ nav:
       - api_reference/core/index.md
       - SolverType: api_reference/core/SolverType.md
       - ProcessTimeSamples: api_reference/core/ProcessTimeSamples.md
+      - SharedMemProcessTimeSamples: api_reference/core/SharedMemProcessTimeSamples.md
       - PointingLO: api_reference/core/PointingLO.md
       - BlockDiagonalPreconditionerLO: api_reference/core/BlockDiagonalPreconditionerLO.md
       - NoiseCovLO_Diagonal: api_reference/core/NoiseCovLO_Diagonal.md
@@ -171,26 +183,27 @@ nav:
       - separate_map_vectors: api_reference/core/separate_map_vectors.md
       - GLSResult: api_reference/core/GLSResult.md 
     
-    - Base Operators:
-      - api_reference/base_operators/index.md
-      - BaseLinearOperator: api_reference/base_operators/BaseLinearOperator.md
-      - LinearOperator: api_reference/base_operators/LinearOperator.md
-      - IdentityOperator: api_reference/base_operators/IdentityOperator.md
-      - DiagonalOperator: api_reference/base_operators/DiagonalOperator.md
-      - MatrixLinearOperator: api_reference/base_operators/MatrixLinearOperator.md
-      - ZeroOperator: api_reference/base_operators/ZeroOperator.md
-      - InverseLO: api_reference/base_operators/InverseLO.md
-      - ReducedLinearOperator: api_reference/base_operators/ReducedLinearOperator.md
-      - SymmetricallyReducedLinearOperator: api_reference/base_operators/SymmetricallyReducedLinearOperator.md
-      - aslinearoperator: api_reference/base_operators/aslinearoperator.md
-      - BlockLinearOperator: api_reference/base_operators/BlockLinearOperator.md
-      - BlockDiagonalLinearOperator: api_reference/base_operators/BlockDiagonalLinearOperator.md
-      - BlockHorizontalLinearOperator: api_reference/base_operators/BlockHorizontalLinearOperator.md
-      - BlockVerticalLinearOperator: api_reference/base_operators/BlockVerticalLinearOperator.md
-      - NoiseCovLinearOperator: api_reference/base_operators/NoiseCovLinearOperator.md
-      - InvNoiseCovLinearOperator: api_reference/base_operators/InvNoiseCovLinearOperator.md
-      - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagNoiseCovLinearOperator.md
-      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_operators/BaseBlockDiagInvNoiseCovLinearOperator.md
+    - Base Classes:
+      - api_reference/base_classes/index.md
+      - BaseLinearOperator: api_reference/base_classes/BaseLinearOperator.md
+      - LinearOperator: api_reference/base_classes/LinearOperator.md
+      - IdentityOperator: api_reference/base_classes/IdentityOperator.md
+      - DiagonalOperator: api_reference/base_classes/DiagonalOperator.md
+      - MatrixLinearOperator: api_reference/base_classes/MatrixLinearOperator.md
+      - ZeroOperator: api_reference/base_classes/ZeroOperator.md
+      - InverseLO: api_reference/base_classes/InverseLO.md
+      - ReducedLinearOperator: api_reference/base_classes/ReducedLinearOperator.md
+      - SymmetricallyReducedLinearOperator: api_reference/base_classes/SymmetricallyReducedLinearOperator.md
+      - aslinearoperator: api_reference/base_classes/aslinearoperator.md
+      - BlockLinearOperator: api_reference/base_classes/BlockLinearOperator.md
+      - BlockDiagonalLinearOperator: api_reference/base_classes/BlockDiagonalLinearOperator.md
+      - BlockHorizontalLinearOperator: api_reference/base_classes/BlockHorizontalLinearOperator.md
+      - BlockVerticalLinearOperator: api_reference/base_classes/BlockVerticalLinearOperator.md
+      - NoiseCovLinearOperator: api_reference/base_classes/NoiseCovLinearOperator.md
+      - InvNoiseCovLinearOperator: api_reference/base_classes/InvNoiseCovLinearOperator.md
+      - BaseBlockDiagNoiseCovLinearOperator: api_reference/base_classes/BaseBlockDiagNoiseCovLinearOperator.md
+      - BaseBlockDiagInvNoiseCovLinearOperator: api_reference/base_classes/BaseBlockDiagInvNoiseCovLinearOperator.md
+      - BaseProcessTimeSamples: api_reference/base_classes/BaseProcessTimeSamples.md
 
     - Math Functions:
       - api_reference/math_functions/index.md
@@ -199,6 +212,8 @@ nav:
 
     - Utilities:
       - api_reference/utilities/index.md
+      - MPI_UTILS: api_reference/utilities/MPI_UTILS.md
+      - SharedMemoryManager: api_reference/utilities/SharedMemoryManager.md
       - bash_colors: api_reference/utilities/bash_colors.md
       - modify_numpy_context: api_reference/utilities/modify_numpy_context.md
       - plot_LinearOperator: api_reference/utilities/plot_LinearOperator.md

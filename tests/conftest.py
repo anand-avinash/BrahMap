@@ -1,9 +1,12 @@
 import pytest
+from mpi4py import MPI
 
 # Dictionaries to keep track of the results and parameter counts of parametrized test cases
 test_results_status = {}
 test_param_counts = {}
 forced_skipped_tests = set()
+
+pytest_plugins = ["fixture_setup"]
 
 
 def pytest_configure(config):
@@ -34,7 +37,9 @@ def pytest_collection_modifyitems(items):
     """This function counts the number of parameters for a parameterized
     test"""
     for item in items:
-        if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
+        # Every parameterized function has an attribute `callspec`, whether
+        # it is parameterized through decorators or fixtures
+        if hasattr(item, "callspec") and "ignore_param_count" not in item.keywords:
             base_nodeid = get_base_nodeid(item.nodeid)
             if base_nodeid not in test_param_counts:
                 test_param_counts[base_nodeid] = 0
@@ -49,7 +54,7 @@ def pytest_runtest_call(item):
     outcome = yield
 
     # Only process parametrized tests
-    if "parametrize" in item.keywords and "ignore_param_count" not in item.keywords:
+    if hasattr(item, "callspec") and "ignore_param_count" not in item.keywords:
         base_nodeid = get_base_nodeid(item.nodeid)
 
         # Initialize the list for this test function if not already done
@@ -115,3 +120,17 @@ def pytest_sessionfinish(session, exitstatus):
     status to the system.
     """
     pass
+
+
+@pytest.fixture(autouse=True)
+def mpi_test_synchronizer():
+    # Synchronize all ranks before starting the test
+    if MPI.Is_initialized():
+        MPI.COMM_WORLD.Barrier()
+
+    yield
+
+    # Synchronize all ranks after finishing the test
+    # (and before starting the next one)
+    if MPI.Is_initialized():
+        MPI.COMM_WORLD.Barrier()

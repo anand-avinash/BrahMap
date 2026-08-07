@@ -12,6 +12,7 @@ from ..base import DTypeNoiseCov
 from ..core import (
     SolverType,
     ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
     PointingLO,
     BlockDiagonalPreconditionerLO,
     InvNoiseCovLO_Diagonal,
@@ -42,7 +43,12 @@ class GLSParameters:
         Whether the GLS solver function should return the processed time
         samples container
     return_hit_map : bool
-        Whether the function should the pixel hit map
+        Whether the function should return the pixel hit map
+    shmem_return_copy : bool
+        Whether the linear operators (PointingLO, BlockDiagonalPreconditionerLO)
+        should return copies of the shared memory buffer during matrix-vector
+        products. Only applicable when using shared memory process time
+        samples class instances, by default `True`
     """
 
     solver_type: SolverType = SolverType.IQU
@@ -52,6 +58,7 @@ class GLSParameters:
     callback_function: Callable | None = None
     return_processed_samples: bool = False
     return_hit_map: bool = False
+    shmem_return_copy: bool = True
 
 
 @dataclass
@@ -91,7 +98,7 @@ class GLSResult:
 
 def separate_map_vectors(
     map_vector: npt.NDArray[np.number],
-    processed_samples: ProcessTimeSamples,
+    processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
 ) -> npt.NDArray[np.number]:
     r"""Separates the interleaved Stokes parameter maps into distinct components.
 
@@ -105,7 +112,7 @@ def separate_map_vectors(
     map_vector : npt.NDArray[np.number]
         The 1D vector representing the flattened interleaved sky map
 
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing pointing and
         map-making metadata
 
@@ -114,20 +121,11 @@ def separate_map_vectors(
     npt.NDArray[np.number]
         The final separated output maps with masked pathological pixels
     """
-    try:
-        map_vector = np.reshape(
-            map_vector,
-            (int(processed_samples.solver_type), processed_samples.new_npix),
-            order="F",
-        )
-    except TypeError:
-        # `newshape` parameter has been deprecated since numpy 2.1.0. This part should
-        # be removed once the support is dropped for lower version
-        map_vector = np.reshape(
-            map_vector,
-            newshape=(int(processed_samples.solver_type), processed_samples.new_npix),
-            order="F",
-        )
+    map_vector = np.reshape(
+        map_vector,
+        (int(processed_samples.solver_type), processed_samples.new_npix),
+        order="F",
+    )
 
     output_maps = np.ma.MaskedArray(
         data=np.empty(processed_samples.npix, dtype=processed_samples.dtype_float),
@@ -144,18 +142,18 @@ def separate_map_vectors(
 
 
 def compute_GLS_maps_from_PTS(
-    processed_samples: ProcessTimeSamples,
+    processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
     time_ordered_data: npt.NDArray[np.number],
     inv_noise_cov_operator: DTypeNoiseCov | None = None,
     gls_parameters: GLSParameters = GLSParameters(),
     x0: npt.NDArray[np.number] | None = None,
 ) -> GLSResult:
     r"""Computes the Generalized Least Squares (GLS) maps using a
-    pre-instantiated `ProcessTimeSamples` instance.
+    pre-instantiated `ProcessTimeSamples` or `SharedMemProcessTimeSamples` instance.
 
     Parameters
     ----------
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing pointing and
         map-making metadata
     time_ordered_data : npt.NDArray[np.number]
@@ -211,11 +209,15 @@ def compute_GLS_maps_from_PTS(
             )
 
     pointing_operator = PointingLO(
-        processed_samples=processed_samples, solver_type=gls_parameters.solver_type
+        processed_samples=processed_samples,
+        solver_type=gls_parameters.solver_type,
+        return_copy=gls_parameters.shmem_return_copy,
     )
 
     blockdiagprecond_operator = BlockDiagonalPreconditionerLO(
-        processed_samples=processed_samples, solver_type=gls_parameters.solver_type
+        processed_samples=processed_samples,
+        solver_type=gls_parameters.solver_type,
+        return_copy=gls_parameters.shmem_return_copy,
     )
 
     b = pointing_operator.T * inv_noise_cov_operator * time_ordered_data
@@ -286,7 +288,9 @@ def compute_GLS_maps(
     update_pointings_inplace: bool = True,
     gls_parameters: GLSParameters = GLSParameters(),
     x0: npt.NDArray[np.number] | None = None,
-) -> GLSResult | tuple[ProcessTimeSamples, GLSResult]:
+    use_shared_memory: bool = False,
+    nproc_reduce: int = 1,
+) -> GLSResult | tuple[ProcessTimeSamples | SharedMemProcessTimeSamples, GLSResult]:
     r"""Computes the Generalized Least Squares (GLS) maps directly from
     raw pointing information and time-ordered data.
 
@@ -321,11 +325,18 @@ def compute_GLS_maps(
     x0 : npt.NDArray[np.number] | None, optional
         Initial guess for the GLS solution in the form of interleaved
         maps (e.g. $[I_1, Q_1, U_1, I_2, Q_2, U_2, \dots]$), by default `None`
+    use_shared_memory : bool, optional
+        Whether to use MPI shared memory based process time samples, by
+        default `False`
+    nproc_reduce : int, optional
+        Number of processes used in parallel reduction within nodes for
+        shared memory mode. See
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
+        for more details. By default `1`
 
     Returns
     -------
-    GLSResult | tuple[ProcessTimeSamples, GLSResult]
-        GLSResult
+    GLSResult | tuple[ProcessTimeSamples | SharedMemProcessTimeSamples, GLSResult]
         The dataclass containing the final output from the GLS map-maker,
         optionally returning the processed samples container
     """
@@ -343,17 +354,31 @@ def compute_GLS_maps(
     else:
         noise_weights = inv_noise_cov_operator.diag
 
-    processed_samples = ProcessTimeSamples(
-        npix=npix,
-        pointings=pointings,
-        pointings_flag=pointings_flag,
-        solver_type=gls_parameters.solver_type,
-        pol_angles=pol_angles,
-        noise_weights=noise_weights,
-        threshold=threshold,
-        dtype_float=dtype_float,
-        update_pointings_inplace=update_pointings_inplace,
-    )
+    if use_shared_memory:
+        processed_samples = SharedMemProcessTimeSamples(
+            npix=npix,
+            pointings=pointings,
+            pointings_flag=pointings_flag,
+            solver_type=gls_parameters.solver_type,
+            pol_angles=pol_angles,
+            noise_weights=noise_weights,
+            threshold=threshold,
+            dtype_float=dtype_float,
+            update_pointings_inplace=update_pointings_inplace,
+            nproc_reduce=nproc_reduce,
+        )
+    else:
+        processed_samples = ProcessTimeSamples(
+            npix=npix,
+            pointings=pointings,
+            pointings_flag=pointings_flag,
+            solver_type=gls_parameters.solver_type,
+            pol_angles=pol_angles,
+            noise_weights=noise_weights,
+            threshold=threshold,
+            dtype_float=dtype_float,
+            update_pointings_inplace=update_pointings_inplace,
+        )
 
     gls_result = compute_GLS_maps_from_PTS(
         processed_samples=processed_samples,
@@ -366,6 +391,8 @@ def compute_GLS_maps(
     if gls_parameters.return_processed_samples:
         return processed_samples, gls_result
     else:
+        if isinstance(processed_samples, SharedMemProcessTimeSamples):
+            processed_samples.free_shmem_arrays()
         del processed_samples
         gc.collect()
         return gls_result

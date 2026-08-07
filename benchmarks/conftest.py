@@ -35,6 +35,39 @@ def pytest_addoption(parser):
         type=int,
         help="Nside for the healpix map",
     )
+    parser.addoption(
+        "--mpi-rounds",
+        action="store",
+        type=int,
+        default=20,
+        help="Number of rounds for mpi_benchmark",
+    )
+    parser.addoption(
+        "--mpi-iterations",
+        action="store",
+        type=int,
+        default=1,
+        help="Number of iterations for mpi_benchmark",
+    )
+    parser.addoption(
+        "--mpi-warmup-rounds",
+        action="store",
+        type=int,
+        default=0,
+        help="Number of warmup rounds for mpi_benchmark",
+    )
+    parser.addoption(
+        "--nproc-reduce",
+        action="store",
+        type=int,
+        default=1,
+        help="Number of processes used in parallel Reduction within nodes for shared memory mode",
+    )
+
+
+@pytest.fixture(scope="session")
+def nproc_reduce(request):
+    return request.config.getoption("--nproc-reduce")
 
 
 @pytest.fixture(scope="session")
@@ -95,3 +128,48 @@ def pytest_report_header(config):
 def pytest_benchmark_update_machine_info(config, machine_info):
     """Add resolved benchmark parameters to the JSON report."""
     machine_info["benchmark_params"] = _resolve_params(config)
+
+
+@pytest.fixture
+def mpi_benchmark(benchmark, request):
+    """A fixture to enable pedantic benchmark in order to enforce fixed
+    iterations and rounds across all MPI ranks.
+    """
+    # For a generic benchmark, the rounds and the iterations are determined
+    # individually by each MPI process. If the number of iterations or the
+    # rounds are not equal across all MPI ranks, the standard benchmark runs
+    # in segmentation faults. Setting the rounds and the iterations to the
+    # same value for all MPI ranks avoids this issue.
+
+    # Retrieve default CLI overrides
+    cli_rounds = request.config.getoption("--mpi-rounds")
+    cli_iterations = request.config.getoption("--mpi-iterations")
+    cli_warmup = request.config.getoption("--mpi-warmup-rounds")
+
+    def _run(func, *args, **kwargs):
+        # Extract benchmark configuration, defaulting to CLI values (or their defaults)
+        rounds = kwargs.pop("rounds", cli_rounds)
+        iterations = kwargs.pop("iterations", cli_iterations)
+        warmup_rounds = kwargs.pop("warmup_rounds", cli_warmup)
+        setup = kwargs.pop("setup", None)
+        teardown = kwargs.pop("teardown", None)
+
+        # Setup function when used in benchmark.pedantic, can also be used to
+        # supply the benchmark parameters. The setup functions is called at
+        # the first iteration of every round. In some of the cases, we need
+        # to supply the zero-ed arrays as the function/class arguments every
+        # once in a while to prevent overflow/underflow. There, we can use
+        # the setup argument to do so (for example, in `test_bench_extensions.py`)
+        # See <https://pytest-benchmark.readthedocs.io/en/latest/pedantic.html#reference>
+        return benchmark.pedantic(
+            func,
+            args=args,
+            kwargs=kwargs,
+            setup=setup,
+            teardown=teardown,
+            iterations=iterations,
+            rounds=rounds,
+            warmup_rounds=warmup_rounds,
+        )
+
+    return _run

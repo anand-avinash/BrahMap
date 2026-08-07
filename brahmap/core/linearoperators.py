@@ -1,15 +1,14 @@
 import numpy as np
 import numpy.typing as npt
-
 from ..base.linop import LinearOperator
-
-from .process_time_samples import SolverType, ProcessTimeSamples
-
-
+from ..mpi import MPI_UTILS
+from .process_time_samples import (
+    SolverType,
+    ProcessTimeSamples,
+    SharedMemProcessTimeSamples,
+)
 from .._extensions import PointingLO_tools
 from .._extensions import BlkDiagPrecondLO_tools
-
-from ..mpi import MPI_UTILS
 
 
 class PointingLO(LinearOperator):
@@ -27,23 +26,32 @@ class PointingLO(LinearOperator):
 
     Parameters
     ----------
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing pointing and
         map-making metadata
     solver_type : SolverType | None, optional
         The map-making solver configuration to use. If `None`, it falls
         back to the `solver_type` of `processed_samples`, by default `None`
+    return_copy : bool, optional
+        If `True`, the transposed operator (`rmatvec`) returns a copy of the
+        shared memory buffer. If `False`, it returns the shared memory buffer
+        directly. This argument is ignored if `processed_samples` is not a
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples] object, by default `True`
 
     Attributes
     ----------
     solver_type : SolverType
         The current map-making solver configuration
+    return_copy : bool
+        Whether the transposed operator returns a copy of the shared memory
+        buffer
     """
 
     def __init__(
         self,
-        processed_samples: ProcessTimeSamples,
+        processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
+        return_copy: bool = True,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
         ### extensions. A corresponding full Python implementation is provided in
@@ -59,6 +67,8 @@ class PointingLO(LinearOperator):
                 )
             self.__solver_type = solver_type
 
+        self.__return_copy = return_copy
+
         self.new_npix = processed_samples.new_npix
         self.ncols = processed_samples.new_npix * self.solver_type
         self.nrows = processed_samples.nsamples
@@ -70,13 +80,41 @@ class PointingLO(LinearOperator):
             self.sin2phi = processed_samples.sin2phi
             self.cos2phi = processed_samples.cos2phi
 
+        self._is_shmem = hasattr(processed_samples, "shared_mem_manager")
+
+        if self._is_shmem:
+            assert isinstance(processed_samples, SharedMemProcessTimeSamples)
+            self.__shared_mem_mgr = processed_samples.shared_mem_manager
+            mgr = self.__shared_mem_mgr
+
+            # Allocated node-level shared memory arrays for transposed product
+            self._node_prod, self._win_node_prod = mgr.alloc_shared_node(
+                self.ncols,
+                processed_samples.dtype_float,
+            )
+
+            self._grp_prod, self._win_grp_prod = mgr.alloc_shared_comm(
+                self.ncols,
+                processed_samples.dtype_float,
+                comm=mgr.tree_grp_comm,
+                comm_root=0,
+            )
+
+            rmatvec_I = self._rmult_I_shmem
+            rmatvec_QU = self._rmult_QU_shmem
+            rmatvec_IQU = self._rmult_IQU_shmem
+        else:
+            rmatvec_I = self._rmult_I
+            rmatvec_QU = self._rmult_QU
+            rmatvec_IQU = self._rmult_IQU
+
         if self.solver_type == 1:
             super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
                 symmetric=False,
                 matvec=self._mult_I,
-                rmatvec=self._rmult_I,
+                rmatvec=rmatvec_I,
                 dtype=processed_samples.dtype_float,
             )
         elif self.solver_type == 2:
@@ -85,16 +123,16 @@ class PointingLO(LinearOperator):
                 nargout=self.nrows,
                 symmetric=False,
                 matvec=self._mult_QU,
-                rmatvec=self._rmult_QU,
+                rmatvec=rmatvec_QU,
                 dtype=processed_samples.dtype_float,
             )
         else:
             super().__init__(
                 nargin=self.ncols,
                 nargout=self.nrows,
-                matvec=self._mult_IQU,
                 symmetric=False,
-                rmatvec=self._rmult_IQU,
+                matvec=self._mult_IQU,
+                rmatvec=rmatvec_IQU,
                 dtype=processed_samples.dtype_float,
             )
 
@@ -153,6 +191,48 @@ class PointingLO(LinearOperator):
         )
 
         return prod
+
+    def _rmult_I_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature-only ($I$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting vector of size `new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
+
+        PointingLO_tools.shmem_PLO_rmult_I(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod.copy() if self.return_copy else self._node_prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for linear
@@ -214,6 +294,50 @@ class PointingLO(LinearOperator):
 
         return prod
 
+    def _rmult_QU_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        linear polarization ($QU$) map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `2*new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
+
+        PointingLO_tools.shmem_PLO_rmult_QU(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod.copy() if self.return_copy else self._node_prod
+
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Performs the matrix-vector product $Pv$ for temperature and
         linear polarization map-making.
@@ -274,6 +398,50 @@ class PointingLO(LinearOperator):
 
         return prod
 
+    def _rmult_IQU_shmem(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
+        r"""Performs the transposed matrix-vector product $P^T v$ for
+        temperature and linear polarization map-making.
+
+        Parameters
+        ----------
+        vec : npt.NDArray[np.number]
+            The input vector of size `nsamples`
+
+        Returns
+        -------
+        npt.NDArray[np.number]
+            The resulting array of size `3*new_npix`
+        """
+
+        if self.__shared_mem_mgr.tree_grp_rank == 0:
+            self._grp_prod[:] = 0
+        if self.__shared_mem_mgr.node_rank == 0:
+            self._node_prod[:] = 0
+
+        self._win_grp_prod.Fence(0)
+        self._win_node_prod.Fence(0)
+
+        PointingLO_tools.shmem_PLO_rmult_IQU(
+            new_npix=self.new_npix,
+            nsamples=self.nrows,
+            pointings=self.pointings,
+            pointings_flag=self.pointings_flag,
+            sin2phi=self.sin2phi,
+            cos2phi=self.cos2phi,
+            vec=vec,
+            grp_prod=self._grp_prod,
+            win_grp_prod=self._win_grp_prod,
+            node_prod=self._node_prod,
+            win_node_prod=self._win_node_prod,
+            node_root=self.__shared_mem_mgr.node_root,
+            tree_grp_comm=self.__shared_mem_mgr.tree_grp_comm,
+            tree_grp_root_comm=self.__shared_mem_mgr.tree_grp_root_comm,
+            node_comm=self.__shared_mem_mgr.node_comm,
+            node_root_comm=self.__shared_mem_mgr.node_root_comm,
+        )
+
+        return self._node_prod.copy() if self.return_copy else self._node_prod
+
     @property
     def solver_type(self) -> SolverType:
         """The current map-making solver configuration.
@@ -284,6 +452,18 @@ class PointingLO(LinearOperator):
             The map-making solver type
         """
         return self.__solver_type
+
+    @property
+    def return_copy(self) -> bool:
+        """Whether the transposed operator returns a copy of the shared memory
+        buffer.
+
+        Returns
+        -------
+        bool
+            `True` if a copy is returned, `False` otherwise.
+        """
+        return self.__return_copy
 
 
 class BlockDiagonalPreconditionerLO(LinearOperator):
@@ -298,22 +478,34 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
     Parameters
     ----------
-    processed_samples : ProcessTimeSamples
+    processed_samples : ProcessTimeSamples | SharedMemProcessTimeSamples
         The pre-processed time samples object containing accumulated map-making weights
     solver_type : SolverType | None, optional
         The map-making solver configuration to use. If `None`, it falls
         back to the `solver_type` of `processed_samples`, by default None
+    return_copy : bool, optional
+        If `True`, the operator application (`matvec`) is computed locally by
+        each process and it returns the product as a new numpy array. If
+        `False` and `processed_samples` is a
+        [`SharedMemProcessTimeSamples`][brahmap.core.SharedMemProcessTimeSamples]
+        object, the computation is performed only on the node root process
+        using a node-level shared memory buffer, and a reference to this
+        shared memory buffer is returned directly (zero-copy). By default `True`
 
     Attributes
     ----------
     solver_type : SolverType
         The active map-making solver configuration
+    return_copy : bool
+        If `True`, `matvec` returns a locally computed copy. If `False`, it
+        returns the raw shared memory buffer reference
     """
 
     def __init__(
         self,
-        processed_samples: ProcessTimeSamples,
+        processed_samples: ProcessTimeSamples | SharedMemProcessTimeSamples,
         solver_type: None | SolverType = None,
+        return_copy: bool = True,
     ) -> None:
         ### Some of the functionalities of this class are implemented with C++
         ### extensions. A corresponding full Python implementation is provided in
@@ -331,6 +523,24 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
 
         self.new_npix = processed_samples.new_npix
         self.size = processed_samples.new_npix * self.solver_type
+
+        self.__return_copy = return_copy
+
+        # If a return copy is requested, there is not need to use shared
+        # memory, we can just use standard operations
+        self._shmem_mode = not return_copy and isinstance(
+            processed_samples, SharedMemProcessTimeSamples
+        )
+        if self._shmem_mode:
+            assert isinstance(processed_samples, SharedMemProcessTimeSamples)
+            self.__shared_mem_mgr = processed_samples.shared_mem_manager
+            (
+                self._node_prod,
+                self._win_node_prod,
+            ) = self.__shared_mem_mgr.alloc_shared_node(
+                self.size,
+                processed_samples.dtype_float,
+            )
 
         if self.solver_type == 1:
             self.weighted_counts = processed_samples.weighted_counts  # type: ignore
@@ -385,10 +595,14 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `new_npix`
         """
-
-        prod = vec / self.weighted_counts
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                self._node_prod[:] = vec / self.weighted_counts
+            self._win_node_prod.Fence(0)
+            return self._node_prod
+        else:
+            prod = vec / self.weighted_counts
+            return prod
 
     def _mult_QU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Applies the block-diagonal preconditioner for linear
@@ -406,20 +620,31 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `2*new_npix`
         """
-
-        prod = np.zeros(self.size, dtype=self.dtype)
-
-        BlkDiagPrecondLO_tools.BDPLO_mult_QU(
-            new_npix=self.new_npix,
-            weighted_sin_sq=self.weighted_sin_sq,
-            weighted_cos_sq=self.weighted_cos_sq,
-            weighted_sincos=self.weighted_sincos,
-            one_over_determinant=self.one_over_determinant,
-            vec=vec,
-            prod=prod,
-        )
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+                    new_npix=self.new_npix,
+                    weighted_sin_sq=self.weighted_sin_sq,
+                    weighted_cos_sq=self.weighted_cos_sq,
+                    weighted_sincos=self.weighted_sincos,
+                    one_over_determinant=self.one_over_determinant,
+                    vec=vec,
+                    prod=self._node_prod,
+                )
+            self._win_node_prod.Fence(0)
+            return self._node_prod
+        else:
+            prod = np.zeros(self.size, dtype=self.dtype)
+            BlkDiagPrecondLO_tools.BDPLO_mult_QU(
+                new_npix=self.new_npix,
+                weighted_sin_sq=self.weighted_sin_sq,
+                weighted_cos_sq=self.weighted_cos_sq,
+                weighted_sincos=self.weighted_sincos,
+                one_over_determinant=self.one_over_determinant,
+                vec=vec,
+                prod=prod,
+            )
+            return prod
 
     def _mult_IQU(self, vec: npt.NDArray[np.number]) -> npt.NDArray[np.number]:
         r"""Applies the block-diagonal preconditioner for temperature and
@@ -437,23 +662,37 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
         npt.NDArray[np.number]
             The resulting array of size `3*new_npix`
         """
-
-        prod = np.zeros(self.size, dtype=self.dtype)
-
-        BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
-            new_npix=self.new_npix,
-            weighted_counts=self.weighted_counts,
-            weighted_sin_sq=self.weighted_sin_sq,
-            weighted_cos_sq=self.weighted_cos_sq,
-            weighted_sincos=self.weighted_sincos,
-            weighted_sin=self.weighted_sin,
-            weighted_cos=self.weighted_cos,
-            one_over_determinant=self.one_over_determinant,
-            vec=vec,
-            prod=prod,
-        )
-
-        return prod
+        if self._shmem_mode:
+            if self.__shared_mem_mgr.node_rank == 0:
+                BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+                    new_npix=self.new_npix,
+                    weighted_counts=self.weighted_counts,
+                    weighted_sin_sq=self.weighted_sin_sq,
+                    weighted_cos_sq=self.weighted_cos_sq,
+                    weighted_sincos=self.weighted_sincos,
+                    weighted_sin=self.weighted_sin,
+                    weighted_cos=self.weighted_cos,
+                    one_over_determinant=self.one_over_determinant,
+                    vec=vec,
+                    prod=self._node_prod,
+                )
+            self._win_node_prod.Fence(0)
+            return self._node_prod
+        else:
+            prod = np.zeros(self.size, dtype=self.dtype)
+            BlkDiagPrecondLO_tools.BDPLO_mult_IQU(
+                new_npix=self.new_npix,
+                weighted_counts=self.weighted_counts,
+                weighted_sin_sq=self.weighted_sin_sq,
+                weighted_cos_sq=self.weighted_cos_sq,
+                weighted_sincos=self.weighted_sincos,
+                weighted_sin=self.weighted_sin,
+                weighted_cos=self.weighted_cos,
+                one_over_determinant=self.one_over_determinant,
+                vec=vec,
+                prod=prod,
+            )
+            return prod
 
     @property
     def solver_type(self) -> SolverType:
@@ -465,3 +704,15 @@ class BlockDiagonalPreconditionerLO(LinearOperator):
             The map-making solver type
         """
         return self.__solver_type
+
+    @property
+    def return_copy(self) -> bool:
+        """Whether the operator application returns a copy of the shared
+        memory buffer.
+
+        Returns
+        -------
+        bool
+            `True` if a copy is returned, `False` otherwise.
+        """
+        return self.__return_copy

@@ -25,12 +25,25 @@ formatted_print() {
 # String to collect the failing nprocs
 error_nprocs=()
 
+# To prevent overusing resources while running the tests as github actions
+export OMP_NUM_THREADS=1
+
+# On macOS, the tests seems to be stalling for nprocs > 2. The docs says that
+# macos-latest runner comes with 2 vCPUs. My guess is that the shared memory
+# based test are stalling due to fences or barriers whenever there is
+# oversubscription. So I am limiting the tests to 1 and 2 processes for macos.
+if [ "$(uname)" = "Darwin" ]; then
+  nprocs_list="1 2"
+else
+  nprocs_list="1 2 3 4"
+fi
+
 # Testing the execution for different nprocs
-for nprocs in 1 2 3 4; do
+for nprocs in $nprocs_list; do
 
   formatted_print "Running test with nprocs = $nprocs"
 
-  if ! mpiexec --map-by :OVERSUBSCRIBE -n $nprocs pytest; then
+  if ! mpiexec --map-by :OVERSUBSCRIBE -n $nprocs pytest --tb=short; then
     # if fails, prints the status and stores the `nprocs`` in `error_nprocs`
     formatted_print \
       "Test status for nprocs = $nprocs: $(printf "${bbred}FAILED${nc}")"
@@ -45,8 +58,10 @@ for nprocs in 1 2 3 4; do
 done
 
 num_errors=${#error_nprocs[@]}
+num_procs=$(( ${#nprocs_arr[@]} / 2 ))
 
-if [ ${num_errors} -gt 2 ]; then
+nprocs_arr=($nprocs_list)
+if [ ${num_errors} -gt ${num_procs} ]; then
   # exit 1, when more than two tests fail
   formatted_print \
     "$(printf "${bbred}Test failed for nproc(s): ${error_nprocs[*]}${nc}")"

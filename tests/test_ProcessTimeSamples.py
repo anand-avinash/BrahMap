@@ -29,93 +29,24 @@ import py_ProcessTimeSamples as hpts
 from mpi4py import MPI
 
 
-class InitCommonParams:
-    np.random.seed(1234 + brahmap.MPI_UTILS.rank)
-    npix = 128
-    nsamples_global = npix * 6
-
-    div, rem = divmod(nsamples_global, brahmap.MPI_UTILS.size)
-    nsamples = div + (brahmap.MPI_UTILS.rank < rem)
-
-    nbad_pixels_global = npix
-    div, rem = divmod(nbad_pixels_global, brahmap.MPI_UTILS.size)
-    nbad_pixels = div + (brahmap.MPI_UTILS.rank < rem)
-
-    pointings_flag = np.ones(nsamples, dtype=bool)
-    bad_samples = np.random.randint(low=0, high=nsamples, size=nbad_pixels)
-    pointings_flag[bad_samples] = False
+TOLERANCES = {
+    np.float32: {"rtol": 1.5e-3, "atol": 1.0e-5},
+    np.float64: {"rtol": 1.5e-5, "atol": 1.0e-10},
+}
 
 
-class InitInt32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
+class TestProcessTimeSamplesCpp:
+    def test_ProcessTimeSamples_I_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
 
-        self.dtype = np.int32
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitInt64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.int64
-        self.pointings = np.random.randint(
-            low=0, high=self.npix, size=self.nsamples, dtype=self.dtype
-        )
-
-
-class InitFloat32Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float32
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-
-class InitFloat64Params(InitCommonParams):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.dtype = np.float64
-        self.noise_weights = np.random.random(size=self.nsamples).astype(
-            dtype=self.dtype
-        )
-        self.pol_angles = np.random.uniform(
-            low=-np.pi / 2.0, high=np.pi / 2.0, size=self.nsamples
-        ).astype(dtype=self.dtype)
-
-
-# Initializing the parameter classes
-initint32 = InitInt32Params()
-initint64 = InitInt64Params()
-initfloat32 = InitFloat32Params()
-initfloat64 = InitFloat64Params()
-
-
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-3, 1.0e-5),
-        (initint64, initfloat32, 1.5e-3, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestProcessTimeSamplesCpp(InitCommonParams):
-    def test_ProcessTimeSamples_I_Cpp(self, initint, initfloat, rtol, atol):
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.I
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -123,9 +54,9 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         )
 
         py_PTS = hpts.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -145,13 +76,17 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_QU_Cpp(self, initint, initfloat, rtol, atol):
+    def test_ProcessTimeSamples_QU_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.QU
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -160,9 +95,9 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         )
 
         py_PTS = hpts.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -219,13 +154,17 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.pixel_flag, py_PTS.pixel_flag)
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
-    def test_ProcessTimeSamples_IQU_Cpp(self, initint, initfloat, rtol, atol):
+    def test_ProcessTimeSamples_IQU_Cpp(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.IQU
 
         cpp_PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -234,9 +173,9 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         )
 
         py_PTS = hpts.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -306,23 +245,18 @@ class TestProcessTimeSamplesCpp(InitCommonParams):
         np.testing.assert_array_equal(cpp_PTS.old2new_pixel, py_PTS.old2new_pixel)
 
 
-@pytest.mark.parametrize(
-    "initint, initfloat, rtol, atol",
-    [
-        (initint32, initfloat32, 1.5e-3, 1.0e-5),
-        (initint64, initfloat32, 1.5e-3, 1.0e-5),
-        (initint32, initfloat64, 1.5e-5, 1.0e-10),
-        (initint64, initfloat64, 1.5e-5, 1.0e-10),
-    ],
-)
-class TestProcessTimeSamples(InitCommonParams):
-    def test_ProcessTimeSamples_I(self, initint, initfloat, rtol, atol):
+class TestProcessTimeSamples:
+    def test_ProcessTimeSamples_I(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.I
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             noise_weights=initfloat.noise_weights,
             dtype_float=initfloat.dtype,
@@ -331,7 +265,7 @@ class TestProcessTimeSamples(InitCommonParams):
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             if PTS.pointings_flag[idx]:
                 pixel = PTS.pointings[idx]
                 weighted_counts[pixel] += initfloat.noise_weights[idx]
@@ -345,13 +279,17 @@ class TestProcessTimeSamples(InitCommonParams):
             atol=atol,
         )
 
-    def test_ProcessTimeSamples_QU(self, initint, initfloat, rtol, atol):
+    def test_ProcessTimeSamples_QU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.QU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -359,17 +297,17 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
-        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+        sin2phi = np.empty(initint.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(initint.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(initint.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(initint.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_cos_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sincos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             if PTS.pointings_flag[idx]:
                 pixel = PTS.pointings[idx]
                 weighted_counts[pixel] += initfloat.noise_weights[idx]
@@ -435,13 +373,17 @@ class TestProcessTimeSamples(InitCommonParams):
             atol=atol,
         )
 
-    def test_ProcessTimeSamples_IQU(self, initint, initfloat, rtol, atol):
+    def test_ProcessTimeSamples_IQU(self, setup_scan):
+        initint, initfloat = setup_scan
+
+        tol = TOLERANCES[initfloat.dtype]
+        rtol, atol = tol["rtol"], tol["atol"]
         solver_type = hpts.SolverType.IQU
 
         PTS = brahmap.core.ProcessTimeSamples(
-            npix=self.npix,
+            npix=initint.npix,
             pointings=initint.pointings,
-            pointings_flag=self.pointings_flag,
+            pointings_flag=initint.pointings_flag,
             solver_type=solver_type,
             pol_angles=initfloat.pol_angles,
             noise_weights=initfloat.noise_weights,
@@ -449,10 +391,10 @@ class TestProcessTimeSamples(InitCommonParams):
             update_pointings_inplace=False,
         )
 
-        sin2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        cos2phi = np.empty(self.nsamples, dtype=initfloat.dtype)
-        brahmap.math.sin(self.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
-        brahmap.math.cos(self.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
+        sin2phi = np.empty(initint.nsamples, dtype=initfloat.dtype)
+        cos2phi = np.empty(initint.nsamples, dtype=initfloat.dtype)
+        brahmap.math.sin(initint.nsamples, 2.0 * initfloat.pol_angles, sin2phi)
+        brahmap.math.cos(initint.nsamples, 2.0 * initfloat.pol_angles, cos2phi)
 
         weighted_counts = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_sin_sq = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
@@ -461,7 +403,7 @@ class TestProcessTimeSamples(InitCommonParams):
         weighted_sin = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
         weighted_cos = np.zeros(PTS.new_npix, dtype=initfloat.dtype)
 
-        for idx in range(self.nsamples):
+        for idx in range(initint.nsamples):
             if PTS.pointings_flag[idx]:
                 pixel = PTS.pointings[idx]
                 weighted_counts[pixel] += initfloat.noise_weights[idx]
